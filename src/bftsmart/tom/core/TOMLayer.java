@@ -385,15 +385,18 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                 while (!Thread.interrupted()) {
                     if (System.currentTimeMillis()-lastsend>1000) {
                         RequestList reqlist=clientsManager.getPendingRequests();
+                        if (reqlist.size()>0){
+                            multiChain.updateMyGeneratedHeight();
+                            communication.send(controller.getCurrentViewAcceptors(),messageFactory.createMzBatch(0,
+                                    0,mzbb.makeMzBatch(controller.getStaticConf().getProcessId(),multiChain.getMyGeneratedHeight(),reqlist,controller.getStaticConf().getUseSignatures()==1)));
+                            System.out.println("Node id: "+controller.getStaticConf().getProcessId()+" Mzbatch:"+(multiChain.getMyGeneratedHeight()));
+                            lastsend=System.currentTimeMillis();
+                        }
                         //System.out.println("Node id: "+controller.getStaticConf().getProcessId()+" pack Mzbatch:"+reqlist);
                         //acceptor.MzBatchReceived();
                         //Mz_Batch Batch=new Mz_Batch(reqlist,id,multiChain.getMyGeneratedHeight()+1);
                         //System.out.println("1");
-                        multiChain.updateMyGeneratedHeight();
-                        communication.send(controller.getCurrentViewAcceptors(),messageFactory.createMzBatch(0,
-                                 0,mzbb.makeMzBatch(controller.getStaticConf().getProcessId(),multiChain.getMyGeneratedHeight(),reqlist,controller.getStaticConf().getUseSignatures()==1)));
-                        System.out.println("Node id: "+controller.getStaticConf().getProcessId()+" Mzbatch:"+(multiChain.getMyGeneratedHeight()));
-                        lastsend=System.currentTimeMillis();
+
                     }
                 }
             }

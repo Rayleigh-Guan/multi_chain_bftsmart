@@ -1,6 +1,7 @@
 package bftsmart.multi_zone;
 
 import bftsmart.clientsmanagement.RequestList;
+import bftsmart.tom.core.messages.TOMMessage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,7 @@ public class multi_chain {
     private int NodeID;
 
     private ReentrantLock mzlock = new ReentrantLock();
+    private List<Mz_BatchListItem> lastbatchlist=new ArrayList<>();
 
     public multi_chain(Integer nodeid)
     {
@@ -31,9 +33,9 @@ public class multi_chain {
         this.mzlock.lock();
         int nodeid = value.NodeId;
         this.ChainPool[nodeid].add(value);
-        if (nodeid==this.NodeID)
-            this.MyGeneratedHeight=this.MyGeneratedHeight+1;
-        System.out.println("Nodeid: "+this.NodeID+" received "+value.BatchId+" from "+value.NodeId+" --REQ:"+value.Req);
+//        if (nodeid==this.NodeID)
+//            this.MyGeneratedHeight=this.MyGeneratedHeight+1;
+        System.out.println("Nodeid: "+this.NodeID+" received "+value.BatchId+" from "+value.NodeId+" --batch:"+value.Req);
         this.mzlock.unlock();
     }
 
@@ -45,8 +47,8 @@ public class multi_chain {
         {
             if (this.ChainPool[i].size()==0)
                 continue;
-            Integer batchtip=this.ChainPool[i].get(this.ChainPool[i].size()-1).BatchId;
-            Integer hi=this.PackagedHeight[i];
+            int batchtip=this.ChainPool[i].get(this.ChainPool[i].size()-1).BatchId;
+            int hi=this.PackagedHeight[i];
             if (batchtip>hi+2)
             {
                 Mz_BatchListItem temp=new Mz_BatchListItem(hi+1,hi+1,i);
@@ -75,9 +77,9 @@ public class multi_chain {
         return reqlist;
     }
 
-    public void updatePackagedHeight(List<Mz_BatchListItem> rev){
+    public void updatePackagedHeight(){
         this.mzlock.lock();
-        for (Mz_BatchListItem mz_batchListItem : rev) {
+        for (Mz_BatchListItem mz_batchListItem : this.lastbatchlist) {
             Integer nodeid_temp = mz_batchListItem.NodeId;
             if (mz_batchListItem.EndHeight > this.PackagedHeight[nodeid_temp])
                 this.PackagedHeight[nodeid_temp] = mz_batchListItem.EndHeight;
@@ -85,8 +87,19 @@ public class multi_chain {
         this.mzlock.unlock();
     }
 
-    public Integer getMyGeneratedHeight(){
+    public int getMyGeneratedHeight(){
         return this.MyGeneratedHeight;
     }
+    public void updateMyGeneratedHeight(){
+        this.mzlock.lock();
+        this.MyGeneratedHeight=this.MyGeneratedHeight+1;
+        this.mzlock.unlock();
+    }
+    public TOMMessage getfistMsg(int nodeid, int height){
+        return this.ChainPool[nodeid].get(height-1).Req.getFirst();
+    }
 
+    public void setLastbatchlist(List<Mz_BatchListItem> lastbatchlist) {
+        this.lastbatchlist = lastbatchlist;
+    }
 }

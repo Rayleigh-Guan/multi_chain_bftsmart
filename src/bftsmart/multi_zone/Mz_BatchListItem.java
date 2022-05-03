@@ -1,13 +1,15 @@
 package bftsmart.multi_zone;
 
 public class Mz_BatchListItem {
+    public Integer NodeId;
     public Integer StartHeight;
     public Integer EndHeight;
-    public Integer NodeId;
 
-    public Mz_BatchListItem(Integer sh,Integer eh,Integer ni){
+
+    public Mz_BatchListItem(Integer ni,Integer sh,Integer eh){
+        this.NodeId=ni;
         this.StartHeight=sh;
         this.EndHeight=eh;
-        this.NodeId=ni;
+
     }
 }

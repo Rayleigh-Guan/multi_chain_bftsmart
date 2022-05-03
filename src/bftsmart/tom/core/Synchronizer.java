@@ -930,7 +930,7 @@ public class Synchronizer {
             Decision dec = new Decision(-1); // the only purpose of this object is to obtain the batchsize,
                                                 // using code inside of createPropose()
 
-            propose = tom.createPropose(dec);
+            propose = tom.createMzPropose(dec);
             batchSize = dec.batchSize;
             
             try { // serialization of the CATCH-UP message

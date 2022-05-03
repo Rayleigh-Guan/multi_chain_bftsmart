@@ -216,7 +216,6 @@ public final class Acceptor {
                             factory.createWrite(cid, epoch.getTimestamp(), epoch.propValueHash));
 
                     logger.debug("WRITE sent for " + cid);
-                
                     computeWrite(cid, epoch, epoch.propValueHash);
                 
                     logger.debug("WRITE computed for " + cid);
@@ -299,7 +298,7 @@ public final class Acceptor {
                 
                 int[] targets = this.controller.getCurrentViewOtherAcceptors();
                 communication.getServersConn().send(targets, cm, true);
-                
+                tomLayer.updatepackedheight();
                 //communication.send(this.reconfManager.getCurrentViewOtherAcceptors(),
                         //factory.createStrong(cid, epoch.getNumber(), value));
                 epoch.addToProof(cm);
@@ -432,7 +431,7 @@ public final class Acceptor {
 
     public void MzProposeReceived(Epoch epoch, ConsensusMessage msg)
     {
-
+        tomLayer.OnMzPropose(epoch,msg);
     }
     public void MzBatchReceived(ConsensusMessage msg)
     {

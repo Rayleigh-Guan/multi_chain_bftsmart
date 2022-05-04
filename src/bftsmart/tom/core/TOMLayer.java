@@ -366,6 +366,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
 
         //for benchmarking
         if (dec.getConsensusId() > -1) { // if this is from the leader change, it doesnt matter
+            System.out.println("Mzpropose try to get first msg pendingbatch:"+pendingBatch);
             dec.firstMessageProposed = multiChain.getfistMsg(pendingBatch.get(0).NodeId,pendingBatch.get(0).StartHeight);
             dec.firstMessageProposed.consensusStartTime = System.nanoTime();
         }
@@ -452,7 +453,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             logger.debug("I can try to propose.");
 
             if ((execManager.getCurrentLeader() == this.controller.getStaticConf().getProcessId()) && //I'm the leader
-                    (clientsManager.havePendingRequests()) && //there are messages to be ordered
+                   // (clientsManager.havePendingRequests()) && //there are messages to be ordered
                     (getInExec() == -1)) { //there is no consensus in execution
 
                 // Sets the current consensus

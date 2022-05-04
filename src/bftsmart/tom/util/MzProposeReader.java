@@ -28,7 +28,9 @@ public class MzProposeReader {
 
         for (int i=0;i< mz_propose.numBatchlistItems;i++)
         {
-            mz_propose.list.add(new Mz_BatchListItem(MzProposeBuffer.getInt(),MzProposeBuffer.getInt(),MzProposeBuffer.getInt()));
+            Mz_BatchListItem batchListItem=new Mz_BatchListItem(MzProposeBuffer.getInt(),MzProposeBuffer.getInt(),MzProposeBuffer.getInt());
+            System.out.println("--batchListItem: "+batchListItem);
+            mz_propose.list.add(batchListItem);
         }
         return mz_propose;
     }

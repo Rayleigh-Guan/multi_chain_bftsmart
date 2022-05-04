@@ -30,7 +30,7 @@ public class MzProposeBuilder {
         }
 
         MzProposeBuffer.putInt(numBatchlistItems);
-        System.out.println("Mzpropose numBatchlistItems: "+numBatchlistItems);
+        System.out.println("Mzpropose numBatchlistItems: "+numBatchlistItems+" msg: "+msgs);
         for (Mz_BatchListItem msg : msgs) {
             MzProposeBuffer.putInt(msg.NodeId);
             MzProposeBuffer.putInt(msg.StartHeight);

@@ -35,7 +35,7 @@ public class multi_chain {
         this.ChainPool[nodeid].add(value);
 //        if (nodeid==this.NodeID)
 //            this.MyGeneratedHeight=this.MyGeneratedHeight+1;
-        System.out.println("Nodeid: "+this.NodeID+" received "+value.BatchId+" from "+value.NodeId+" --batch:"+value.Req);
+        //System.out.println("Nodeid: "+this.NodeID+" received "+value.BatchId+" from "+value.NodeId+" --batch:"+value.Req);
         this.mzlock.unlock();
     }
 
@@ -49,7 +49,7 @@ public class multi_chain {
                 continue;
             int batchtip=this.ChainPool[i].get(this.ChainPool[i].size()-1).BatchId;
             int hi=this.PackagedHeight[i];
-            if (batchtip>hi+2)
+            if (batchtip>hi)
             {
                 Mz_BatchListItem temp=new Mz_BatchListItem(hi+1,hi+1,i);
                 list.add(temp);

@@ -351,8 +351,15 @@ public final class TOMLayer extends Thread implements RequestReceiver {
 
     //our propose
     public byte[] createMzPropose(Decision dec) {
-
+        System.out.println("Node create a Mzpropose");
         List<Mz_BatchListItem> pendingBatch = multiChain.packList();
+        if (pendingBatch.size()==0){
+            System.out.println("Node create a Mzpropose faild,because packlist is null");
+            return null;
+        }else{
+            System.out.println("Node create a Mzpropose ,and success get a packlist");
+        }
+
 
         int numberOfItems = pendingBatch.size(); // number of messages retrieved
         int numberOfNonces = this.controller.getStaticConf().getNumberOfNonces(); // ammount of nonces to be generated
@@ -383,13 +390,13 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                 long lastsend =System.currentTimeMillis();
                 MessageFactory messageFactory=new MessageFactory(controller.getStaticConf().getProcessId());
                 while (!Thread.interrupted()) {
-                    if (System.currentTimeMillis()-lastsend>1000) {
+                    if (System.currentTimeMillis()-lastsend>10) {
                         RequestList reqlist=clientsManager.getPendingRequests();
                         if (reqlist.size()>0){
                             multiChain.updateMyGeneratedHeight();
                             communication.send(controller.getCurrentViewAcceptors(),messageFactory.createMzBatch(0,
                                     0,mzbb.makeMzBatch(controller.getStaticConf().getProcessId(),multiChain.getMyGeneratedHeight(),reqlist,controller.getStaticConf().getUseSignatures()==1)));
-                            System.out.println("Node id: "+controller.getStaticConf().getProcessId()+" Mzbatch:"+(multiChain.getMyGeneratedHeight()));
+                            System.out.println("Node id: "+controller.getStaticConf().getProcessId()+" create Mzbatch height:"+(multiChain.getMyGeneratedHeight())+" batch size: "+reqlist.size()+" batch req: "+reqlist.toString()+" batch time: "+System.currentTimeMillis());
                             lastsend=System.currentTimeMillis();
                         }
                         //System.out.println("Node id: "+controller.getStaticConf().getProcessId()+" pack Mzbatch:"+reqlist);
@@ -460,7 +467,8 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                     logger.debug("Only one replica, bypassing consensus.");
                     
                     byte[] value = createMzPropose(dec);
-
+                    if (value==null)
+                        continue;
                     Consensus consensus = execManager.getConsensus(dec.getConsensusId());
                     Epoch epoch = consensus.getEpoch(0, controller);
                     epoch.propValue = value;
@@ -475,7 +483,11 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                     continue;
 
                 }
-                execManager.getProposer().startConsensus(execId, createMzPropose(dec));
+                byte[] value=createMzPropose(dec);
+                if (value!=null){
+                    execManager.getProposer().startConsensus(execId, value);
+                }
+
             }
         }
         logger.info("TOMLayer stopped.");
@@ -654,6 +666,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
 
     public void OnMzPropose(Epoch epoch,ConsensusMessage msg){
         MzProposeReader mzproposeReader = new MzProposeReader(msg.getValue());
+        System.out.println("Nodeid: "+this.controller.getStaticConf().getProcessId()+" received mzpropose from: "+msg.getSender()+" --msg type: "+msg.getType());
         Mz_Propose mz_propose=mzproposeReader.deserialisemsg();
         RequestList list=this.multiChain.getRequestfromlist(mz_propose.list);
         MessageFactory messageFactory=new MessageFactory(msg.getSender());

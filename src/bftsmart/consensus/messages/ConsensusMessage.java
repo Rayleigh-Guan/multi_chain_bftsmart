@@ -57,6 +57,7 @@ public class ConsensusMessage extends SystemMessage {
         this.number = id;
         this.epoch = epoch;
         this.value = value;
+
         //this.macVector = proof;
 
     }

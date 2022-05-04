@@ -14,24 +14,28 @@ public class MzProposeBuilder {
         rnd = new Random(seed);
     }
     public byte[] makeMzPropose(List<Mz_BatchListItem> msgs, int numNounces, long timestamp) {
+        System.out.println("Node make a Mzpropose to byte");
         int numBatchlistItems=msgs.size();
-        int size = 24 + //timestamp 8, nonces 4, numBatchlistItems 4
+        int size = 16 + //timestamp 8, nonces 4, numBatchlistItems 4
                 (numNounces > 0 ? 8 : 0) + //seed if needed
-                (Integer.BYTES * 3*numBatchlistItems);// Items length
-
+                (4*3*numBatchlistItems);// Items length
+        System.out.println("Mzpropose size: "+size);
         ByteBuffer MzProposeBuffer = ByteBuffer.allocate(size);
         MzProposeBuffer.putLong(timestamp);
+        System.out.println("Mzpropose timestamp: "+timestamp);
         MzProposeBuffer.putInt(numNounces);
+        System.out.println("Mzpropose numNounces: "+numNounces);
         if(numNounces>0){
             MzProposeBuffer.putLong(rnd.nextLong());
         }
 
         MzProposeBuffer.putInt(numBatchlistItems);
-
-        for (int i = 0; i < numBatchlistItems; i++) {
-            MzProposeBuffer.putInt(msgs.get(0).NodeId);
-            MzProposeBuffer.putInt(msgs.get(0).StartHeight);
-            MzProposeBuffer.putInt(msgs.get(0).EndHeight);
+        System.out.println("Mzpropose numBatchlistItems: "+numBatchlistItems);
+        for (Mz_BatchListItem msg : msgs) {
+            MzProposeBuffer.putInt(msg.NodeId);
+            MzProposeBuffer.putInt(msg.StartHeight);
+            MzProposeBuffer.putInt(msg.EndHeight);
+            System.out.println("Mzpropose BatchlistItem: --nd: "+msg.NodeId+" --st: "+msg.StartHeight+" --ed: "+msg.EndHeight);
         }
 
         // return the MzPropose

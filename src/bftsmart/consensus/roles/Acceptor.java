@@ -132,7 +132,7 @@ public final class Acceptor {
         Consensus consensus = executionManager.getConsensus(msg.getNumber());
 
         consensus.lock.lock();
-        Epoch epoch = consensus.getEpoch(msg.getEpoch(), controller);       
+        Epoch epoch = consensus.getEpoch(msg.getEpoch(), controller);
         switch (msg.getType()){
             case MessageFactory.PROPOSE:{
                     proposeReceived(epoch, msg);
@@ -142,10 +142,10 @@ public final class Acceptor {
             }break;
             case MessageFactory.ACCEPT:{
                     acceptReceived(epoch, msg);
-            }
+            }break;
             case MessageFactory.MZPROPOSE:{
                 MzProposeReceived(epoch,msg);
-            }
+            }break;
         }
         consensus.lock.unlock();
     }

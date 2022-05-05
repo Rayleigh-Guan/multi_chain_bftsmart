@@ -15,7 +15,7 @@ public class multi_chain {
 
     private int MyGeneratedHeight;
     private int NodeID;
-
+    private int NPackedTx;
     private ReentrantLock mzlock = new ReentrantLock();
     private List<Mz_BatchListItem> lastbatchlist=new ArrayList<>();
 
@@ -27,6 +27,7 @@ public class multi_chain {
         }
         this.NodeID=nodeid;
         this.MyGeneratedHeight=0;
+        NPackedTx = 0;
     }
 
     public void add(Mz_Batch value){
@@ -35,7 +36,7 @@ public class multi_chain {
         this.ChainPool[nodeid].add(value);
 //        if (nodeid==this.NodeID)
 //            this.MyGeneratedHeight=this.MyGeneratedHeight+1;
-        System.out.println("Stage：addbatch --Nodeid: "+this.NodeID+" received "+value.BatchId+" from "+value.NodeId+" --batch:"+value.Req+" --len"+this.ChainPool[nodeid].size());
+        System.out.println("Stage: addbatch --Nodeid: "+this.NodeID+" received "+value.BatchId+" from "+value.NodeId+" --batch:"+value.Req+" --len"+this.ChainPool[nodeid].size());
         this.mzlock.unlock();
     }
 
@@ -61,7 +62,7 @@ public class multi_chain {
     }
 
     public RequestList getRequestfromlist(List<Mz_BatchListItem> rev){
-
+        
         RequestList reqlist=new RequestList();
         System.out.println("Stage: getRequestfromlist try to getRequestfromlist");
         this.mzlock.lock();
@@ -76,7 +77,12 @@ public class multi_chain {
             }
         }
         this.mzlock.unlock();
-        System.out.println("Stage: getRequestfromlist --totoal reqlist"+reqlist);
+        // System.out.println("Stage: getRequestfromlist --totoal reqlist"+reqlist);
+        System.out.printf("Stage:getRequestfromlist --total request size: %d, request: %s\n", reqlist.size(), reqlist.toString());
+        NPackedTx += reqlist.size();
+        if (reqlist.isEmpty() == false) {
+            System.out.printf("Node %d packed tx number: %d\n", NodeID, NPackedTx);
+        }
         return reqlist;
     }
 

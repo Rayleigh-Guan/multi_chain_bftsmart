@@ -70,7 +70,7 @@ public class MessageHandler {
             int myId = tomLayer.controller.getStaticConf().getProcessId();
             
             ConsensusMessage consMsg = (ConsensusMessage) sm;
-
+            //System.out.println("received a message: --message type: "+consMsg.getType()+" from "+consMsg.getSender());
             if (tomLayer.controller.getStaticConf().getUseMACs() == 0 || consMsg.authenticated || consMsg.getSender() == myId) acceptor.deliver(consMsg);
             else if (consMsg.getType() == MessageFactory.ACCEPT && consMsg.getProof() != null) {
                                         

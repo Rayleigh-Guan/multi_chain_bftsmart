@@ -44,7 +44,7 @@ public final class BatchReader {
 
         //obtain the timestamps to be delivered to the application
         long timestamp = proposalBuffer.getLong();
-
+        System.out.println("Stage: deserialiseRequests --timestamp:"+timestamp);
         int numberOfNonces = proposalBuffer.getInt();
         
         long seed = 0;
@@ -57,6 +57,7 @@ public final class BatchReader {
         else numberOfNonces = 0; // make sure the value is correct
         
         int numberOfMessages = proposalBuffer.getInt();
+        System.out.println("Stage: deserialiseRequests --numberOfMessages:"+numberOfMessages);
 
         TOMMessage[] requests = new TOMMessage[numberOfMessages];
 

@@ -110,13 +110,21 @@ public final class Acceptor {
      * @param msg Paxos messages delivered by the communication layer
      */
     public final void deliver(ConsensusMessage msg) {
+        System.out.println("received a message: --message type: "+msg.getType()+" from "+msg.getSender());
         if (msg.getType()==MessageFactory.MZBATCH)
         {
             MzBatchReceived(msg);
+        }else if (msg.getType()==MessageFactory.MZPROPOSE)
+        {
+            MzProposeReceived(msg);
         }else if (executionManager.checkLimits(msg)) {
             logger.debug("Processing paxos msg with id " + msg.getNumber());
             processMessage(msg);
         } else {
+            if (msg.getType()==MessageFactory.MZPROPOSE)
+            {
+                System.out.println("received a Mzporpose message from "+msg.getSender()+" but do not pass check limits");
+            }
             logger.debug("Out of context msg with id " + msg.getNumber());
             tomLayer.processOutOfContext();
         }
@@ -161,6 +169,7 @@ public final class Acceptor {
         int ts = epoch.getConsensus().getEts();
         int ets = executionManager.getConsensus(msg.getNumber()).getEts();
     	logger.debug("PROPOSE for consensus " + cid);
+        System.out.println("Stage: proposeReceived --from: "+msg.getSender());
     	if (msg.getSender() == executionManager.getCurrentLeader() // Is the replica the leader?
                 && epoch.getTimestamp() == 0 && ts == ets && ets == 0) { // Is all this in epoch 0?
     		executePropose(epoch, msg.getValue());
@@ -181,7 +190,7 @@ public final class Acceptor {
 
         long consensusStartTime = System.nanoTime();
 
-        
+
         if(epoch.propValue == null) { //only accept one propose per epoch
             epoch.propValue = value;
             epoch.propValueHash = tomLayer.computeHash(value);
@@ -196,7 +205,7 @@ public final class Acceptor {
                 tomLayer.setInExec(cid);
             }
             epoch.deserializedPropValue = tomLayer.checkProposedValue(value, true);
-
+            System.out.println("Stage: executePropose --deserializedPropValue: "+ Arrays.toString(epoch.deserializedPropValue));
             if (epoch.deserializedPropValue != null && !epoch.isWriteSetted(me)) {
                 if(epoch.getConsensus().getDecision().firstMessageProposed == null) {
                     epoch.getConsensus().getDecision().firstMessageProposed = epoch.deserializedPropValue[0];
@@ -214,10 +223,10 @@ public final class Acceptor {
                     epoch.getConsensus().getDecision().firstMessageProposed.writeSentTime = System.nanoTime();
                     communication.send(this.controller.getCurrentViewOtherAcceptors(),
                             factory.createWrite(cid, epoch.getTimestamp(), epoch.propValueHash));
-
+                    System.out.println("Stage: executePropose --has wirte vote");
                     logger.debug("WRITE sent for " + cid);
                     computeWrite(cid, epoch, epoch.propValueHash);
-                
+                    tomLayer.updatepackedheight();
                     logger.debug("WRITE computed for " + cid);
                 
                 } else {
@@ -237,7 +246,7 @@ public final class Acceptor {
                 executionManager.processOutOfContext(epoch.getConsensus());
                 
             } else if (epoch.deserializedPropValue == null && !tomLayer.isChangingLeader()) { //force a leader change if the proposal is garbage
-                
+                System.out.println("Stage: executePropose --has not wirte vote");
                 tomLayer.getSynchronizer().triggerTimeout(new LinkedList<>());
             }
         } 
@@ -298,7 +307,6 @@ public final class Acceptor {
                 
                 int[] targets = this.controller.getCurrentViewOtherAcceptors();
                 communication.getServersConn().send(targets, cm, true);
-                tomLayer.updatepackedheight();
                 //communication.send(this.reconfManager.getCurrentViewOtherAcceptors(),
                         //factory.createStrong(cid, epoch.getNumber(), value));
                 epoch.addToProof(cm);
@@ -432,6 +440,10 @@ public final class Acceptor {
     public void MzProposeReceived(Epoch epoch, ConsensusMessage msg)
     {
         tomLayer.OnMzPropose(epoch,msg);
+    }
+    public void MzProposeReceived(ConsensusMessage msg)
+    {
+        tomLayer.OnMzPropose(msg);
     }
     public void MzBatchReceived(ConsensusMessage msg)
     {

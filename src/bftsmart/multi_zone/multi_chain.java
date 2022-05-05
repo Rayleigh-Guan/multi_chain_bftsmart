@@ -35,7 +35,7 @@ public class multi_chain {
         this.ChainPool[nodeid].add(value);
 //        if (nodeid==this.NodeID)
 //            this.MyGeneratedHeight=this.MyGeneratedHeight+1;
-        System.out.println("Nodeid: "+this.NodeID+" received "+value.BatchId+" from "+value.NodeId+" --batch:"+value.Req+" --len"+this.ChainPool[nodeid].size());
+        System.out.println("Stage：addbatch --Nodeid: "+this.NodeID+" received "+value.BatchId+" from "+value.NodeId+" --batch:"+value.Req+" --len"+this.ChainPool[nodeid].size());
         this.mzlock.unlock();
     }
 
@@ -63,19 +63,20 @@ public class multi_chain {
     public RequestList getRequestfromlist(List<Mz_BatchListItem> rev){
 
         RequestList reqlist=new RequestList();
-        System.out.println("try to getRequestfromlist");
+        System.out.println("Stage: getRequestfromlist try to getRequestfromlist");
         this.mzlock.lock();
         for (Mz_BatchListItem mz_batchListItem : rev) {
             int st = mz_batchListItem.StartHeight;
             int ed = mz_batchListItem.EndHeight;
             int nd = mz_batchListItem.NodeId;
-            System.out.println("Node id :"+nd+" StartHeight: "+st+" EndHeight"+ed);
+            System.out.println("Stage: getRequestfromlist --Node id :"+nd+" StartHeight: "+st+" EndHeight"+ed);
             for (int j = st - 1; j < ed; j++) {
                 reqlist.addAll(this.ChainPool[nd].get(j).Req);
+                System.out.println("Stage: getRequestfromlist --Height: "+j+" req: "+this.ChainPool[nd].get(j).Req);
             }
         }
         this.mzlock.unlock();
-
+        System.out.println("Stage: getRequestfromlist --totoal reqlist"+reqlist);
         return reqlist;
     }
 

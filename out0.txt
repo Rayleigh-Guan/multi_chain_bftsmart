@@ -3,7 +3,7 @@
 -- N = 4
 -- F = 1
 -- Port = 11000
--- requestTimeout = 2000
+-- requestTimeout = 5000
 -- maxBatch = 400
 -- Using MACs
 -- Binded replica to IP address 127.0.0.1
@@ -17,749 +17,449 @@
 -- Session Created, active clients=0
 -- Session Created, active clients=0
 -- Session Created, active clients=0
-Node create a Mzpropose
-Node try to packlist:[]
-Node create a Mzpropose faild,because packlist is null
-Node id: 0 create Mzbatch height:1 batch size: 2 batch req: [[0:172679476:0], [1:-489602158:0]] batch time: 1651674564379
-Nodeid: 0 received 1 from 0 --batch:[[0:172679476:0], [1:-489602158:0]] --len1
-Nodeid: 0 received 1 from 1 --batch:[[2:2126507679:0]] --len1
-Nodeid: 0 received 2 from 1 --batch:[[1:-489602158:0]] --len2
-Nodeid: 0 received 1 from 2 --batch:[[0:172679476:0], [2:2126507679:0]] --len1
-Nodeid: 0 received 2 from 0 --batch:[[2:2126507679:0]] --len2
-Nodeid: 0 received 2 from 2 --batch:[[1:-489602158:0]] --len2
-Nodeid: 0 received 1 from 3 --batch:[[0:172679476:0], [1:-489602158:0]] --len1
-Node id: 0 create Mzbatch height:2 batch size: 1 batch req: [[2:2126507679:0]] batch time: 1651674564429
-Nodeid: 0 received 3 from 1 --batch:[[0:172679476:0]] --len3
-Nodeid: 0 received 2 from 3 --batch:[[2:2126507679:0]] --len2
--- The following requests timed out: [[0:172679476:0], [1:-489602158:0]]
--- Forwarding requests [0:172679476:0] to leader
--- Forwarding requests [1:-489602158:0] to leader
--- The following requests timed out: [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Forwarding requests [2:2126507679:0] to leader
--- Attempting to start leader change for requests [[0:172679476:0], [1:-489602158:0]]
--- Sending STOP message to install regency 1 with 2 request(s) to relay
+Stage: createMzPropose --Node create a Mzpropose
+Stage: createMzPropose --Node create a Mzpropose faild,because packlist is null
+received a message: --message type: 44785 from 0
+Stage：addbatch --Nodeid: 0 received 1 from 0 --batch:[[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]] --len1
+Stage: packbatch --Node id: 0 create Mzbatch height:1 batch size: 3 batch req: [[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]] at time: 1651735574384
+received a message: --message type: 44785 from 3
+Stage：addbatch --Nodeid: 0 received 1 from 3 --batch:[[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]] --len1
+received a message: --message type: 44785 from 1
+Stage：addbatch --Nodeid: 0 received 1 from 1 --batch:[[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]] --len1
+received a message: --message type: 44785 from 2
+Stage：addbatch --Nodeid: 0 received 1 from 2 --batch:[[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]] --len1
+-- The following requests timed out: [[1:-114470927:0]]
+-- Forwarding requests [1:-114470927:0] to leader
+-- The following requests timed out: [[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]]
+-- Forwarding requests [0:-634900014:0] to leader
+-- Forwarding requests [2:-1151509849:0] to leader
+-- Attempting to start leader change for requests [[1:-114470927:0]]
+-- Sending STOP message to install regency 1 with 1 request(s) to relay
+-- Received leader change message of type STOP for regency 1 from replica 3
+-- Last regency: 0, next regency: 1
+Stage: deserialiseRequests --timestamp:0
+Stage: deserialiseRequests --numberOfMessages:3
 -- Received leader change message of type STOP for regency 1 from replica 1
 -- Last regency: 0, next regency: 1
--- Received leader change message of type STOP for regency 1 from replica 2
--- Last regency: 0, next regency: 1
+Stage: deserialiseRequests --timestamp:0
+Stage: deserialiseRequests --numberOfMessages:1
 -- Sending STOPDATA of regency 1
 -- No out of context SYNC for regency 1
--- Received leader change message of type STOP for regency 1 from replica 3
+-- Received leader change message of type STOP for regency 1 from replica 2
 -- Last regency: 1, next regency: 1
 -- Received leader change message of type SYNC for regency 1 from replica 1
 -- Last regency: 1, next regency: 1
 -- I did not install any proof of last decided consensus -1
--- Sending WRITE message for CID 0, timestamp 1, value [-106, 42, -58, 67, -122, -72, 77, -126, 113, 58, 75, 33, -126, -73, -58, -49, 33, -64, 72, -47, -113, -68, -55, 68, -46, -110, 28, -119, -59, 4, 10, -7, -60, -119, 9, -86, -55, 8, 73, -97, -16, -63, -13, -20, 80, -90, 55, 92, -41, -49, -10, -114, 62, 0, -57, 36, 26, -30, -17, -127, -31, -5, 82, 112]
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1651735584408
+Stage: deserialiseRequests --numberOfMessages:0
+-- Sending WRITE message for CID 0, timestamp 1, value [-20, -112, 105, -13, -45, 114, 122, 106, 14, -72, -32, -19, -56, 45, -91, 110, 47, 75, 7, 64, 102, -39, 116, 4, 24, -7, -6, -128, 32, -96, 71, 102, -70, 0, 73, -103, -23, -118, 106, -75, -60, 122, -122, 97, 12, -4, 5, -89, 92, 90, 57, 108, 9, 80, -10, -57, 98, 111, 82, -60, -117, 24, 102, 24]
+received a message: --message type: 44782 from 1
+received a message: --message type: 44782 from 3
+received a message: --message type: 44782 from 2
+received a message: --message type: 44783 from 1
+received a message: --message type: 44783 from 3
+received a message: --message type: 44783 from 2
 -- Error while processing decision
 java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
 	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- Received leader change message of type STOP for regency 2 from replica 2
--- Last regency: 1, next regency: 1
--- The following requests timed out: [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Attempting to start leader change for requests [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
+-- The following requests timed out: [[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]]
+-- Attempting to start leader change for requests [[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]]
 -- Sending STOP message to install regency 2 with 3 request(s) to relay
+-- Received leader change message of type STOP for regency 2 from replica 1
+-- Last regency: 1, next regency: 2
+Stage: deserialiseRequests --timestamp:0
+Stage: deserialiseRequests --numberOfMessages:3
 -- Received leader change message of type STOP for regency 2 from replica 3
 -- Last regency: 1, next regency: 2
+Stage: deserialiseRequests --timestamp:0
+Stage: deserialiseRequests --numberOfMessages:3
 -- Sending STOPDATA of regency 2
 -- No out of context SYNC for regency 2
+-- Received leader change message of type STOP for regency 2 from replica 2
+-- Last regency: 2, next regency: 2
+-- Received leader change message of type STOP for regency 3 from replica 2
+-- Last regency: 2, next regency: 2
+Stage: deserialiseRequests --timestamp:0
+Stage: deserialiseRequests --numberOfMessages:2
 -- Received leader change message of type SYNC for regency 2 from replica 2
 -- Last regency: 2, next regency: 2
 -- Installed proof of last decided consensus 0
--- Sending WRITE message for CID 1, timestamp 2, value [23, -1, -76, 0, -92, -48, 41, -60, -35, 2, 58, 121, -59, 75, 91, 33, -36, -76, -127, -75, 60, -4, -118, 89, -28, -79, 59, -52, 47, 89, -95, -75, -13, 57, -9, 115, 25, -121, 113, 27, -54, -52, -112, -110, -72, 26, 71, 99, -110, -53, -37, 74, -26, 51, 43, 14, -80, -11, -78, 79, 96, 26, -74, 87]
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1651735584408
+Stage: deserialiseRequests --numberOfMessages:0
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1651735589400
+Stage: deserialiseRequests --numberOfMessages:0
+-- Sending WRITE message for CID 1, timestamp 2, value [105, 123, -8, -65, -15, 18, -96, 0, -59, 64, -106, 24, -72, -126, -54, -1, -26, 47, -66, -93, -116, -73, 120, 76, 53, -27, 46, -60, 95, -53, -113, 124, -60, -118, -28, 103, 28, -109, 114, 14, 46, 110, 93, 111, -8, -90, 122, 117, 86, 123, 125, 71, 125, 100, -65, -45, 43, -3, 96, 106, -26, -15, -118, 48]
+received a message: --message type: 44782 from 2
+received a message: --message type: 44782 from 3
+received a message: --message type: 44782 from 1
+received a message: --message type: 44783 from 1
+received a message: --message type: 44783 from 2
+received a message: --message type: 44783 from 3
 -- Error while processing decision
 java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
 	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- Received leader change message of type STOP for regency 2 from replica 1
--- Last regency: 2, next regency: 2
--- The following requests timed out: [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Attempting to start leader change for requests [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Sending STOP message to install regency 3 with 3 request(s) to relay
 -- Received leader change message of type STOP for regency 3 from replica 3
--- Last regency: 2, next regency: 3
--- Received leader change message of type STOP for regency 3 from replica 2
--- Last regency: 2, next regency: 3
+-- Last regency: 2, next regency: 2
+Stage: deserialiseRequests --timestamp:0
+Stage: deserialiseRequests --numberOfMessages:3
+-- Sending STOP message to install regency 3 with 3 request(s) to relay
 -- Sending STOPDATA of regency 3
 -- No out of context SYNC for regency 3
 -- Received leader change message of type STOP for regency 3 from replica 1
 -- Last regency: 3, next regency: 3
+-- Received leader change message of type STOP for regency 3 from replica 2
+-- Last regency: 3, next regency: 3
 -- Received leader change message of type SYNC for regency 3 from replica 3
 -- Last regency: 3, next regency: 3
 -- Installed proof of last decided consensus 1
--- Sending WRITE message for CID 2, timestamp 3, value [117, 63, -120, -107, 58, -107, -43, 33, -74, 64, -44, 12, -56, 94, -121, -10, -53, -120, -95, -108, -68, 4, -114, -70, -92, -123, -108, 96, -56, -123, 124, 86, 37, 127, 26, 118, -74, 118, -48, -2, 35, -109, -103, 54, -97, -83, -53, -33, 45, 35, -118, -7, 97, 21, 90, 115, -56, -19, 113, -56, -107, -71, -112, -94]
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1651735589400
+Stage: deserialiseRequests --numberOfMessages:0
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1651735594408
+Stage: deserialiseRequests --numberOfMessages:0
+-- Sending WRITE message for CID 2, timestamp 3, value [28, 119, 43, 91, -95, -45, -124, -66, -45, 55, -93, 82, -84, 34, 111, 117, 82, 13, 114, 115, 107, -62, -79, -103, -115, -21, -11, 65, -9, 125, -2, -17, 105, -127, 69, -46, -75, 124, -9, -100, -52, -100, -37, 112, -79, -122, -20, -128, -45, 26, 34, -78, 67, -5, 43, -120, 114, -12, -15, -10, -28, 32, -12, -114]
+received a message: --message type: 44782 from 3
+received a message: --message type: 44782 from 2
+received a message: --message type: 44782 from 1
+received a message: --message type: 44783 from 1
+received a message: --message type: 44783 from 2
+received a message: --message type: 44783 from 3
 -- Error while processing decision
 java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
 	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- The following requests timed out: [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Attempting to start leader change for requests [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
+-- The following requests timed out: [[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]]
+-- Attempting to start leader change for requests [[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]]
 -- Sending STOP message to install regency 4 with 3 request(s) to relay
 -- Received leader change message of type STOP for regency 4 from replica 3
 -- Last regency: 3, next regency: 4
--- Received leader change message of type STOP for regency 4 from replica 2
--- Last regency: 3, next regency: 4
+Stage: deserialiseRequests --timestamp:0
+Stage: deserialiseRequests --numberOfMessages:3
 -- Received leader change message of type STOP for regency 4 from replica 1
+-- Last regency: 3, next regency: 4
+Stage: deserialiseRequests --timestamp:0
+Stage: deserialiseRequests --numberOfMessages:3
+-- Received leader change message of type STOP for regency 4 from replica 2
 -- Last regency: 4, next regency: 4
 -- Received leader change message of type STOPDATA for regency 4 from replica 2
 -- Last regency: 4, next regency: 4
--- Received leader change message of type STOPDATA for regency 4 from replica 1
+-- Received leader change message of type STOPDATA for regency 4 from replica 3
 -- Last regency: 4, next regency: 4
 Node id: 0 pack batch:[]
 -- Sending SYNC message for regency 4
 -- Installed proof of last decided consensus 2
--- Sending WRITE message for CID 3, timestamp 4, value [-92, 88, -62, -51, -70, -67, -75, 48, 33, -93, 27, 1, -121, -91, -124, -85, -27, -12, 43, 16, -25, -59, -21, -72, 36, -113, 106, -65, -49, 86, -20, -49, 61, 34, 126, 67, 9, -59, 112, 48, -110, 5, -95, -99, 17, 39, 60, -53, -10, -61, 23, 118, -25, 80, 6, -75, -102, -62, 112, -17, 104, 78, 57, -31]
--- Received leader change message of type STOPDATA for regency 4 from replica 3
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1651735594408
+Stage: deserialiseRequests --numberOfMessages:0
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1651735599414
+Stage: deserialiseRequests --numberOfMessages:0
+-- Sending WRITE message for CID 3, timestamp 4, value [11, 57, 8, 37, -52, -113, -5, 47, -57, -23, -122, 71, 6, -127, 107, 126, 39, 19, 90, 32, -46, -127, 59, 106, 114, -70, -23, -47, -90, -91, -90, -124, 102, 62, 91, -118, -90, 49, 65, -95, -83, 37, -30, -67, -24, 99, -72, -32, -45, 104, -23, 27, -71, 106, 110, -97, -12, -98, -50, 100, 39, 82, 98, -51]
+-- Received leader change message of type STOPDATA for regency 4 from replica 1
 -- Last regency: 4, next regency: 4
+received a message: --message type: 44782 from 1
+received a message: --message type: 44782 from 3
+received a message: --message type: 44782 from 2
+received a message: --message type: 44783 from 3
+received a message: --message type: 44783 from 1
+received a message: --message type: 44783 from 2
 -- Error while processing decision
 java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
 	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
+-- Received leader change message of type STOP for regency 5 from replica 1
+-- Last regency: 4, next regency: 4
+Stage: deserialiseRequests --timestamp:0
+Stage: deserialiseRequests --numberOfMessages:3
 -- Received leader change message of type STOP for regency 5 from replica 2
 -- Last regency: 4, next regency: 4
--- The following requests timed out: [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Attempting to start leader change for requests [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
+Stage: deserialiseRequests --timestamp:0
+Stage: deserialiseRequests --numberOfMessages:3
+Stage: createMzPropose --Node create a Mzpropose
+Stage: createMzPropose --Node create a Mzpropose ,and success get a packlist,list size:4
+Stage: makeMzPropose --Node make a Mzpropose to byte
+Stage: makeMzPropose --Mzpropose size: 72
+Stage: makeMzPropose --Mzpropose timestamp: 1651735604408
+Stage: makeMzPropose --Mzpropose numNounces: 10
+Stage: makeMzPropose --Mzpropose BatchlistItem: --nd: 0 --st: 1 --ed: 1
+Stage: makeMzPropose --Mzpropose BatchlistItem: --nd: 1 --st: 1 --ed: 1
+Stage: makeMzPropose --Mzpropose BatchlistItem: --nd: 2 --st: 1 --ed: 1
+Stage: makeMzPropose --Mzpropose BatchlistItem: --nd: 3 --st: 1 --ed: 1
 -- Sending STOP message to install regency 5 with 3 request(s) to relay
-Node create a Mzpropose
-Node try to packlist:[bftsmart.multi_zone.Mz_BatchListItem@f147d67, bftsmart.multi_zone.Mz_BatchListItem@7def7807, bftsmart.multi_zone.Mz_BatchListItem@19600331, bftsmart.multi_zone.Mz_BatchListItem@78557d5e]
-Node create a Mzpropose ,and success get a packlist
-Mzpropose try to get first msg pendingbatch:[bftsmart.multi_zone.Mz_BatchListItem@f147d67, bftsmart.multi_zone.Mz_BatchListItem@7def7807, bftsmart.multi_zone.Mz_BatchListItem@19600331, bftsmart.multi_zone.Mz_BatchListItem@78557d5e]
-
-Node make a Mzpropose to byte
-Mzpropose size: 72
-Mzpropose timestamp: 1651674576471
-Mzpropose numNounces: 10
-Mzpropose numBatchlistItems: 4 msg: [bftsmart.multi_zone.Mz_BatchListItem@f147d67, bftsmart.multi_zone.Mz_BatchListItem@7def7807, bftsmart.multi_zone.Mz_BatchListItem@19600331, bftsmart.multi_zone.Mz_BatchListItem@78557d5e]
-Mzpropose BatchlistItem: --nd: 0 --st: 1 --ed: 1
-Mzpropose BatchlistItem: --nd: 1 --st: 1 --ed: 1
-Mzpropose BatchlistItem: --nd: 2 --st: 1 --ed: 1
-Mzpropose BatchlistItem: --nd: 3 --st: 1 --ed: 1
-Nodeid: 0 received mzpropose from: 0 --msg type: 44784
---timestamp: 1651674576471
---numNounces: 10
---numBatchlistItems: 4
---batchListItem: bftsmart.multi_zone.Mz_BatchListItem@1633369f
---batchListItem: bftsmart.multi_zone.Mz_BatchListItem@3a59784c
---batchListItem: bftsmart.multi_zone.Mz_BatchListItem@665c6f5c
---batchListItem: bftsmart.multi_zone.Mz_BatchListItem@50bac95e
-try to getRequestfromlist
-Node id :0 StartHeight: 1 EndHeight1
-Node id :1 StartHeight: 1 EndHeight1
-Node id :2 StartHeight: 1 EndHeight1
-Node id :3 StartHeight: 1 EndHeight1
-
--- Received leader change message of type STOP for regency 5 from replica 1
--- Last regency: 4, next regency: 5
 -- Sending STOPDATA of regency 5
 -- No out of context SYNC for regency 5
 -- Received leader change message of type STOP for regency 5 from replica 3
 -- Last regency: 5, next regency: 5
+received a message: --message type: 44784 from 0
+Stage:OnMzPropose2 --Nodeid: 0 received mzpropose from: 0 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1651735604408
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 1 endheight: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 1 endheight: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 1 endheight: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 1 endheight: 1
+Stage: getRequestfromlist try to getRequestfromlist
+Stage: getRequestfromlist --Node id :0 StartHeight: 1 EndHeight1
+Stage: getRequestfromlist --Height: 0 req: [[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]]
+Stage: getRequestfromlist --Node id :1 StartHeight: 1 EndHeight1
+Stage: getRequestfromlist --Height: 0 req: [[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]]
+Stage: getRequestfromlist --Node id :2 StartHeight: 1 EndHeight1
+Stage: getRequestfromlist --Height: 0 req: [[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]]
+Stage: getRequestfromlist --Node id :3 StartHeight: 1 EndHeight1
+Stage: getRequestfromlist --Height: 0 req: [[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]]
+Stage: getRequestfromlist --totoal reqlist[[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0], [0:-634900014:0], [1:-114470927:0], [2:-1151509849:0], [0:-634900014:0], [1:-114470927:0], [2:-1151509849:0], [0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]]
+received a message: --message type: 44781 from 0
 -- Received leader change message of type SYNC for regency 5 from replica 1
 -- Last regency: 5, next regency: 5
 -- Installed proof of last decided consensus 3
--- Sending WRITE message for CID 4, timestamp 5, value [-11, 101, -89, 62, 13, 70, 67, -54, -43, -57, 51, -3, -35, -17, -106, 92, -42, 116, -48, -63, 111, 7, 99, 38, -11, -36, 40, -74, 115, -41, -119, 93, 15, 70, -59, 31, -96, 102, -116, 51, -60, 46, 14, 52, -30, 95, -96, 82, -34, 3, -123, 47, -53, 105, 51, 125, -14, -68, 10, -63, -81, -74, 22, -98]
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1651735599414
+Stage: deserialiseRequests --numberOfMessages:0
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1651735604417
+Stage: deserialiseRequests --numberOfMessages:0
+Stage: proposeReceived --from: 0
+-- Sending WRITE message for CID 4, timestamp 5, value [-88, -101, -39, -73, 81, 22, 29, -72, 126, 2, -72, -98, -79, 56, -69, 85, -52, -61, 51, 105, -85, -44, 75, 48, -115, -60, 63, -41, -26, -72, 31, -85, -89, -12, 21, 37, 110, 20, -96, 56, -38, 8, 114, -122, -111, 32, -91, 82, 9, 124, -88, 25, 83, 63, -27, -106, -72, -89, 118, 34, 12, -13, 75, -76]
+received a message: --message type: 44782 from 1
+received a message: --message type: 44782 from 3
+received a message: --message type: 44782 from 2
+received a message: --message type: 44783 from 2
+received a message: --message type: 44783 from 3
+received a message: --message type: 44783 from 1
 -- Error while processing decision
 java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
 	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- Received leader change message of type STOP for regency 6 from replica 1
+-- Received leader change message of type STOP for regency 6 from replica 3
 -- Last regency: 5, next regency: 5
+Stage: deserialiseRequests --timestamp:0
+Stage: deserialiseRequests --numberOfMessages:3
 -- Received leader change message of type STOP for regency 6 from replica 2
 -- Last regency: 5, next regency: 5
+Stage: deserialiseRequests --timestamp:0
+Stage: deserialiseRequests --numberOfMessages:3
 -- Sending STOP message to install regency 6 with 3 request(s) to relay
 -- Sending STOPDATA of regency 6
 -- No out of context SYNC for regency 6
--- Received leader change message of type STOP for regency 6 from replica 3
+-- Received leader change message of type STOP for regency 6 from replica 1
 -- Last regency: 6, next regency: 6
 -- Received leader change message of type SYNC for regency 6 from replica 2
 -- Last regency: 6, next regency: 6
 -- Installed proof of last decided consensus 4
--- Sending WRITE message for CID 5, timestamp 6, value [-124, 9, -60, 77, 105, -42, -60, -90, -116, 59, 26, -28, 19, -58, 6, -110, -53, 78, -124, -9, 44, 44, -105, -11, -14, 64, 74, -54, -47, 15, 69, 70, 42, -21, 65, 96, -32, 8, -78, 46, 107, 80, 33, -39, -65, 76, 56, -54, 33, -20, 47, 2, 91, -107, -63, -102, 114, 16, -102, 19, 113, 3, 107, 127]
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1651735604417
+Stage: deserialiseRequests --numberOfMessages:0
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1651735609427
+Stage: deserialiseRequests --numberOfMessages:0
+-- Sending WRITE message for CID 5, timestamp 6, value [-113, -123, 19, 11, -82, -109, 7, 55, 41, -80, -72, 67, -58, 1, 117, 100, -22, -81, -99, 76, -72, 32, 104, -51, 9, 95, -52, -52, 61, 112, 116, 125, 38, -90, 55, 105, 93, 17, 31, -112, 95, 20, 64, -99, 2, 124, -76, 91, 108, -83, 58, 9, -59, 12, 107, -73, 116, -23, -9, -101, -120, 108, -26, 124]
+received a message: --message type: 44782 from 2
+received a message: --message type: 44782 from 1
+received a message: --message type: 44782 from 3
+received a message: --message type: 44783 from 1
+received a message: --message type: 44783 from 2
+received a message: --message type: 44783 from 3
 -- Error while processing decision
 java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
 	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- The following requests timed out: [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Attempting to start leader change for requests [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Sending STOP message to install regency 7 with 3 request(s) to relay
--- Received leader change message of type STOP for regency 7 from replica 3
+Stage: packbatch --Node id: 0 create Mzbatch height:2 batch size: 1 batch req: [[2:-1151509849:1]] at time: 1651735614304
+received a message: --message type: 44785 from 0
+Stage：addbatch --Nodeid: 0 received 2 from 0 --batch:[[2:-1151509849:1]] --len2
+received a message: --message type: 44785 from 2
+Stage：addbatch --Nodeid: 0 received 2 from 2 --batch:[[1:-114470927:1]] --len2
+received a message: --message type: 44785 from 1
+Stage：addbatch --Nodeid: 0 received 2 from 1 --batch:[[0:-634900014:1]] --len2
+received a message: --message type: 44785 from 3
+Stage：addbatch --Nodeid: 0 received 2 from 3 --batch:[[0:-634900014:1]] --len2
+received a message: --message type: 44784 from 2
+Stage:OnMzPropose2 --Nodeid: 0 received mzpropose from: 2 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1651735614304
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 1 endheight: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 1 endheight: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 1 endheight: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 1 endheight: 1
+Stage: getRequestfromlist try to getRequestfromlist
+Stage: getRequestfromlist --Node id :0 StartHeight: 1 EndHeight1
+Stage: getRequestfromlist --Height: 0 req: [[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]]
+Stage: getRequestfromlist --Node id :1 StartHeight: 1 EndHeight1
+Stage: getRequestfromlist --Height: 0 req: [[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]]
+Stage: getRequestfromlist --Node id :2 StartHeight: 1 EndHeight1
+Stage: getRequestfromlist --Height: 0 req: [[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]]
+Stage: getRequestfromlist --Node id :3 StartHeight: 1 EndHeight1
+Stage: getRequestfromlist --Height: 0 req: [[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]]
+Stage: getRequestfromlist --totoal reqlist[[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0], [0:-634900014:0], [1:-114470927:0], [2:-1151509849:0], [0:-634900014:0], [1:-114470927:0], [2:-1151509849:0], [0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]]
+received a message: --message type: 44781 from 2
+Stage: proposeReceived --from: 2
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1651735614304
+Stage: deserialiseRequests --numberOfMessages:12
+Stage: packbatch --Node id: 0 create Mzbatch height:3 batch size: 2 batch req: [[0:-634900014:1], [1:-114470927:1]] at time: 1651735614315
+Stage: executePropose --deserializedPropValue: [[0:-634900014:0], [1:-114470927:0], [2:-1151509849:0], [0:-634900014:0], [1:-114470927:0], [2:-1151509849:0], [0:-634900014:0], [1:-114470927:0], [2:-1151509849:0], [0:-634900014:0], [1:-114470927:0], [2:-1151509849:0]]
+Stage: executePropose --has wirte vote
+received a message: --message type: 44785 from 0
+Stage：addbatch --Nodeid: 0 received 3 from 0 --batch:[[0:-634900014:1], [1:-114470927:1]] --len3
+received a message: --message type: 44785 from 1
+Stage：addbatch --Nodeid: 0 received 3 from 1 --batch:[[1:-114470927:1], [2:-1151509849:1]] --len3
+received a message: --message type: 44785 from 3
+Stage：addbatch --Nodeid: 0 received 3 from 3 --batch:[[1:-114470927:1], [2:-1151509849:1]] --len3
+received a message: --message type: 44782 from 3
+received a message: --message type: 44782 from 2
+received a message: --message type: 44782 from 1
+received a message: --message type: 44785 from 2
+Stage：addbatch --Nodeid: 0 received 3 from 2 --batch:[[0:-634900014:1], [2:-1151509849:1]] --len3
+received a message: --message type: 44783 from 1
+received a message: --message type: 44783 from 2
+received a message: --message type: 44783 from 3
+received a message: --message type: 44784 from 2
+Stage:OnMzPropose2 --Nodeid: 0 received mzpropose from: 2 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1651735619422
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 2 endheight: 2
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 2 endheight: 2
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 2 endheight: 2
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 2 endheight: 2
+Stage: getRequestfromlist try to getRequestfromlist
+Stage: getRequestfromlist --Node id :0 StartHeight: 2 EndHeight2
+Stage: getRequestfromlist --Height: 1 req: [[2:-1151509849:1]]
+Stage: getRequestfromlist --Node id :1 StartHeight: 2 EndHeight2
+Stage: getRequestfromlist --Height: 1 req: [[0:-634900014:1]]
+Stage: getRequestfromlist --Node id :2 StartHeight: 2 EndHeight2
+Stage: getRequestfromlist --Height: 1 req: [[1:-114470927:1]]
+Stage: getRequestfromlist --Node id :3 StartHeight: 2 EndHeight2
+Stage: getRequestfromlist --Height: 1 req: [[0:-634900014:1]]
+Stage: getRequestfromlist --totoal reqlist[[2:-1151509849:1], [0:-634900014:1], [1:-114470927:1], [0:-634900014:1]]
+received a message: --message type: 44781 from 2
+Stage: proposeReceived --from: 2
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1651735619422
+Stage: deserialiseRequests --numberOfMessages:4
+Stage: executePropose --deserializedPropValue: [[2:-1151509849:1], [0:-634900014:1], [1:-114470927:1], [0:-634900014:1]]
+Stage: executePropose --has wirte vote
+-- The following requests timed out: [[0:-634900014:1], [1:-114470927:1], [2:-1151509849:1]]
+-- Forwarding requests [0:-634900014:1] to leader
+-- Forwarding requests [1:-114470927:1] to leader
+-- Forwarding requests [2:-1151509849:1] to leader
+received a message: --message type: 44782 from 2
+received a message: --message type: 44782 from 1
+received a message: --message type: 44782 from 3
+received a message: --message type: 44783 from 2
+received a message: --message type: 44783 from 1
+received a message: --message type: 44783 from 3
+Stage: packbatch --Node id: 0 create Mzbatch height:4 batch size: 1 batch req: [[0:-634900014:2]] at time: 1651735619461
+received a message: --message type: 44785 from 0
+Stage：addbatch --Nodeid: 0 received 4 from 0 --batch:[[0:-634900014:2]] --len4
+received a message: --message type: 44785 from 2
+Stage：addbatch --Nodeid: 0 received 4 from 2 --batch:[[1:-114470927:2]] --len4
+received a message: --message type: 44785 from 3
+Stage：addbatch --Nodeid: 0 received 4 from 3 --batch:[[0:-634900014:2]] --len4
+received a message: --message type: 44785 from 1
+Stage：addbatch --Nodeid: 0 received 4 from 1 --batch:[[0:-634900014:2]] --len4
+received a message: --message type: 44784 from 2
+Stage:OnMzPropose2 --Nodeid: 0 received mzpropose from: 2 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1651735619466
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 3 endheight: 3
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 3 endheight: 3
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 3 endheight: 3
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 3 endheight: 3
+Stage: getRequestfromlist try to getRequestfromlist
+Stage: getRequestfromlist --Node id :0 StartHeight: 3 EndHeight3
+Stage: getRequestfromlist --Height: 2 req: [[0:-634900014:1], [1:-114470927:1]]
+Stage: getRequestfromlist --Node id :1 StartHeight: 3 EndHeight3
+Stage: getRequestfromlist --Height: 2 req: [[1:-114470927:1], [2:-1151509849:1]]
+Stage: getRequestfromlist --Node id :2 StartHeight: 3 EndHeight3
+Stage: getRequestfromlist --Height: 2 req: [[0:-634900014:1], [2:-1151509849:1]]
+Stage: getRequestfromlist --Node id :3 StartHeight: 3 EndHeight3
+Stage: getRequestfromlist --Height: 2 req: [[1:-114470927:1], [2:-1151509849:1]]
+Stage: getRequestfromlist --totoal reqlist[[0:-634900014:1], [1:-114470927:1], [1:-114470927:1], [2:-1151509849:1], [0:-634900014:1], [2:-1151509849:1], [1:-114470927:1], [2:-1151509849:1]]
+received a message: --message type: 44781 from 2
+Stage: proposeReceived --from: 2
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1651735619466
+Stage: deserialiseRequests --numberOfMessages:8
+-- Detected a leader replay attack, rejecting request
+-- Detected a leader replay attack, rejecting request
+-- Detected a leader replay attack, rejecting request
+-- Detected a leader replay attack, rejecting request
+-- Detected a leader replay attack, rejecting request
+-- Detected a leader replay attack, rejecting request
+-- Detected a leader replay attack, rejecting request
+-- Detected a leader replay attack, rejecting request
+-- Request [0:-634900014:1] could not be added to the pending messages queue of its respective client
+Stage: executePropose --deserializedPropValue: null
+Stage: executePropose --has not wirte vote
+-- Strange... did not include any request in my STOP message for regency 7
+-- Sending STOP message to install regency 7 with 0 request(s) to relay
+-- Received leader change message of type STOP for regency 7 from replica 1
 -- Last regency: 6, next regency: 7
 -- Received leader change message of type STOP for regency 7 from replica 2
 -- Last regency: 6, next regency: 7
 -- Sending STOPDATA of regency 7
 -- No out of context SYNC for regency 7
--- Received leader change message of type STOP for regency 7 from replica 1
+-- Received leader change message of type STOP for regency 7 from replica 3
 -- Last regency: 7, next regency: 7
+received a message: --message type: 44785 from 1
+Stage：addbatch --Nodeid: 0 received 5 from 1 --batch:[[1:-114470927:2], [2:-1151509849:2]] --len5
+received a message: --message type: 44785 from 0
+Stage：addbatch --Nodeid: 0 received 5 from 0 --batch:[[1:-114470927:2], [2:-1151509849:2]] --len5
+Stage: packbatch --Node id: 0 create Mzbatch height:5 batch size: 2 batch req: [[1:-114470927:2], [2:-1151509849:2]] at time: 1651735619479
+received a message: --message type: 44785 from 2
+Stage：addbatch --Nodeid: 0 received 5 from 2 --batch:[[0:-634900014:2], [2:-1151509849:2]] --len5
+received a message: --message type: 44785 from 3
+Stage：addbatch --Nodeid: 0 received 5 from 3 --batch:[[1:-114470927:2], [2:-1151509849:2]] --len5
 -- Received leader change message of type SYNC for regency 7 from replica 3
 -- Last regency: 7, next regency: 7
--- Installed proof of last decided consensus 5
--- Sending WRITE message for CID 6, timestamp 7, value [118, 98, -7, 93, -59, 56, 122, 40, -21, -71, 65, 108, -76, -6, 126, -103, 80, -65, 81, 65, -79, -10, -1, -100, 81, -75, -75, 75, -27, -24, -77, 111, 4, 113, -82, 105, 16, 55, -56, 11, -93, 61, 88, 75, 105, 59, 64, 44, 94, 113, -89, -116, -104, -66, -29, -22, 112, -83, 108, 91, -36, 22, 97, 90]
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- Received leader change message of type STOP for regency 8 from replica 1
--- Last regency: 7, next regency: 7
--- Received leader change message of type STOP for regency 8 from replica 2
--- Last regency: 7, next regency: 7
--- Sending STOP message to install regency 8 with 3 request(s) to relay
--- Received leader change message of type STOP for regency 8 from replica 3
--- Last regency: 8, next regency: 8
--- Received leader change message of type STOPDATA for regency 8 from replica 3
--- Last regency: 8, next regency: 8
--- Received leader change message of type STOPDATA for regency 8 from replica 2
--- Last regency: 8, next regency: 8
-Node id: 0 pack batch:[]
--- Sending SYNC message for regency 8
--- Installed proof of last decided consensus 6
-Nodeid: 0 received mzpropose from: 3 --msg type: 44784
---timestamp: 1651674582503
---numNounces: 10
---numBatchlistItems: 4
---batchListItem: bftsmart.multi_zone.Mz_BatchListItem@1aa25be3
---batchListItem: bftsmart.multi_zone.Mz_BatchListItem@57539059
---batchListItem: bftsmart.multi_zone.Mz_BatchListItem@7ff7b2d0
---batchListItem: bftsmart.multi_zone.Mz_BatchListItem@727b5221
-try to getRequestfromlist
-Node id :0 StartHeight: 2 EndHeight2
-Node id :1 StartHeight: 2 EndHeight2
-Node id :2 StartHeight: 2 EndHeight2
-Node id :3 StartHeight: 2 EndHeight2
--- Sending WRITE message for CID 7, timestamp 8, value [121, 112, 51, 17, 44, 21, -63, 52, 72, -8, 127, -87, 123, 49, 118, 101, -82, 18, -50, -88, 15, 110, -114, -126, -75, -81, -110, 114, -126, -85, 14, 53, 89, -126, -98, 77, 43, 123, 24, -17, 125, 105, 3, 54, 9, 48, -89, 69, 80, 0, -56, -14, 8, -120, 62, 34, -35, 46, -86, -59, -27, 13, 37, 85]
--- Received leader change message of type STOPDATA for regency 8 from replica 1
--- Last regency: 8, next regency: 8
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- The following requests timed out: [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Attempting to start leader change for requests [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Sending STOP message to install regency 9 with 3 request(s) to relay
--- Received leader change message of type STOP for regency 9 from replica 3
--- Last regency: 8, next regency: 9
--- Received leader change message of type STOP for regency 9 from replica 2
--- Last regency: 8, next regency: 9
--- Sending STOPDATA of regency 9
--- No out of context SYNC for regency 9
--- Received leader change message of type STOP for regency 9 from replica 1
--- Last regency: 9, next regency: 9
--- Received leader change message of type SYNC for regency 9 from replica 1
--- Last regency: 9, next regency: 9
 -- Installed proof of last decided consensus 7
--- Sending WRITE message for CID 8, timestamp 9, value [49, 26, -59, 119, 17, 71, 3, 5, -114, 60, -68, -39, -12, -92, 121, 51, -34, 115, 94, -90, -50, 37, 127, 94, -14, -90, -116, 81, 4, 82, 37, -114, -37, 30, 49, -100, -39, -73, -98, -58, -76, -38, -103, 109, -20, -71, 37, -90, 102, 48, -3, -74, 66, 69, -98, 34, -24, 97, 44, -125, -62, -13, -77, 23]
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1651735619422
+Stage: deserialiseRequests --numberOfMessages:4
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1651735619480
+Stage: deserialiseRequests --numberOfMessages:0
+-- Sending WRITE message for CID 8, timestamp 7, value [-39, 53, 110, -104, 58, 114, -57, -11, -37, 57, -83, -87, 32, 18, -94, 117, -78, -18, -57, -11, 103, 56, -111, 29, 63, -116, -107, 120, 44, -35, 116, 78, 118, 72, 76, -26, 42, 93, 12, 118, 45, 58, -116, 31, 76, -114, -25, -32, 25, -90, 39, 60, -103, -15, -119, -116, 121, 79, -28, -75, -50, -13, 49, 71]
+received a message: --message type: 44782 from 3
+received a message: --message type: 44782 from 1
+received a message: --message type: 44782 from 2
+received a message: --message type: 44783 from 2
+received a message: --message type: 44783 from 3
+received a message: --message type: 44783 from 1
 -- Error while processing decision
 java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
 	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- Received leader change message of type STOP for regency 10 from replica 2
--- Last regency: 9, next regency: 9
--- The following requests timed out: [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Attempting to start leader change for requests [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Sending STOP message to install regency 10 with 3 request(s) to relay
--- Received leader change message of type STOP for regency 10 from replica 1
--- Last regency: 9, next regency: 10
--- Sending STOPDATA of regency 10
--- No out of context SYNC for regency 10
--- Received leader change message of type STOP for regency 10 from replica 3
--- Last regency: 10, next regency: 10
--- Received leader change message of type SYNC for regency 10 from replica 2
--- Last regency: 10, next regency: 10
--- Installed proof of last decided consensus 8
--- Sending WRITE message for CID 9, timestamp 10, value [45, 28, 92, -92, -76, -57, -46, -60, -74, -72, 124, -13, 85, -32, -23, 34, -123, -82, 86, -80, 86, -103, -89, 117, 88, 30, 26, -29, 36, 81, -24, 108, -96, 16, -55, -50, 7, 25, 93, 115, -61, 99, 7, -93, -113, -128, 65, 113, -42, -2, -2, -102, -91, 52, 40, 95, -41, -16, -39, 22, -77, -122, 23, -3]
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- Received leader change message of type STOP for regency 11 from replica 3
--- Last regency: 10, next regency: 10
--- The following requests timed out: [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Attempting to start leader change for requests [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Sending STOP message to install regency 11 with 3 request(s) to relay
--- Received leader change message of type STOP for regency 11 from replica 1
--- Last regency: 10, next regency: 11
--- Sending STOPDATA of regency 11
--- No out of context SYNC for regency 11
--- Received leader change message of type STOP for regency 11 from replica 2
--- Last regency: 11, next regency: 11
--- Received leader change message of type SYNC for regency 11 from replica 3
--- Last regency: 11, next regency: 11
--- Installed proof of last decided consensus 9
-Nodeid: 0 received mzpropose from: 2 --msg type: 44784
---timestamp: 1651674588542
---numNounces: 10
---numBatchlistItems: 1
---batchListItem: bftsmart.multi_zone.Mz_BatchListItem@4ad57bee
-try to getRequestfromlist
-Node id :1 StartHeight: 3 EndHeight3
--- Sending WRITE message for CID 10, timestamp 11, value [-59, 49, -42, 0, -110, -74, 111, -96, -31, -119, -4, -46, 85, 17, 30, 4, 65, 37, 2, 7, 23, -109, -35, 81, -87, 117, -52, -36, 24, -34, -113, 91, -57, -40, 1, 6, -29, 33, 84, -68, 58, 80, -60, 105, -105, -51, -81, 76, 78, 3, 44, -64, -23, -116, -7, -106, 122, 91, 35, -91, -65, 119, 4, -92]
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- Received leader change message of type STOP for regency 12 from replica 2
--- Last regency: 11, next regency: 11
--- The following requests timed out: [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Attempting to start leader change for requests [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Sending STOP message to install regency 12 with 3 request(s) to relay
--- Received leader change message of type STOP for regency 12 from replica 1
--- Last regency: 11, next regency: 12
--- Received leader change message of type STOP for regency 12 from replica 3
--- Last regency: 12, next regency: 12
--- Received leader change message of type STOPDATA for regency 12 from replica 1
--- Last regency: 12, next regency: 12
--- Received leader change message of type STOPDATA for regency 12 from replica 3
--- Last regency: 12, next regency: 12
-Node id: 0 pack batch:[]
--- Sending SYNC message for regency 12
--- Installed proof of last decided consensus 10
-Nodeid: 0 received mzpropose from: 3 --msg type: 44784
---timestamp: 1651674590553
---numNounces: 10
---numBatchlistItems: 1
---batchListItem: bftsmart.multi_zone.Mz_BatchListItem@3cda8c7a
-try to getRequestfromlist
-Node id :1 StartHeight: 3 EndHeight3
--- Sending WRITE message for CID 11, timestamp 12, value [100, -111, 100, 27, -101, 94, 76, -81, 102, 30, -94, -96, 101, 63, 83, -40, -32, 103, -23, -113, -35, 35, 112, 116, -121, 18, 97, 99, -112, 95, -2, 39, 64, -107, 98, 81, 86, -59, 42, -1, -21, 115, -14, 87, -5, 34, 87, 2, -31, 105, 75, -60, -2, -124, 9, 119, 11, -83, -77, -46, 69, -117, 42, 89]
--- Received leader change message of type STOPDATA for regency 12 from replica 2
--- Last regency: 12, next regency: 12
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- Received leader change message of type STOP for regency 13 from replica 3
--- Last regency: 12, next regency: 12
--- The following requests timed out: [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Attempting to start leader change for requests [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
-Node create a Mzpropose
-Node try to packlist:[]
-Node create a Mzpropose faild,because packlist is null
--- Sending STOP message to install regency 13 with 3 request(s) to relay
--- Received leader change message of type STOP for regency 13 from replica 1
--- Last regency: 12, next regency: 13
--- Sending STOPDATA of regency 13
--- No out of context SYNC for regency 13
--- Received leader change message of type STOP for regency 13 from replica 2
--- Last regency: 13, next regency: 13
--- Received leader change message of type SYNC for regency 13 from replica 1
--- Last regency: 13, next regency: 13
--- Installed proof of last decided consensus 11
--- Sending WRITE message for CID 12, timestamp 13, value [-122, -26, 83, 37, 0, -78, 48, 59, 72, 107, -77, -85, 55, -74, -69, -12, -108, 88, -9, 107, -82, 84, -98, 72, -47, 122, -21, -96, -77, 27, -23, 36, 106, 117, 12, 30, 113, -4, -6, 58, -123, 75, -62, -10, 82, -42, -38, -67, 74, 20, -78, 40, -27, -61, -62, -94, -68, -68, -89, -91, 52, 76, 83, -107]
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- Received leader change message of type STOP for regency 14 from replica 2
--- Last regency: 13, next regency: 13
--- The following requests timed out: [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Attempting to start leader change for requests [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Sending STOP message to install regency 14 with 3 request(s) to relay
--- Received leader change message of type STOP for regency 14 from replica 3
--- Last regency: 13, next regency: 14
--- Sending STOPDATA of regency 14
--- No out of context SYNC for regency 14
--- Received leader change message of type STOP for regency 14 from replica 1
--- Last regency: 14, next regency: 14
--- Received leader change message of type SYNC for regency 14 from replica 2
--- Last regency: 14, next regency: 14
--- Installed proof of last decided consensus 12
--- Sending WRITE message for CID 13, timestamp 14, value [-35, -96, -25, 93, -51, 65, -23, 44, 58, -64, -108, -41, -65, 69, 9, -64, -117, 75, -118, 37, -67, -118, 23, -30, 127, -21, -41, 74, 54, -17, 81, 103, 67, -58, -18, 28, -56, 21, 78, -115, 35, -48, 70, -15, 8, -59, -81, 87, 43, -10, 28, 40, -114, 33, 79, 5, -127, -126, -75, -18, 125, -86, -34, 9]
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- Received leader change message of type STOP for regency 15 from replica 3
--- Last regency: 14, next regency: 14
--- The following requests timed out: [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Attempting to start leader change for requests [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Sending STOP message to install regency 15 with 3 request(s) to relay
--- Received leader change message of type STOP for regency 15 from replica 1
--- Last regency: 14, next regency: 15
--- Sending STOPDATA of regency 15
--- No out of context SYNC for regency 15
--- Received leader change message of type STOP for regency 15 from replica 2
--- Last regency: 15, next regency: 15
--- Received leader change message of type SYNC for regency 15 from replica 3
--- Last regency: 15, next regency: 15
--- Installed proof of last decided consensus 13
--- Sending WRITE message for CID 14, timestamp 15, value [-85, 7, 87, -74, -81, -25, 100, -128, -108, 54, 112, 121, 24, 20, 78, -13, -43, 23, -11, 126, 65, -46, -108, -64, -48, 45, 99, 37, -52, -21, 89, -20, 41, -106, 59, -27, -51, -67, 57, -2, 127, 116, -123, -44, 95, -49, 104, -64, -26, 43, -13, 108, -87, 21, -123, 41, -71, -59, 15, -56, 93, -53, 99, -29]
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- The following requests timed out: [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Attempting to start leader change for requests [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Sending STOP message to install regency 16 with 3 request(s) to relay
--- Received leader change message of type STOP for regency 16 from replica 3
--- Last regency: 15, next regency: 16
--- Received leader change message of type STOP for regency 16 from replica 2
--- Last regency: 15, next regency: 16
--- Received leader change message of type STOPDATA for regency 16 from replica 2
--- Last regency: 16, next regency: 16
--- Received leader change message of type STOPDATA for regency 16 from replica 3
--- Last regency: 16, next regency: 16
-Node id: 0 pack batch:[]
--- Sending SYNC message for regency 16
--- Installed proof of last decided consensus 14
--- Sending WRITE message for CID 15, timestamp 16, value [16, 122, 19, 65, 59, -17, -64, 98, 111, 73, 56, -93, 72, 64, 112, 24, 122, 104, -57, 68, -66, 72, 123, 42, 55, 104, -126, -127, 123, 20, -40, -106, -127, 7, 37, -83, 81, -106, 47, 23, 7, 100, 66, -105, 34, 96, 62, -5, 23, 47, -107, 83, -69, -39, 126, 81, 28, 124, -25, 100, -43, 33, -45, -112]
--- Received leader change message of type STOP for regency 16 from replica 1
--- Last regency: 16, next regency: 16
--- Received leader change message of type STOPDATA for regency 16 from replica 1
--- Last regency: 16, next regency: 16
--- Received leader change message of type STOP for regency 17 from replica 1
--- Last regency: 16, next regency: 16
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- Received leader change message of type STOP for regency 17 from replica 3
--- Last regency: 16, next regency: 16
-Node create a Mzpropose
-Node try to packlist:[]
-Node create a Mzpropose faild,because packlist is null
--- Sending STOP message to install regency 17 with 3 request(s) to relay
--- Sending STOPDATA of regency 17
--- No out of context SYNC for regency 17
--- The following requests timed out: [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Attempting to start leader change for requests [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Sending STOP message to install regency 18 with 3 request(s) to relay
--- Received leader change message of type STOP for regency 17 from replica 2
--- Last regency: 17, next regency: 18
--- Received leader change message of type STOP for regency 18 from replica 3
--- Last regency: 17, next regency: 18
--- Received leader change message of type STOP for regency 17 from replica 1
--- Last regency: 17, next regency: 18
--- Received leader change message of type SYNC for regency 17 from replica 1
--- Last regency: 17, next regency: 18
--- Installed proof of last decided consensus 15
--- Sending WRITE message for CID 16, timestamp 17, value [88, -83, 89, 91, 91, 68, -35, -16, -81, -53, -14, 103, -115, 67, -83, 73, -5, 39, -51, 102, -35, 45, 103, -41, -99, 3, 5, 19, 114, -106, 57, 88, -79, 80, -5, -124, -68, -97, 126, 23, 8, -6, -31, 93, -70, -74, -26, -50, 84, 96, -85, 91, -36, 59, -9, -127, -17, 72, 18, 81, -92, 0, 37, -110]
--- Received leader change message of type STOP for regency 18 from replica 1
--- Last regency: 17, next regency: 18
--- Sending STOPDATA of regency 18
--- No out of context SYNC for regency 18
--- Received leader change message of type STOP for regency 18 from replica 2
--- Last regency: 18, next regency: 18
--- Received leader change message of type SYNC for regency 18 from replica 2
--- Last regency: 18, next regency: 18
--- Installed proof of last decided consensus 15
--- Sending WRITE message for CID 16, timestamp 18, value [93, -104, 92, 95, 23, -1, -91, 59, -18, -21, 94, -49, -52, 125, 17, 92, 28, 114, 116, 35, 3, -96, 44, -115, 51, -24, -58, -5, -119, 85, 77, 12, 43, 66, -46, 24, -26, 117, -77, 72, -59, 4, 127, 123, 73, 122, -57, -54, 0, 103, -6, 4, 38, -72, -49, 24, -71, 125, 57, -103, 89, -74, 53, 101]
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- Received leader change message of type STOP for regency 19 from replica 1
--- Last regency: 18, next regency: 18
--- Received leader change message of type STOP for regency 19 from replica 2
--- Last regency: 18, next regency: 18
--- Sending STOP message to install regency 19 with 3 request(s) to relay
--- Sending STOPDATA of regency 19
--- No out of context SYNC for regency 19
-Node id: 0 create Mzbatch height:3 batch size: 1 batch req: [[0:172679476:1]] batch time: 1651674604254
-Nodeid: 0 received 3 from 0 --batch:[[0:172679476:1]] --len3
-Nodeid: 0 received 3 from 2 --batch:[[0:172679476:1]] --len3
-Nodeid: 0 received 4 from 1 --batch:[[0:172679476:1]] --len4
-Nodeid: 0 received 3 from 3 --batch:[[0:172679476:1]] --len3
-Node id: 0 create Mzbatch height:4 batch size: 2 batch req: [[1:-489602158:1], [2:2126507679:1]] batch time: 1651674604288
-Nodeid: 0 received 5 from 1 --batch:[[2:2126507679:1]] --len5
-Nodeid: 0 received 4 from 2 --batch:[[2:2126507679:1]] --len4
-Nodeid: 0 received 4 from 0 --batch:[[1:-489602158:1], [2:2126507679:1]] --len4
-Nodeid: 0 received 4 from 3 --batch:[[1:-489602158:1], [2:2126507679:1]] --len4
-Nodeid: 0 received 5 from 2 --batch:[[1:-489602158:1]] --len5
-Nodeid: 0 received 6 from 1 --batch:[[1:-489602158:1]] --len6
--- Received leader change message of type STOP for regency 19 from replica 1
--- Last regency: 19, next regency: 19
--- Received leader change message of type STOP for regency 19 from replica 2
--- Last regency: 19, next regency: 19
--- Re-transmitting STOP message to install regency 19
--- The following requests timed out: [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Attempting to start leader change for requests [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Sending STOP message to install regency 20 with 3 request(s) to relay
--- Received leader change message of type STOP for regency 20 from replica 2
--- Last regency: 19, next regency: 20
--- Received leader change message of type STOP for regency 20 from replica 1
--- Last regency: 19, next regency: 20
--- Received leader change message of type STOPDATA for regency 20 from replica 2
--- Last regency: 20, next regency: 20
--- Received leader change message of type STOPDATA for regency 20 from replica 1
--- Last regency: 20, next regency: 20
-Node id: 0 pack batch:[]
--- Sending SYNC message for regency 20
--- Installed proof of last decided consensus 16
--- Sending WRITE message for CID 17, timestamp 20, value [-92, 85, -17, 124, 68, 90, -14, 112, 48, 51, -93, -100, -38, -31, -116, 42, -42, 12, 103, -40, -49, 26, 71, -27, -11, 11, 104, -80, 71, -61, 120, -99, 35, -105, -89, -6, -52, 59, -40, -3, -74, 14, -117, 102, 47, -20, -25, -25, 5, -115, 33, 30, -122, -21, 119, -58, -65, -59, 99, 23, 12, 53, -36, -38]
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- The following requests timed out: [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Forwarding requests [0:172679476:1] to leader
--- Forwarding requests [1:-489602158:1] to leader
--- Forwarding requests [2:2126507679:1] to leader
--- Attempting to start leader change for requests [[0:172679476:0], [1:-489602158:0], [2:2126507679:0]]
--- Sending STOP message to install regency 21 with 3 request(s) to relay
-Node create a Mzpropose
-Node try to packlist:[bftsmart.multi_zone.Mz_BatchListItem@522fada1, bftsmart.multi_zone.Mz_BatchListItem@4b4f455e, bftsmart.multi_zone.Mz_BatchListItem@18236ee4, bftsmart.multi_zone.Mz_BatchListItem@7a84d0ee]
-Node create a Mzpropose ,and success get a packlist
-Mzpropose try to get first msg pendingbatch:[bftsmart.multi_zone.Mz_BatchListItem@522fada1, bftsmart.multi_zone.Mz_BatchListItem@4b4f455e, bftsmart.multi_zone.Mz_BatchListItem@18236ee4, bftsmart.multi_zone.Mz_BatchListItem@7a84d0ee]
-Node make a Mzpropose to byte
-Mzpropose size: 72
-Mzpropose timestamp: 1651674606657
-Mzpropose numNounces: 10
-Mzpropose numBatchlistItems: 4 msg: [bftsmart.multi_zone.Mz_BatchListItem@522fada1, bftsmart.multi_zone.Mz_BatchListItem@4b4f455e, bftsmart.multi_zone.Mz_BatchListItem@18236ee4, bftsmart.multi_zone.Mz_BatchListItem@7a84d0ee]
-Mzpropose BatchlistItem: --nd: 0 --st: 3 --ed: 3
-Mzpropose BatchlistItem: --nd: 1 --st: 4 --ed: 4
-Mzpropose BatchlistItem: --nd: 2 --st: 3 --ed: 3
-Mzpropose BatchlistItem: --nd: 3 --st: 3 --ed: 3
-Nodeid: 0 received mzpropose from: 0 --msg type: 44784
---timestamp: 1651674606657
---numNounces: 10
---numBatchlistItems: 4
---batchListItem: bftsmart.multi_zone.Mz_BatchListItem@19596f42
---batchListItem: bftsmart.multi_zone.Mz_BatchListItem@17d0eda
---batchListItem: bftsmart.multi_zone.Mz_BatchListItem@592078bf
---batchListItem: bftsmart.multi_zone.Mz_BatchListItem@7fde7f06
-try to getRequestfromlist
-Node id :0 StartHeight: 3 EndHeight3
-Node id :1 StartHeight: 4 EndHeight4
-Node id :2 StartHeight: 3 EndHeight3
-Node id :3 StartHeight: 3 EndHeight3
--- Received leader change message of type STOP for regency 21 from replica 2
--- Last regency: 20, next regency: 21
--- Received leader change message of type STOP for regency 21 from replica 1
--- Last regency: 20, next regency: 21
--- Sending STOPDATA of regency 21
--- No out of context SYNC for regency 21
--- Received leader change message of type SYNC for regency 21 from replica 1
--- Last regency: 21, next regency: 21
--- Installed proof of last decided consensus 17
--- Sending WRITE message for CID 18, timestamp 21, value [-105, -36, -21, 36, -58, 30, 15, 31, -91, 24, 47, -87, -31, -57, -71, -76, 18, 10, 26, -100, -83, -10, 11, -89, 114, 31, -76, 41, -63, -106, -120, 73, 6, -79, -47, -111, 49, -16, -101, -38, 8, -81, 75, -7, 64, -66, 9, 123, -1, 13, 115, -40, -111, 100, -39, -121, -9, -21, -18, -93, -35, 123, 107, -84]
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- Received leader change message of type STOP for regency 22 from replica 2
--- Last regency: 21, next regency: 21
--- Received leader change message of type STOP for regency 22 from replica 1
--- Last regency: 21, next regency: 21
--- Sending STOP message to install regency 22 with 6 request(s) to relay
--- Sending STOPDATA of regency 22
--- No out of context SYNC for regency 22
--- Received leader change message of type SYNC for regency 22 from replica 2
--- Last regency: 22, next regency: 22
--- Installed proof of last decided consensus 18
--- Sending WRITE message for CID 19, timestamp 22, value [61, 83, -15, -26, 46, -32, 36, -114, 1, 4, -48, -126, 117, 59, 58, -80, 94, 44, -41, -7, -62, 33, 103, 107, -123, -63, -40, -97, 23, -35, -28, 36, 69, 114, -95, 31, -105, -6, -87, -70, -85, 60, 55, 11, -7, -59, -80, -31, -94, 104, -119, -67, 123, -42, -38, -120, -74, 81, 56, -19, -73, -86, -24, 53]
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- The following requests timed out: [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Attempting to start leader change for requests [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Sending STOP message to install regency 23 with 6 request(s) to relay
--- Received leader change message of type STOP for regency 23 from replica 1
--- Last regency: 22, next regency: 23
--- Received leader change message of type STOP for regency 23 from replica 2
--- Last regency: 22, next regency: 23
--- Sending STOPDATA of regency 23
--- No out of context SYNC for regency 23
--- Re-transmitting STOP message to install regency 23
--- Received leader change message of type STOP for regency 23 from replica 1
--- Last regency: 23, next regency: 23
--- Received leader change message of type STOP for regency 23 from replica 2
--- Last regency: 23, next regency: 23
--- The following requests timed out: [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Attempting to start leader change for requests [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Sending STOP message to install regency 24 with 6 request(s) to relay
--- Received leader change message of type STOP for regency 24 from replica 1
--- Last regency: 23, next regency: 24
--- Received leader change message of type STOP for regency 24 from replica 2
--- Last regency: 23, next regency: 24
--- Received leader change message of type STOPDATA for regency 24 from replica 2
--- Last regency: 24, next regency: 24
--- Received leader change message of type STOPDATA for regency 24 from replica 1
--- Last regency: 24, next regency: 24
-Node id: 0 pack batch:[]
--- Sending SYNC message for regency 24
--- Installed proof of last decided consensus 19
--- Sending WRITE message for CID 20, timestamp 24, value [-72, -23, 61, 58, 124, -92, 43, 33, -46, -26, 26, -66, 2, -103, -1, -40, -36, 80, 74, -62, -108, 125, 30, 121, 127, -121, -127, 2, -85, 72, 76, -104, 6, -116, 103, 115, -63, 25, 108, 43, -39, -84, 18, -116, 116, -124, 78, -122, -22, 116, 127, -116, -11, 91, 113, 42, -59, 59, 100, 20, -72, 80, 122, 27]
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- Received leader change message of type STOP for regency 25 from replica 2
--- Last regency: 24, next regency: 24
--- The following requests timed out: [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Attempting to start leader change for requests [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
-Node create a Mzpropose
-Node try to packlist:[bftsmart.multi_zone.Mz_BatchListItem@64bdf2fc, bftsmart.multi_zone.Mz_BatchListItem@67eae4c1, bftsmart.multi_zone.Mz_BatchListItem@3bb54b72, bftsmart.multi_zone.Mz_BatchListItem@27850856]
-Node create a Mzpropose ,and success get a packlist
-Mzpropose try to get first msg pendingbatch:[bftsmart.multi_zone.Mz_BatchListItem@64bdf2fc, bftsmart.multi_zone.Mz_BatchListItem@67eae4c1, bftsmart.multi_zone.Mz_BatchListItem@3bb54b72, bftsmart.multi_zone.Mz_BatchListItem@27850856]
-Node make a Mzpropose to byte
-Mzpropose size: 72
--- Sending STOP message to install regency 25 with 6 request(s) to relay
-Mzpropose timestamp: 1651674614699
-Mzpropose numNounces: 10
-Mzpropose numBatchlistItems: 4 msg: [bftsmart.multi_zone.Mz_BatchListItem@64bdf2fc, bftsmart.multi_zone.Mz_BatchListItem@67eae4c1, bftsmart.multi_zone.Mz_BatchListItem@3bb54b72, bftsmart.multi_zone.Mz_BatchListItem@27850856]
-Mzpropose BatchlistItem: --nd: 0 --st: 4 --ed: 4
-Mzpropose BatchlistItem: --nd: 1 --st: 5 --ed: 5
-Mzpropose BatchlistItem: --nd: 2 --st: 4 --ed: 4
-Mzpropose BatchlistItem: --nd: 3 --st: 4 --ed: 4
-Nodeid: 0 received mzpropose from: 0 --msg type: 44784
---timestamp: 1651674614699
---numNounces: 10
---numBatchlistItems: 4
---batchListItem: bftsmart.multi_zone.Mz_BatchListItem@1d5e306f
---batchListItem: bftsmart.multi_zone.Mz_BatchListItem@49b025f2
---batchListItem: bftsmart.multi_zone.Mz_BatchListItem@673bac72
---batchListItem: bftsmart.multi_zone.Mz_BatchListItem@35d11d5e
-try to getRequestfromlist
-Node id :0 StartHeight: 4 EndHeight4
-Node id :1 StartHeight: 5 EndHeight5
-Node id :2 StartHeight: 4 EndHeight4
-Node id :3 StartHeight: 4 EndHeight4
--- Received leader change message of type STOP for regency 25 from replica 1
--- Last regency: 24, next regency: 25
--- Sending STOPDATA of regency 25
--- No out of context SYNC for regency 25
--- Received leader change message of type SYNC for regency 25 from replica 1
--- Last regency: 25, next regency: 25
--- Installed proof of last decided consensus 20
--- Sending WRITE message for CID 21, timestamp 25, value [-14, -84, -124, -31, -48, 89, -100, -84, -81, -100, -88, -40, 0, 6, -80, 121, -86, -82, 126, -101, 119, 34, 107, -44, -88, 112, 41, -6, -102, -45, 1, -30, 117, 43, -92, 104, 121, -27, -52, 53, -5, 108, 100, -99, 83, -94, 121, -117, 70, -29, 94, 0, 66, -80, 62, -33, 84, -59, 28, 58, -57, -71, -46, -85]
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- The following requests timed out: [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Attempting to start leader change for requests [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Sending STOP message to install regency 26 with 6 request(s) to relay
--- Received leader change message of type STOP for regency 26 from replica 2
--- Last regency: 25, next regency: 26
--- Received leader change message of type STOP for regency 26 from replica 1
--- Last regency: 25, next regency: 26
--- Sending STOPDATA of regency 26
--- No out of context SYNC for regency 26
--- Received leader change message of type SYNC for regency 26 from replica 2
--- Last regency: 26, next regency: 26
--- Installed proof of last decided consensus 21
--- Sending WRITE message for CID 22, timestamp 26, value [-17, 119, 20, -128, 9, 66, -20, -126, 58, -6, -24, 65, -125, 25, 41, -15, -21, 126, 103, 101, -100, -63, 58, 103, 109, -72, -39, 77, 10, 33, -49, -18, 42, -77, 4, 46, -69, 105, -102, -95, 110, 6, -17, 95, 34, 93, 50, 24, 66, -91, -16, -118, 4, -89, 31, 27, -92, -28, 75, -121, 80, 25, -43, -8]
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- The following requests timed out: [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Attempting to start leader change for requests [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Sending STOP message to install regency 27 with 6 request(s) to relay
--- Received leader change message of type STOP for regency 27 from replica 2
--- Last regency: 26, next regency: 27
--- Received leader change message of type STOP for regency 27 from replica 1
--- Last regency: 26, next regency: 27
--- Sending STOPDATA of regency 27
--- No out of context SYNC for regency 27
--- Re-transmitting STOP message to install regency 27
--- Received leader change message of type STOP for regency 27 from replica 2
--- Last regency: 27, next regency: 27
--- Received leader change message of type STOP for regency 27 from replica 1
--- Last regency: 27, next regency: 27
--- The following requests timed out: [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Attempting to start leader change for requests [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Sending STOP message to install regency 28 with 6 request(s) to relay
--- Received leader change message of type STOP for regency 28 from replica 1
--- Last regency: 27, next regency: 28
--- Received leader change message of type STOP for regency 28 from replica 2
--- Last regency: 27, next regency: 28
--- Received leader change message of type STOPDATA for regency 28 from replica 2
--- Last regency: 28, next regency: 28
--- Received leader change message of type STOPDATA for regency 28 from replica 1
--- Last regency: 28, next regency: 28
-Node id: 0 pack batch:[]
--- Sending SYNC message for regency 28
--- Installed proof of last decided consensus 22
--- Sending WRITE message for CID 23, timestamp 28, value [102, -83, -3, 47, 92, -120, -42, 96, 5, 59, 46, -68, -32, 58, -95, 4, -87, 42, 8, 6, 41, 80, 1, 57, 77, -123, -3, 110, -43, 56, 68, -116, -60, 110, 25, 19, 64, 22, 20, 26, -44, 71, 9, -105, 111, 11, 101, 112, -95, 123, 57, 60, -100, 92, -108, 68, 54, 111, -48, -101, -102, -6, -104, 36]
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- The following requests timed out: [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Attempting to start leader change for requests [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Sending STOP message to install regency 29 with 6 request(s) to relay
--- Received leader change message of type STOP for regency 29 from replica 2
--- Last regency: 28, next regency: 29
--- Received leader change message of type STOP for regency 29 from replica 1
--- Last regency: 28, next regency: 29
--- Sending STOPDATA of regency 29
--- No out of context SYNC for regency 29
--- Received leader change message of type SYNC for regency 29 from replica 1
--- Last regency: 29, next regency: 29
--- Installed proof of last decided consensus 23
--- Sending WRITE message for CID 24, timestamp 29, value [87, 109, -30, -103, -82, -47, -60, -2, -102, 110, -64, 60, 34, 126, -121, 25, -61, 97, 125, -19, -109, -112, 115, 46, 63, 77, -40, 61, -127, -79, 74, -122, 18, 36, -47, 89, -7, 0, -115, 113, -16, -71, -16, 122, 23, 86, -90, -112, -40, 112, -32, 79, -112, -108, -7, 51, -63, 117, -86, -99, 95, -52, -26, -52]
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- The following requests timed out: [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Attempting to start leader change for requests [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Sending STOP message to install regency 30 with 6 request(s) to relay
--- Received leader change message of type STOP for regency 30 from replica 2
--- Last regency: 29, next regency: 30
--- Received leader change message of type STOP for regency 30 from replica 1
--- Last regency: 29, next regency: 30
--- Sending STOPDATA of regency 30
--- No out of context SYNC for regency 30
--- Received leader change message of type SYNC for regency 30 from replica 2
--- Last regency: 30, next regency: 30
--- Installed proof of last decided consensus 24
--- Sending WRITE message for CID 25, timestamp 30, value [-47, 81, 49, -117, 29, -64, 98, -59, -27, -108, 58, -74, 71, -84, 4, -78, -12, -2, -78, -40, -55, -76, 50, 24, -70, 49, 98, -97, 99, 100, 36, 92, 88, -25, 43, 41, 3, -51, -105, 44, -37, -31, 102, 17, -19, 51, 67, 99, 10, 43, 3, -47, -21, 95, -107, -113, 84, -7, 0, -64, 43, 26, -78, 120]
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- The following requests timed out: [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Attempting to start leader change for requests [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Sending STOP message to install regency 31 with 6 request(s) to relay
--- Received leader change message of type STOP for regency 31 from replica 2
--- Last regency: 30, next regency: 31
--- Received leader change message of type STOP for regency 31 from replica 1
--- Last regency: 30, next regency: 31
--- Sending STOPDATA of regency 31
--- No out of context SYNC for regency 31
 -- Removing client channel with ID= 2
 -- Active clients=2
--- Re-transmitting STOP message to install regency 31
--- Removing client channel with ID= 1
--- Active clients=1
 -- Removing client channel with ID= 0
+-- Active clients=1
+-- Removing client channel with ID= 1
 -- Active clients=0
--- The following requests timed out: [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Attempting to start leader change for requests [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Sending STOP message to install regency 32 with 6 request(s) to relay
--- Received leader change message of type STOP for regency 31 from replica 1
--- Last regency: 31, next regency: 32
--- Received leader change message of type STOP for regency 31 from replica 2
--- Last regency: 31, next regency: 32
--- Received leader change message of type STOP for regency 32 from replica 2
--- Last regency: 31, next regency: 32
--- Received leader change message of type STOP for regency 32 from replica 1
--- Last regency: 31, next regency: 32
--- Received leader change message of type STOPDATA for regency 32 from replica 1
--- Last regency: 32, next regency: 32
--- Received leader change message of type STOPDATA for regency 32 from replica 2
--- Last regency: 32, next regency: 32
-Node id: 0 pack batch:[]
--- Sending SYNC message for regency 32
--- Installed proof of last decided consensus 25
--- Sending WRITE message for CID 26, timestamp 32, value [-120, 16, -41, 33, -90, -3, -79, -49, -94, 54, 23, -100, -60, 49, -58, 58, -69, -99, -102, -84, -85, 17, -60, -16, -8, -57, 59, -60, -66, -24, -78, 66, 94, 48, -79, -66, -40, -62, 13, 17, -44, 88, -41, 50, -118, -115, 119, -109, 20, -29, -75, 28, -14, 85, -30, -7, -25, 91, 32, 25, -113, -11, -40, -45]
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
--- The following requests timed out: [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Attempting to start leader change for requests [[0:172679476:0], [0:172679476:1], [1:-489602158:0], [1:-489602158:1], [2:2126507679:0], [2:2126507679:1]]
--- Sending STOP message to install regency 33 with 6 request(s) to relay
--- Received leader change message of type STOP for regency 33 from replica 1
--- Last regency: 32, next regency: 33
--- Received leader change message of type STOP for regency 33 from replica 2
--- Last regency: 32, next regency: 33
--- Sending STOPDATA of regency 33
--- No out of context SYNC for regency 33
--- Received leader change message of type SYNC for regency 33 from replica 1
--- Last regency: 33, next regency: 33
--- Installed proof of last decided consensus 26
--- Sending WRITE message for CID 27, timestamp 33, value [121, -124, 28, 69, -112, -76, 80, -5, 3, 9, 33, 46, -23, 122, -59, -112, -34, 63, -7, -120, -72, 65, 6, -4, -28, -21, 86, 14, 52, -33, 120, -100, 32, 34, 120, -45, -20, -75, -76, -16, 125, 43, 51, 92, 51, -43, 34, 57, 73, 81, 1, -99, -50, -35, 81, -59, 41, -22, 70, -114, -123, 10, -10, 78]
--- Error while processing decision
-java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
-	at bftsmart.tom.core.DeliveryThread.run(DeliveryThread.java:220)
 -- 
 ---------- DEBUG INFO ----------
 
-Current time: 22:30:30.892
-Current leader: 1
-Current regency: 33
+Current time: 15:27:03.811
+Current leader: 3
+Current regency: 7
 
-Last finished consensus: 27
+Last finished consensus: 8
 
 	 -- Consensus state: 
 
-		ETS=33 
-		WriteSet=[[33 :: eYQcRZC0UPsDCSEu6XrFkN4/+Yi4QQb85OtWDjTfeJwgInjT7LW08H0rM1wz1SI5SVEBnc7dUcUp6kaOhQr2Tg==]] 
-		(VAL,TS)=[33 :: eYQcRZC0UPsDCSEu6XrFkN4/+Yi4QQb85OtWDjTfeJwgInjT7LW08H0rM1wz1SI5SVEBnc7dUcUp6kaOhQr2Tg==]
+		ETS=7 
+		WriteSet=[[7 :: 2TVumDpyx/XbOa2pIBKidbLux/VnOJEdP4yVeCzddE52SEzmKl0Mdi06jB9MjufgGaYnPJnxiYx5T+S1zvMxRw==, 0 :: jKFgkf4YVyoFsKtO410+TbEekSCWZJnDDFk27uKae659Xm12d+wqMrOkxNDSgry24jd0KcsY6vCdxT9HzVSkEQ==]] 
+		(VAL,TS)=[7 :: 2TVumDpyx/XbOa2pIBKidbLux/VnOJEdP4yVeCzddE52SEzmKl0Mdi06jB9MjufgGaYnPJnxiYx5T+S1zvMxRw==]
 
 	 -- Epoch state: 
 
-		CID=27 
-		TS=33 
-		Propose=[eYQcRZC0UPsDCSEu6XrFkN4/+Yi4QQb85OtWDjTfeJwgInjT7LW08H0rM1wz1SI5SVEBnc7dUcUp6kaOhQr2Tg==] 
-		Writes=([eYQcRZC0UPsDCSEu6XrFkN4/+Yi4QQb85OtWDjTfeJwgInjT7LW08H0rM1wz1SI5SVEBnc7dUcUp6kaOhQr2Tg==], [eYQcRZC0UPsDCSEu6XrFkN4/+Yi4QQb85OtWDjTfeJwgInjT7LW08H0rM1wz1SI5SVEBnc7dUcUp6kaOhQr2Tg==], [eYQcRZC0UPsDCSEu6XrFkN4/+Yi4QQb85OtWDjTfeJwgInjT7LW08H0rM1wz1SI5SVEBnc7dUcUp6kaOhQr2Tg==], [null]) 
-		Accepts=([eYQcRZC0UPsDCSEu6XrFkN4/+Yi4QQb85OtWDjTfeJwgInjT7LW08H0rM1wz1SI5SVEBnc7dUcUp6kaOhQr2Tg==], [eYQcRZC0UPsDCSEu6XrFkN4/+Yi4QQb85OtWDjTfeJwgInjT7LW08H0rM1wz1SI5SVEBnc7dUcUp6kaOhQr2Tg==], [eYQcRZC0UPsDCSEu6XrFkN4/+Yi4QQb85OtWDjTfeJwgInjT7LW08H0rM1wz1SI5SVEBnc7dUcUp6kaOhQr2Tg==], [null])
+		CID=8 
+		TS=7 
+		Propose=[2TVumDpyx/XbOa2pIBKidbLux/VnOJEdP4yVeCzddE52SEzmKl0Mdi06jB9MjufgGaYnPJnxiYx5T+S1zvMxRw==] 
+		Writes=([2TVumDpyx/XbOa2pIBKidbLux/VnOJEdP4yVeCzddE52SEzmKl0Mdi06jB9MjufgGaYnPJnxiYx5T+S1zvMxRw==], [2TVumDpyx/XbOa2pIBKidbLux/VnOJEdP4yVeCzddE52SEzmKl0Mdi06jB9MjufgGaYnPJnxiYx5T+S1zvMxRw==], [2TVumDpyx/XbOa2pIBKidbLux/VnOJEdP4yVeCzddE52SEzmKl0Mdi06jB9MjufgGaYnPJnxiYx5T+S1zvMxRw==], [2TVumDpyx/XbOa2pIBKidbLux/VnOJEdP4yVeCzddE52SEzmKl0Mdi06jB9MjufgGaYnPJnxiYx5T+S1zvMxRw==]) 
+		Accepts=([2TVumDpyx/XbOa2pIBKidbLux/VnOJEdP4yVeCzddE52SEzmKl0Mdi06jB9MjufgGaYnPJnxiYx5T+S1zvMxRw==], [null], [2TVumDpyx/XbOa2pIBKidbLux/VnOJEdP4yVeCzddE52SEzmKl0Mdi06jB9MjufgGaYnPJnxiYx5T+S1zvMxRw==], [2TVumDpyx/XbOa2pIBKidbLux/VnOJEdP4yVeCzddE52SEzmKl0Mdi06jB9MjufgGaYnPJnxiYx5T+S1zvMxRw==])
 
 Consensus in execution: None
 

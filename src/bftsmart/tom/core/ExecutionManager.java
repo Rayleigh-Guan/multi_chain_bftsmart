@@ -233,7 +233,7 @@ public final class ExecutionManager {
         }
 
         boolean canProcessTheMessage = false;
-
+        //if (msg.getType()==MessageFactory.MZPROPOSE)
         /** THIS IS JOAO'S CODE, TO HANDLE THE STATE TRANSFER */
         // This serves to re-direct the messages to the out of context
         // while a replica is receiving the state of the others and updating itself
@@ -255,7 +255,7 @@ public final class ExecutionManager {
                 if (isRetrievingState || 
                         msg.getNumber() > (lastConsId + 1) || 
                         (inExec != -1 && inExec < msg.getNumber()) || 
-                        (inExec == -1 && msg.getType() != MessageFactory.PROPOSE)) { //not propose message for the next consensus
+                        (inExec == -1 && msg.getType() != MessageFactory.MZPROPOSE)) { //not propose message for the next consensus
                     logger.debug("Message for consensus " + 
                             msg.getNumber() + " is out of context, adding it to out of context set");
                     

@@ -411,12 +411,13 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             }
         };
         this.packbatchthread.start();
+        int myId = this.controller.getStaticConf().getProcessId();
         while (doWork) {
 
             // blocks until this replica learns to be the leader for the current epoch of the current consensus
             leaderLock.lock();
             logger.debug("Next leader for CID=" + (getLastExec() + 1) + ": " + execManager.getCurrentLeader());
-
+            
             //******* EDUARDO BEGIN **************//
             if (execManager.getCurrentLeader() != this.controller.getStaticConf().getProcessId()) {
                 iAmLeader.awaitUninterruptibly();
@@ -429,7 +430,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
 
             // blocks until the current consensus finishes
             proposeLock.lock();
-
+            System.out.printf("Node %d judge if there is some consensus running...\n", myId);
             if (getInExec() != -1) { //there is some consensus running
                 logger.debug("Waiting for consensus " + getInExec() + " termination.");
                 canPropose.awaitUninterruptibly();
@@ -438,14 +439,17 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             
             if (!doWork) break;
 
-            logger.debug("I'm the leader.");
+            System.out.printf("Node %d start to create Propose\n", myId);
 
+            logger.debug("I'm the leader.");
+            
+            
             // blocks until there are requests to be processed/ordered
-            messagesLock.lock();
-            if (!clientsManager.havePendingRequests()) {
-                haveMessages.awaitUninterruptibly();
-            }
-            messagesLock.unlock();
+            // messagesLock.lock();
+            // if (!clientsManager.havePendingRequests()) {
+            //     haveMessages.awaitUninterruptibly();
+            // }
+            // messagesLock.unlock();
             
             if (!doWork) break;
             
@@ -489,9 +493,19 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                 if (value!=null){
                     execManager.getProposer().startConsensus(execId, value);
                 }
-
+                // set In exec to -1 
+                else{
+                    setInExec(-1);
+                    try{
+                        Thread.sleep(2000); 
+                    }
+                    catch (Exception e){ 
+                        System.out.printf("Node: %d, opps, error: %s\n",myId, e.toString());
+                    } 
+                }
             }
         }
+        System.out.printf("Node %d oops, I jump out of run function\n", myId);
         logger.info("TOMLayer stopped.");
     }
 
@@ -574,13 +588,13 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             }
 
             logger.debug("Successfully deserialized batch");
-
+            System.out.println("Stage: Successfully deserialized batch");
             return requests;
         
         } catch (Exception e) {
             logger.error("Failed to check proposed value",e);
             if (Thread.holdsLock(clientsManager.getClientsLock())) clientsManager.getClientsLock().unlock();
-
+            System.out.println("Stage: Failed to deserialized batch");
             return null;
         }
     }
@@ -604,8 +618,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
 
     public boolean isChangingLeader() {
         
-        return !requestsTimer.isEnabled();
-
+        return requestsTimer != null && !requestsTimer.isEnabled();
     }
     
     public void setNoExec() {

@@ -230,13 +230,14 @@ public class ClientsManager {
         clientData.clientLock.lock();
         
         //Is this a leader replay attack?
-        if (!fromClient && clientData.getSession() == request.getSession() &&
-                clientData.getLastMessageDelivered() >= request.getSequence()) {
+        // comment by hzx, we leave replay attack to be detect by execute phase.
+        // if (!fromClient && clientData.getSession() == request.getSession() &&
+        //         clientData.getLastMessageDelivered() >= request.getSequence()) {
             
-            clientData.clientLock.unlock();
-            logger.warn("Detected a leader replay attack, rejecting request");
-            return false;
-        }
+        //     clientData.clientLock.unlock();
+        //     logger.warn("Detected a leader replay attack, rejecting request");
+        //     return false;
+        // }
 
         request.receptionTime = receptionTime;
         request.receptionTimestamp = receptionTimestamp;

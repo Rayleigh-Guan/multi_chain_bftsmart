@@ -6,6 +6,7 @@ import bftsmart.tom.core.messages.TOMMessage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.lang.Math;
 import java.util.concurrent.locks.ReentrantLock;
 public class multi_chain {
     private int replica_num=4;
@@ -53,7 +54,10 @@ public class multi_chain {
             if (batchtip>hi)
             {
                 if (batchtip>hi+6){
-                    Mz_BatchListItem temp=new Mz_BatchListItem(i,hi+1,hi+1,1);
+                    int ed = hi+1;
+                    if (batchtip > hi+25)
+                        ed = Math.max(ed, batchtip-25);
+                    Mz_BatchListItem temp=new Mz_BatchListItem(i,hi+1,ed,1);
                     list.add(temp);
                 }else
                 {

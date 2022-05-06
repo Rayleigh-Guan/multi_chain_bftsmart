@@ -52,8 +52,14 @@ public class multi_chain {
             int hi=this.PackagedHeight[i];
             if (batchtip>hi)
             {
-                Mz_BatchListItem temp=new Mz_BatchListItem(i,hi+1,hi+1);
-                list.add(temp);
+                if (batchtip>hi+6){
+                    Mz_BatchListItem temp=new Mz_BatchListItem(i,hi+1,hi+1,1);
+                    list.add(temp);
+                }else
+                {
+                    Mz_BatchListItem temp=new Mz_BatchListItem(i,hi+1,hi+1,0);
+                    list.add(temp);
+                }
             }
         }
         this.mzlock.unlock();
@@ -61,26 +67,57 @@ public class multi_chain {
         return list;
     }
 
-    public RequestList getRequestfromlist(List<Mz_BatchListItem> rev){
+    public RequestList getsyncedRequestfromlist(List<Mz_BatchListItem> rev){
         
         RequestList reqlist=new RequestList();
-        System.out.println("Stage: getRequestfromlist try to getRequestfromlist");
+        System.out.println("Stage: getsyncedRequestfromlist try to getRequestfromlist");
         this.mzlock.lock();
         for (Mz_BatchListItem mz_batchListItem : rev) {
             int st = mz_batchListItem.StartHeight;
             int ed = mz_batchListItem.EndHeight;
             int nd = mz_batchListItem.NodeId;
-            System.out.println("Stage: getRequestfromlist --Node id :"+nd+" StartHeight: "+st+" EndHeight"+ed);
+            int uf=mz_batchListItem.usedful;
+            System.out.println("Stage: getsyncedRequestfromlist --Node id :"+nd+" StartHeight: "+st+" EndHeight"+ed+" usebatch"+uf);
+            if (uf == 0)
+                continue;
             for (int j = st - 1; j < ed; j++) {
                 reqlist.addAll(this.ChainPool[nd].get(j).Req);
-                System.out.println("Stage: getRequestfromlist --Height: "+j+" req: "+this.ChainPool[nd].get(j).Req);
+                System.out.println("Stage: getsyncedRequestfromlist --Height: "+j+" req: "+this.ChainPool[nd].get(j).Req);
             }
         }
         this.mzlock.unlock();
-        // System.out.println("Stage: getRequestfromlist --totoal reqlist"+reqlist);
-        System.out.printf("Stage:getRequestfromlist --total request size: %d, request: %s\n", reqlist.size(), reqlist.toString());
+        // System.out.println("Stage: getsyncedRequestfromlist --totoal reqlist"+reqlist);
+        System.out.printf("Stage:getsyncedRequestfromlist --total request size: %d, request: %s\n", reqlist.size(), reqlist.toString());
         NPackedTx += reqlist.size();
         if (reqlist.isEmpty() == false) {
+            System.out.printf("Node %d packed tx number: %d\n", NodeID, NPackedTx);
+        }
+        return reqlist;
+    }
+
+    public RequestList getnotsyncRequestfromlist(List<Mz_BatchListItem> rev){
+
+        RequestList reqlist=new RequestList();
+        System.out.println("Stage: getnotsyncRequestfromlist try to getnotsyncRequestfromlist");
+        this.mzlock.lock();
+        for (Mz_BatchListItem mz_batchListItem : rev) {
+            int st = mz_batchListItem.StartHeight;
+            int ed = mz_batchListItem.EndHeight;
+            int nd = mz_batchListItem.NodeId;
+            int uf = mz_batchListItem.usedful;
+            System.out.println("Stage: getnotsyncRequestfromlist --Node id :"+nd+" StartHeight: "+st+" EndHeight"+ed+" usebatch"+uf);
+            if (uf == 1)
+                continue;
+            for (int j = st - 1; j < ed; j++) {
+                reqlist.addAll(this.ChainPool[nd].get(j).Req);
+                System.out.println("Stage: getnotsyncRequestfromlist --Height: "+j+" req: "+this.ChainPool[nd].get(j).Req);
+            }
+        }
+        this.mzlock.unlock();
+        // System.out.println("Stage: getnotsyncRequestfromlist --totoal reqlist"+reqlist);
+        System.out.printf("Stage:getnotsyncRequestfromlist --total request size: %d, request: %s\n", reqlist.size(), reqlist.toString());
+        NPackedTx += reqlist.size();
+        if (!reqlist.isEmpty()) {
             System.out.printf("Node %d packed tx number: %d\n", NodeID, NPackedTx);
         }
         return reqlist;
@@ -89,7 +126,7 @@ public class multi_chain {
     public void updatePackagedHeight(){
         this.mzlock.lock();
         for (Mz_BatchListItem mz_batchListItem : this.lastbatchlist) {
-            Integer nodeid_temp = mz_batchListItem.NodeId;
+            int nodeid_temp = mz_batchListItem.NodeId;
             if (mz_batchListItem.EndHeight > this.PackagedHeight[nodeid_temp])
                 this.PackagedHeight[nodeid_temp] = mz_batchListItem.EndHeight;
         }

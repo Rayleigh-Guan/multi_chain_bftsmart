@@ -353,7 +353,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     //our propose
     public byte[] createMzPropose(Decision dec) {
         System.out.println("Stage: createMzPropose --Node create a Mzpropose");
-        List<Mz_BatchListItem> pendingBatch = multiChain.packList();
+        List<Mz_BatchListItem> pendingBatch= multiChain.packList();
         if (pendingBatch.size()==0){
             System.out.println("Stage: createMzPropose --Node create a Mzpropose faild,because packlist is null");
             return null;
@@ -361,6 +361,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             System.out.println("Stage: createMzPropose --Node create a Mzpropose ,and success get a packlist,list size:"+pendingBatch.size());
         }
 
+        RequestList requestnotsync=multiChain.getnotsyncRequestfromlist(pendingBatch);
 
         int numberOfItems = pendingBatch.size(); // number of messages retrieved
         int numberOfNonces = this.controller.getStaticConf().getNumberOfNonces(); // ammount of nonces to be generated
@@ -368,14 +369,20 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         //for benchmarking
         if (dec.getConsensusId() > -1) { // if this is from the leader change, it doesnt matter
 //            System.out.println("Mzpropose try to get first msg pendingbatch:"+pendingBatch);
-            dec.firstMessageProposed = multiChain.getfistMsg(pendingBatch.get(0).NodeId,pendingBatch.get(0).StartHeight);
-            dec.firstMessageProposed.consensusStartTime = System.nanoTime();
+            if (requestnotsync.size()==0)
+            {
+                dec.firstMessageProposed = multiChain.getfistMsg(pendingBatch.get(0).NodeId,pendingBatch.get(0).StartHeight);
+                dec.firstMessageProposed.consensusStartTime = System.nanoTime();
+            }else {
+                dec.firstMessageProposed = requestnotsync.get(0);
+                dec.firstMessageProposed.consensusStartTime = System.nanoTime();
+            }
         }
         dec.batchSize = numberOfItems;
 
         logger.debug("Creating a MzPROPOSE with " + numberOfItems + " Items");
 
-        return mzpb.makeMzPropose(pendingBatch, numberOfNonces, System.currentTimeMillis());
+        return mzpb.makeMzPropose(pendingBatch, requestnotsync,numberOfNonces, System.currentTimeMillis(),controller.getStaticConf().getUseSignatures() == 1);
     }
 
     /**
@@ -680,23 +687,40 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     }
 
     public void OnMzPropose(Epoch epoch,ConsensusMessage msg){
-        MzProposeReader mzproposeReader = new MzProposeReader(msg.getValue());
+        MzProposeReader mzproposeReader = new MzProposeReader(msg.getValue(),controller.getStaticConf().getUseSignatures() == 1);
         System.out.println("OnMzPropose1 Nodeid: "+this.controller.getStaticConf().getProcessId()+" received mzpropose from: "+msg.getSender()+" --msg type: "+msg.getType());
+
         Mz_Propose mz_propose=mzproposeReader.deserialisemsg();
-        RequestList list=this.multiChain.getRequestfromlist(mz_propose.list);
+
+        RequestList synclist=this.multiChain.getsyncedRequestfromlist(mz_propose.list);
+
         MessageFactory messageFactory=new MessageFactory(msg.getSender());
+
         this.multiChain.setLastbatchlist(mz_propose.list);
-        this.acceptor.proposeReceived(epoch,messageFactory.createPropose(msg.getNumber(),msg.getEpoch(),bb.makeBatch(list,mz_propose.numNounces,mz_propose.seed,mz_propose.timestamp,controller.getStaticConf().getUseSignatures() == 1)));
+
+        RequestList totalreqlist=new RequestList();
+        if (mz_propose.numofnotsyncreq>0){
+            totalreqlist.addAll(mz_propose.notsyncreq);
+        }
+        totalreqlist.addAll(synclist);
+        this.acceptor.proposeReceived(epoch,messageFactory.createPropose(msg.getNumber(),msg.getEpoch(),bb.makeBatch(totalreqlist,mz_propose.numNounces,mz_propose.seed,mz_propose.timestamp,controller.getStaticConf().getUseSignatures() == 1)));
     }
 
     public void OnMzPropose(ConsensusMessage msg){
-        MzProposeReader mzproposeReader = new MzProposeReader(msg.getValue());
+        MzProposeReader mzproposeReader = new MzProposeReader(msg.getValue(),controller.getStaticConf().getUseSignatures() == 1);
         System.out.println("Stage:OnMzPropose2 --Nodeid: "+this.controller.getStaticConf().getProcessId()+" received mzpropose from: "+msg.getSender()+" --msg type: "+msg.getType());
+
         Mz_Propose mz_propose=mzproposeReader.deserialisemsg();
-        RequestList list=this.multiChain.getRequestfromlist(mz_propose.list);
+        RequestList synclist=this.multiChain.getsyncedRequestfromlist(mz_propose.list);
         MessageFactory messageFactory=new MessageFactory(msg.getSender());
+
         this.multiChain.setLastbatchlist(mz_propose.list);
-        this.acceptor.deliver(messageFactory.createPropose(msg.getNumber(),msg.getEpoch(),bb.makeBatch(list,mz_propose.numNounces,mz_propose.seed,mz_propose.timestamp,controller.getStaticConf().getUseSignatures() == 1)));
+        RequestList totalreqlist=new RequestList();
+        if (mz_propose.numofnotsyncreq>0){
+            totalreqlist.addAll(mz_propose.notsyncreq);
+        }
+        totalreqlist.addAll(synclist);
+        this.acceptor.deliver(messageFactory.createPropose(msg.getNumber(),msg.getEpoch(),bb.makeBatch(totalreqlist,mz_propose.numNounces,mz_propose.seed,mz_propose.timestamp,controller.getStaticConf().getUseSignatures() == 1)));
     }
     public void updatepackedheight(){
         this.multiChain.updatePackagedHeight();

@@ -116,12 +116,20 @@ public abstract class TOMSender implements ReplyReceiver, Closeable, AutoCloseab
 	}
 
 	public void TOMulticast(TOMMessage sm) {
-		cs.send(useSignatures, this.viewController.getCurrentViewProcesses(), sm);
+		int[] replicaArray = (this.viewController.getCurrentViewProcesses());
+		int[] target = {(me % replicaArray.length)};
+		// cs.send(useSignatures, this.viewController.getCurrentViewProcesses(), sm);
+		cs.send(useSignatures, target, sm);
 	}
 
 
 	public void TOMulticast(byte[] m, int reqId, int operationId, TOMMessageType reqType) {
-		cs.send(useSignatures, viewController.getCurrentViewProcesses(),
+		int[] replicaArray = (this.viewController.getCurrentViewProcesses());
+		int[] target = {(me % replicaArray.length)};
+		// cs.send(useSignatures, viewController.getCurrentViewProcesses(),
+		// 		new TOMMessage(me, session, reqId, operationId, m, viewController.getCurrentViewId(),
+		// 				reqType));
+		cs.send(useSignatures, target,
 				new TOMMessage(me, session, reqId, operationId, m, viewController.getCurrentViewId(),
 						reqType));
 	}

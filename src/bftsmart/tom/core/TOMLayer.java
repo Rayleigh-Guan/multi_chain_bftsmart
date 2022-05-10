@@ -403,11 +403,18 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                 int useSignature = controller.getStaticConf().getUseSignatures();
                 MessageFactory messageFactory=new MessageFactory(myId);
                 while (!Thread.interrupted()) {
+                    // blocks until there are requests to be processed/ordered
+                    messagesLock.lock();
+                    if (!clientsManager.havePendingRequests()) {
+                        haveMessages.awaitUninterruptibly();
+                    }
+                    messagesLock.unlock();
                     if (System.currentTimeMillis()-lastsend>10) {
                         RequestList reqlist=clientsManager.getPendingRequests();
                         if (reqlist.size()>0){
                             multiChain.updateMyGeneratedHeight();
                             Map<Integer,Integer> chainPoolTip = multiChain.getMyChainPoolTip();
+                            chainPoolTip.put(myId, multiChain.getMyGeneratedHeight());
                             byte[] batch = mzbb.makeMzBatch(myId, multiChain.getMyGeneratedHeight(), reqlist, useSignature==1, chainPoolTip);
                             ConsensusMessage batchMessage = messageFactory.createMzBatch(0,0,batch);
                             communication.send(controller.getCurrentViewAcceptors(),batchMessage);
@@ -510,12 +517,12 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                 else{
                     // setInExec(-1);
                     setNoExec();
-                    // try{
-                    //     Thread.sleep(2000); 
-                    // }
-                    // catch (Exception e){ 
-                    //     System.out.printf("Node: %d, opps, error: %s\n",myId, e.toString());
-                    // } 
+                    try{
+                        Thread.sleep(2000); 
+                    }
+                    catch (Exception e){ 
+                        System.out.printf("Node: %d, opps, error: %s\n",myId, e.toString());
+                    } 
                 }
             }
         }
@@ -727,6 +734,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             totalreqlist.addAll(mz_propose.notsyncreq);
         }
         totalreqlist.addAll(synclist);
+        System.out.printf("Node %d receive a MzPropose contains %d requests\n", this.controller.getStaticConf().getProcessId(), totalreqlist.size());
         this.acceptor.deliver(messageFactory.createPropose(msg.getNumber(),msg.getEpoch(),bb.makeBatch(totalreqlist,mz_propose.numNounces,mz_propose.seed,mz_propose.timestamp,controller.getStaticConf().getUseSignatures() == 1)));
     }
     public void updatepackedheight(){

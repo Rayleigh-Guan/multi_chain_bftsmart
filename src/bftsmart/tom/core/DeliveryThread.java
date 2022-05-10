@@ -87,6 +87,7 @@ public final class DeliveryThread extends Thread {
             
             // clean the ordered messages from the pending buffer
             TOMMessage[] requests = extractMessagesFromDecision(dec);
+            System.out.printf("Leader node %d's consensus is reached, cid: %d, remove %d requests from queue\n", dec.getLeader(), dec.getConsensusId(), requests.length);
             tomLayer.clientsManager.requestsOrdered(requests);
             
             notEmptyQueue.signalAll();

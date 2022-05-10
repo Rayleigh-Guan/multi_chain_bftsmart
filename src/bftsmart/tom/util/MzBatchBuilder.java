@@ -4,6 +4,7 @@ import bftsmart.tom.core.messages.TOMMessage;
 
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Map;
 
 public class MzBatchBuilder {
     private void putMessage(ByteBuffer MzBatchBuffer, byte[] message, boolean addSig, byte[] signature) {
@@ -19,7 +20,7 @@ public class MzBatchBuilder {
             }
         }
     }
-    public byte[] makeMzBatch(int id,Integer height,List<TOMMessage> msgs, boolean useSignatures) {
+    public byte[] makeMzBatch(int id, int height, List<TOMMessage> msgs, boolean useSignatures, Map<Integer, Integer> chainPoolTip) {
         int numMsgs = msgs.size();
         int totalMessageSize = 0; //total size of the messages being batched
 
@@ -35,9 +36,9 @@ public class MzBatchBuilder {
         }
 
         // return the batch
-        return createMzBatch(id,height,numMsgs, totalMessageSize,messages, signatures,useSignatures);
+        return createMzBatch(id, height, numMsgs, totalMessageSize, messages, signatures, useSignatures, chainPoolTip);
     }
-    private byte[] createMzBatch(int id,Integer height,int numberOfMessages, int totalMessagesSize,byte[][] messages, byte[][] signatures,boolean useSignatures) {
+    private byte[] createMzBatch(int id,int height,int numberOfMessages, int totalMessagesSize,byte[][] messages, byte[][] signatures,boolean useSignatures, Map<Integer, Integer> chainPoolTip) {
 
         int sigsSize = 0;
         if (useSignatures) {
@@ -52,6 +53,8 @@ public class MzBatchBuilder {
         int size = 12 + //id 4, height 4, nummessages 4
                 (Integer.BYTES * numberOfMessages) + // messages length size
                 sigsSize + // signatures size
+                Integer.BYTES +     // the number of <key,value> pair of chainPool Tip
+                Integer.BYTES * chainPoolTip.size() * 2 + // chainPoolTip size
                 totalMessagesSize; //size of all msges
 
         ByteBuffer MzBacthBuffer = ByteBuffer.allocate(size);
@@ -60,6 +63,13 @@ public class MzBatchBuilder {
         MzBacthBuffer.putInt(numberOfMessages);
         for (int i = 0; i < numberOfMessages; i++) {
             putMessage(MzBacthBuffer,messages[i], useSignatures, signatures[i]);
+        }
+
+        // put batchTip into array
+        MzBacthBuffer.putInt(chainPoolTip.size());
+        for (Integer key : chainPoolTip.keySet()) {
+            MzBacthBuffer.putInt(key);
+            MzBacthBuffer.putInt(chainPoolTip.get(key));
         }
 
         return MzBacthBuffer.array();

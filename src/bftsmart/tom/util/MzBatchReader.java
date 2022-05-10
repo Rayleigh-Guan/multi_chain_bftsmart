@@ -10,6 +10,8 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 import java.util.Random;
+import java.util.Map;
+import java.util.HashMap;
 
 public class MzBatchReader
 {
@@ -59,6 +61,16 @@ public class MzBatchReader
                 LoggerFactory.getLogger(this.getClass()).error("Failed to deserialize Mzbatch",e);
             }
         }
-        return new Mz_Batch(id,height,Req);
+
+        int numberofChainTip = MzBatchBuffer.getInt();
+        Map<Integer, Integer> chainPoolTip = new HashMap<Integer,Integer>();
+        while(numberofChainTip > 0) {
+            int key = MzBatchBuffer.getInt();
+            int value = MzBatchBuffer.getInt();
+            chainPoolTip.put(key, value);
+            --numberofChainTip;
+        }
+
+        return new Mz_Batch(id,height,Req, chainPoolTip);
     }
 }

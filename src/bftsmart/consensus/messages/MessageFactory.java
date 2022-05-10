@@ -24,8 +24,8 @@ public class MessageFactory{
     public static final int PROPOSE = 44781;
     public static final int WRITE    = 44782;
     public static final int ACCEPT  = 44783;
-    public static final int MZPROPOSE =44784;
-    public static final int MZBATCH=44785;
+    public static final int MZPROPOSE = 44784;
+    public static final int MZBATCH = 44785;
 
     private int from; // Replica ID of the process which sent this message
 

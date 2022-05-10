@@ -22,6 +22,7 @@ import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.SignedObject;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -353,7 +354,8 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     //our propose
     public byte[] createMzPropose(Decision dec) {
         System.out.println("Stage: createMzPropose --Node create a Mzpropose");
-        List<Mz_BatchListItem> pendingBatch= multiChain.packList();
+        // List<Mz_BatchListItem> pendingBatch = multiChain.packList();
+        List<Mz_BatchListItem> pendingBatch = multiChain.packListWithTip();
         if (pendingBatch.size()==0){
             System.out.println("Stage: createMzPropose --Node create a Mzpropose faild,because packlist is null");
             return null;
@@ -361,7 +363,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             System.out.println("Stage: createMzPropose --Node create a Mzpropose ,and success get a packlist,list size:"+pendingBatch.size());
         }
 
-        RequestList requestnotsync=multiChain.getnotsyncRequestfromlist(pendingBatch);
+        RequestList requestnotsync = multiChain.getnotsyncRequestfromlist(pendingBatch);
 
         int numberOfItems = pendingBatch.size(); // number of messages retrieved
         int numberOfNonces = this.controller.getStaticConf().getNumberOfNonces(); // ammount of nonces to be generated
@@ -397,18 +399,22 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             @Override
             public void run() {
                 long lastsend =System.currentTimeMillis();
-                MessageFactory messageFactory=new MessageFactory(controller.getStaticConf().getProcessId());
+                int myId = controller.getStaticConf().getProcessId();
+                int useSignature = controller.getStaticConf().getUseSignatures();
+                MessageFactory messageFactory=new MessageFactory(myId);
                 while (!Thread.interrupted()) {
                     if (System.currentTimeMillis()-lastsend>10) {
                         RequestList reqlist=clientsManager.getPendingRequests();
                         if (reqlist.size()>0){
                             multiChain.updateMyGeneratedHeight();
-                            communication.send(controller.getCurrentViewAcceptors(),messageFactory.createMzBatch(0,
-                                    0,mzbb.makeMzBatch(controller.getStaticConf().getProcessId(),multiChain.getMyGeneratedHeight(),reqlist,controller.getStaticConf().getUseSignatures()==1)));
-                            System.out.println("Stage: packbatch --Node id: "+controller.getStaticConf().getProcessId()+" create Mzbatch height:"+(multiChain.getMyGeneratedHeight())+" batch size: "+reqlist.size()+" batch req: "+reqlist.toString()+" at time: "+System.currentTimeMillis());
+                            Map<Integer,Integer> chainPoolTip = multiChain.getMyChainPoolTip();
+                            byte[] batch = mzbb.makeMzBatch(myId, multiChain.getMyGeneratedHeight(), reqlist, useSignature==1, chainPoolTip);
+                            ConsensusMessage batchMessage = messageFactory.createMzBatch(0,0,batch);
+                            communication.send(controller.getCurrentViewAcceptors(),batchMessage);
+                            System.out.println("Stage: packbatch --Node id: "+myId+" create Mzbatch height:"+(multiChain.getMyGeneratedHeight())+" batch size: "+reqlist.size()+" batch req: "+reqlist.toString()+" at time: "+System.currentTimeMillis());
                             lastsend=System.currentTimeMillis();
                         }
-                        //System.out.println("Node id: "+controller.getStaticConf().getProcessId()+" pack Mzbatch:"+reqlist);
+                        //System.out.println("Node id: "+myId+" pack Mzbatch:"+reqlist);
                         //acceptor.MzBatchReceived();
                         //Mz_Batch Batch=new Mz_Batch(reqlist,id,multiChain.getMyGeneratedHeight()+1);
                         //System.out.println("1");
@@ -502,13 +508,14 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                 }
                 // set In exec to -1 
                 else{
-                    setInExec(-1);
-                    try{
-                        Thread.sleep(2000); 
-                    }
-                    catch (Exception e){ 
-                        System.out.printf("Node: %d, opps, error: %s\n",myId, e.toString());
-                    } 
+                    // setInExec(-1);
+                    setNoExec();
+                    // try{
+                    //     Thread.sleep(2000); 
+                    // }
+                    // catch (Exception e){ 
+                    //     System.out.printf("Node: %d, opps, error: %s\n",myId, e.toString());
+                    // } 
                 }
             }
         }

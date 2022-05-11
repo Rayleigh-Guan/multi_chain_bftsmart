@@ -373,7 +373,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
 //            System.out.println("Mzpropose try to get first msg pendingbatch:"+pendingBatch);
             if (requestnotsync.size()==0)
             {
-                dec.firstMessageProposed = multiChain.getfistMsg(pendingBatch.get(0).NodeId,pendingBatch.get(0).StartHeight);
+                dec.firstMessageProposed = multiChain.getFirstRequest(pendingBatch);
                 dec.firstMessageProposed.consensusStartTime = System.nanoTime();
             }else {
                 dec.firstMessageProposed = requestnotsync.get(0);
@@ -403,29 +403,24 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                 int useSignature = controller.getStaticConf().getUseSignatures();
                 MessageFactory messageFactory=new MessageFactory(myId);
                 while (!Thread.interrupted()) {
-                    // blocks until there are requests to be processed/ordered
-                    messagesLock.lock();
-                    if (!clientsManager.havePendingRequests()) {
-                        haveMessages.awaitUninterruptibly();
-                    }
-                    messagesLock.unlock();
-                    if (System.currentTimeMillis()-lastsend>10) {
-                        RequestList reqlist=clientsManager.getPendingRequests();
-                        if (reqlist.size()>0){
-                            multiChain.updateMyGeneratedHeight();
-                            Map<Integer,Integer> chainPoolTip = multiChain.getMyChainPoolTip();
-                            chainPoolTip.put(myId, multiChain.getMyGeneratedHeight());
-                            byte[] batch = mzbb.makeMzBatch(myId, multiChain.getMyGeneratedHeight(), reqlist, useSignature==1, chainPoolTip);
-                            ConsensusMessage batchMessage = messageFactory.createMzBatch(0,0,batch);
-                            communication.send(controller.getCurrentViewAcceptors(),batchMessage);
-                            System.out.println("Stage: packbatch --Node id: "+myId+" create Mzbatch height:"+(multiChain.getMyGeneratedHeight())+" batch size: "+reqlist.size()+" batch req: "+reqlist.toString()+" at time: "+System.currentTimeMillis());
-                            lastsend=System.currentTimeMillis();
-                        }
-                        //System.out.println("Node id: "+myId+" pack Mzbatch:"+reqlist);
-                        //acceptor.MzBatchReceived();
-                        //Mz_Batch Batch=new Mz_Batch(reqlist,id,multiChain.getMyGeneratedHeight()+1);
-                        //System.out.println("1");
-
+                    // // blocks until there are requests to be packed or the batch tip need to be updated.
+                    // messagesLock.lock();
+                    // if (! && multiChain.getUpdateTipState() == false) {
+                    //     haveMessages.awaitUninterruptibly();
+                    // }
+                    // messagesLock.unlock();
+                    long interval = System.currentTimeMillis()-lastsend;
+                    if ((interval > 5 && clientsManager.havePendingRequests()) || (interval > 500 && multiChain.getUpdateTipState() == true && multiChain.getMyGeneratedHeight()!=-1)){
+                        RequestList reqlist = clientsManager.getPendingRequests();
+                        multiChain.updateMyGeneratedHeight();
+                        multiChain.setUpdateTipState(false);
+                        Map<Integer,Integer> chainPoolTip = multiChain.getMyChainPoolTip();
+                        chainPoolTip.put(myId, multiChain.getMyGeneratedHeight());
+                        byte[] batch = mzbb.makeMzBatch(myId, multiChain.getMyGeneratedHeight(), reqlist, useSignature==1, chainPoolTip);
+                        ConsensusMessage batchMessage = messageFactory.createMzBatch(0,0,batch);
+                        communication.send(controller.getCurrentViewAcceptors(),batchMessage);
+                        System.out.println("Stage: packbatch --Node id: "+myId+" create Mzbatch height:"+(multiChain.getMyGeneratedHeight())+" batch size: "+reqlist.size()+" batch req: "+reqlist.toString()+" at time: "+System.currentTimeMillis());
+                        lastsend=System.currentTimeMillis();
                     }
                 }
             }

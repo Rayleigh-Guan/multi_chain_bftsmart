@@ -9,13 +9,14 @@ import java.util.Map;
 import java.lang.Math;
 import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.AtomicBoolean;
 public class multi_chain {
     private int replica_num=4;
 
     private List<Mz_Batch>[] ChainPool = new ArrayList[this.replica_num];
     private int[] nTxArray;
     private int[] PackagedHeight=new int[this.replica_num];
-
+    private AtomicBoolean multicastTip;
     private int MyGeneratedHeight;
     private int NodeID;
     private int NPackedTx;
@@ -24,6 +25,7 @@ public class multi_chain {
 
     public multi_chain(Integer nodeid)
     {
+        multicastTip = new AtomicBoolean(false);
         nTxArray = new int[this.replica_num];
         for (int i = 0; i < this.replica_num; i++) {
             this.ChainPool[i]=new ArrayList<>();
@@ -34,16 +36,25 @@ public class multi_chain {
         NPackedTx = 0;
     }
 
+    public void setUpdateTipState(boolean b) {
+        multicastTip.set(b);
+    }
+
+    public boolean getUpdateTipState() {
+        return multicastTip.get();
+    }
+
     public void add(Mz_Batch value){
         this.mzlock.lock();
         int nodeid = value.NodeId;
         this.ChainPool[nodeid].add(value);
-//        if (nodeid==this.NodeID)
-//            this.MyGeneratedHeight=this.MyGeneratedHeight+1;
+        // received a new batch, we need to update our tip.
+        if (nodeid != this.NodeID && value.Req.isEmpty()==false) {
+            setUpdateTipState(true);
+        }
         nTxArray[nodeid] += value.Req.size();
-        System.out.printf("Stage: addbatch --Nodeid: %d, received Batch: %d from %d, len: %d, req: %s, tipArray: %s, total received Tx: %d\n", 
-            this.NodeID, value.BatchId, nodeid, this.ChainPool[nodeid].size(), value.Req.toString(),value.chainPooltip.toString(), nTxArray[nodeid]);
-        // System.out.println("Stage: addbatch --Nodeid: "+this.NodeID+" received Batch "+value.BatchId+" from "+value.NodeId+" --batch:"+value.Req+" --len"+this.ChainPool[nodeid].size()+" tipArray: "+value.chainPooltip.toString());
+        System.out.printf("Stage: addbatch --Nodeid: %d, received Batch: %d from %d, len: %d, req: %s, tipArray: %s, total received Tx: %d, updateTip: %b\n", 
+            this.NodeID, value.BatchId, nodeid, this.ChainPool[nodeid].size(), value.Req.toString(),value.chainPooltip.toString(), nTxArray[nodeid], getUpdateTipState());
         this.mzlock.unlock();
     }
 
@@ -114,7 +125,24 @@ public class multi_chain {
             }
         }
         this.mzlock.unlock();
+        // check the block before returned
+        checkBlock(list);
         return list;
+    }
+
+    public void checkBlock(List<Mz_BatchListItem> list) {
+        // check if the number of txes is zero
+        int nRequests = 0;
+        for(Mz_BatchListItem item: list) {
+            for (int i = item.StartHeight; i <= item.EndHeight; ++i) {
+                nRequests += ChainPool[item.NodeId].get(i).Req.size();
+            }
+        }
+        if (nRequests == 0) {
+            list.clear();
+            System.out.printf("There are no TXes in block, clear the list, list size: %d\n", list.size());
+        }
+            
     }
 
     public List<Map<Integer,Integer>> getReplicaChainPoolTip(){
@@ -152,6 +180,7 @@ public class multi_chain {
         return chainPoolTip;
     }
 
+    // TODO: to fix IndexOutOfBoundsException in line 198
     public RequestList getsyncedRequestfromlist(List<Mz_BatchListItem> rev){
         
         RequestList reqlist=new RequestList();
@@ -226,8 +255,15 @@ public class multi_chain {
         this.MyGeneratedHeight += 1;
         this.mzlock.unlock();
     }
-    public TOMMessage getfistMsg(int nodeid, int height){
-        return this.ChainPool[nodeid].get(height-1).Req.getFirst();
+    public TOMMessage getFirstRequest(List<Mz_BatchListItem> list){
+        for(Mz_BatchListItem item: list) {
+            for (int i = item.StartHeight; i <= item.EndHeight; ++i) {
+                if (ChainPool[item.NodeId].get(i).Req.size() > 0)
+                    return ChainPool[item.NodeId].get(i).Req.getFirst();
+                
+            }
+        }
+        return null;
     }
 
     public void setLastbatchlist(List<Mz_BatchListItem> lastbatchlist) {

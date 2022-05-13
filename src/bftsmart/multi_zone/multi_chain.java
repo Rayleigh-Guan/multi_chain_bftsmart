@@ -49,7 +49,7 @@ public class multi_chain {
         int nodeid = value.NodeId;
         this.ChainPool[nodeid].add(value);
         // received a new batch, we need to update our tip.
-        if (nodeid != this.NodeID && value.Req.isEmpty()==false) {
+        if (nodeid != this.NodeID && !value.Req.isEmpty()) {
             setUpdateTipState(true);
         }
         nTxArray[nodeid] += value.Req.size();
@@ -107,15 +107,15 @@ public class multi_chain {
             int useBatchhash = 0;
             if (endHeight >= startHeight) {
                 int nNotFallBehind = 0;
-                for (int j = 0; j < chainTipArray.size(); ++j) {
-                    if (chainTipArray.get(j).containsKey(i) == false)   continue;
-                    int tmpTip = chainTipArray.get(j).get(i);
+                for (Map<Integer, Integer> integerIntegerMap : chainTipArray) {
+                    if (!integerIntegerMap.containsKey(i)) continue;
+                    int tmpTip = integerIntegerMap.get(i);
                     if (tmpTip < startHeight) continue;
                     ++nNotFallBehind;
-                    if (tmpTip < endHeight) endHeight = tmpTip; 
+                    if (tmpTip < endHeight) endHeight = tmpTip;
                 }
                 // at least 2/3 replicas can catch up.
-                if (endHeight >= startHeight && nNotFallBehind >= quorum)
+                if (nNotFallBehind >= quorum)
                     useBatchhash = 1;
                 else
                     endHeight = startHeight;
@@ -194,6 +194,12 @@ public class multi_chain {
             System.out.println("Stage: getsyncedRequestfromlist --Node id :"+nd+" StartHeight: "+st+" EndHeight: "+ed+" usebatch "+uf);
             if (uf == 0)
                 continue;
+            if (ed>this.ChainPool[nd].get(this.ChainPool[nd].size()-1).BatchId)
+            {
+                reqlist.clear();
+                System.out.println("Stage: getsyncedRequestfromlist --ed>len --ed:"+ed+" --len: "+this.ChainPool[nd].get(this.ChainPool[nd].size()-1).BatchId+" --listsize: "+ 0);
+                return reqlist;
+            }
             for (int j = st; j <= ed; j++) {
                 reqlist.addAll(this.ChainPool[nd].get(j).Req);
                 System.out.println("Stage: getsyncedRequestfromlist --Height: "+j+" req: "+this.ChainPool[nd].get(j).Req);

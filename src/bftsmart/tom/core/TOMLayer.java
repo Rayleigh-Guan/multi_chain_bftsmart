@@ -410,12 +410,13 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                     // }
                     // messagesLock.unlock();
                     long interval = System.currentTimeMillis()-lastsend;
-                    if ((interval > 5 && clientsManager.havePendingRequests()) || (interval > 500 && multiChain.getUpdateTipState() == true && multiChain.getMyGeneratedHeight()!=-1)){
+                    if ((interval > 5 && clientsManager.havePendingRequests()) || (interval > 500 && multiChain.getUpdateTipState() && multiChain.getMyGeneratedHeight()!=-1)){
                         RequestList reqlist = clientsManager.getPendingRequests();
                         multiChain.updateMyGeneratedHeight();
-                        multiChain.setUpdateTipState(false);
+                        //multiChain.setUpdateTipState(false); //如果本来有更新，那么也无法发送了
                         Map<Integer,Integer> chainPoolTip = multiChain.getMyChainPoolTip();
                         chainPoolTip.put(myId, multiChain.getMyGeneratedHeight());
+                        multiChain.add(new Mz_Batch(myId,multiChain.getMyGeneratedHeight(),reqlist,chainPoolTip));
                         byte[] batch = mzbb.makeMzBatch(myId, multiChain.getMyGeneratedHeight(), reqlist, useSignature==1, chainPoolTip);
                         ConsensusMessage batchMessage = messageFactory.createMzBatch(0,0,batch);
                         communication.send(controller.getCurrentViewAcceptors(),batchMessage);
@@ -692,7 +693,9 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     public void OnMzBatch(ConsensusMessage msg){
         MzBatchReader mzbatchReader = new MzBatchReader(msg.getValue(),
                 this.controller.getStaticConf().getUseSignatures() == 1);
-        this.multiChain.add(mzbatchReader.deserialisemsg());
+        if (msg.getSender()!=this.controller.getStaticConf().getProcessId()){
+            this.multiChain.add(mzbatchReader.deserialisemsg());
+        }
     }
 
     public void OnMzPropose(Epoch epoch,ConsensusMessage msg){
@@ -702,7 +705,8 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         Mz_Propose mz_propose=mzproposeReader.deserialisemsg();
 
         RequestList synclist=this.multiChain.getsyncedRequestfromlist(mz_propose.list);
-
+        if (synclist.size()==0)
+            return;
         MessageFactory messageFactory=new MessageFactory(msg.getSender());
 
         this.multiChain.setLastbatchlist(mz_propose.list);
@@ -720,7 +724,11 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         System.out.println("Stage:OnMzPropose2 --Nodeid: "+this.controller.getStaticConf().getProcessId()+" received mzpropose from: "+msg.getSender()+" --msg type: "+msg.getType());
 
         Mz_Propose mz_propose=mzproposeReader.deserialisemsg();
+
         RequestList synclist=this.multiChain.getsyncedRequestfromlist(mz_propose.list);
+        if (synclist.size()==0)
+            return;
+
         MessageFactory messageFactory=new MessageFactory(msg.getSender());
 
         this.multiChain.setLastbatchlist(mz_propose.list);

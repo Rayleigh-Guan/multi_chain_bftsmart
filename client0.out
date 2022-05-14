@@ -1,0 +1,169 @@
+Launching client 0
+-- Connecting to replica 0 at /127.0.0.1:11000
+-- Channel active
+-- Connecting to replica 1 at /127.0.0.1:11010
+-- Impossible to connect to 1
+-- Connecting to replica 2 at /127.0.0.1:11020
+-- Channel active
+-- Connecting to replica 3 at /127.0.0.1:11030
+-- Channel active
+Launching client 1
+-- Connecting to replica 0 at /127.0.0.1:11000
+-- Channel active
+-- Connecting to replica 1 at /127.0.0.1:11010
+-- Impossible to connect to 1
+-- Connecting to replica 2 at /127.0.0.1:11020
+-- Channel active
+-- Connecting to replica 3 at /127.0.0.1:11030
+-- Channel active
+Launching client 2
+-- Connecting to replica 0 at /127.0.0.1:11000
+-- Channel active
+-- Connecting to replica 1 at /127.0.0.1:11010
+-- Impossible to connect to 1
+-- Connecting to replica 2 at /127.0.0.1:11020
+-- Channel active
+-- Connecting to replica 3 at /127.0.0.1:11030
+-- Channel active
+Launching client 3
+-- Connecting to replica 0 at /127.0.0.1:11000
+-- Channel active
+-- Connecting to replica 1 at /127.0.0.1:11010
+-- Impossible to connect to 1
+-- Connecting to replica 2 at /127.0.0.1:11020
+-- Channel active
+-- Connecting to replica 3 at /127.0.0.1:11030
+-- Channel active
+Warm up...
+Warm up...
+Warm up...
+Warm up...
+client id: 2 --target: [2] --sequence: 0
+client id: 1 --target: [1] --sequence: 0
+client id: 3 --target: [3] --sequence: 0
+client id: 0 --target: [0] --sequence: 0
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- ###################TIMEOUT#######################
+-- ###################TIMEOUT#######################
+-- Reply timeout for reqId=0, Replies received: 0
+-- ###################TIMEOUT#######################
+-- Reply timeout for reqId=0, Replies received: 0
+-- Reply timeout for reqId=0, Replies received: 0
+client id: 3 --target: [3] --sequence: 1
+client id: 2 --target: [2] --sequence: 1
+client id: 0 --target: [0] --sequence: 1
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- ###################TIMEOUT#######################
+-- ###################TIMEOUT#######################
+-- ###################TIMEOUT#######################
+-- Reply timeout for reqId=1, Replies received: 0
+-- Reply timeout for reqId=1, Replies received: 0
+-- Reply timeout for reqId=1, Replies received: 0
+client id: 2 --target: [2] --sequence: 2
+client id: 3 --target: [3] --sequence: 2
+client id: 0 --target: [0] --sequence: 2
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- ###################TIMEOUT#######################
+-- ###################TIMEOUT#######################
+-- ###################TIMEOUT#######################
+-- Reply timeout for reqId=2, Replies received: 0
+-- Reply timeout for reqId=2, Replies received: 0
+-- Reply timeout for reqId=2, Replies received: 0
+client id: 2 --target: [2] --sequence: 3
+client id: 3 --target: [3] --sequence: 3
+client id: 0 --target: [0] --sequence: 3
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- ###################TIMEOUT#######################
+-- ###################TIMEOUT#######################
+-- ###################TIMEOUT#######################
+-- Reply timeout for reqId=3, Replies received: 0
+-- Reply timeout for reqId=3, Replies received: 0
+-- Reply timeout for reqId=3, Replies received: 0
+client id: 0 --target: [0] --sequence: 4
+client id: 2 --target: [2] --sequence: 4
+client id: 3 --target: [3] --sequence: 4
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- re-connecting to replica 1 at /127.0.0.1:11010
+-- ###################TIMEOUT#######################
+-- ###################TIMEOUT#######################
+-- ###################TIMEOUT#######################
+-- Reply timeout for reqId=4, Replies received: 0
+-- Reply timeout for reqId=4, Replies received: 0
+-- Reply timeout for reqId=4, Replies received: 0
+client id: 0 --target: [0] --sequence: 5
+client id: 3 --target: [3] --sequence: 5
+client id: 2 --target: [2] --sequence: 5

@@ -10,6 +10,7 @@ import java.lang.Math;
 import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 public class multi_chain {
     private int replica_num=4;
 
@@ -90,6 +91,7 @@ public class multi_chain {
 
     public List<Mz_BatchListItem> packListWithTip(){
         List<Map<Integer,Integer>> chainTipArray = getReplicaChainPoolTip();
+        System.out.println("Stage packListWithTip: --start time: "+System.currentTimeMillis());
         this.mzlock.lock();
         List<Mz_BatchListItem> list = new ArrayList<>();
         // int quorum = (replica_num/3)*2;
@@ -126,7 +128,8 @@ public class multi_chain {
         }
         this.mzlock.unlock();
         // check the block before returned
-        checkBlock(list);
+        checkBlock(list); //这是由于空batch所带来的弊端
+        System.out.println("Stage packListWithTip: --end time: "+System.currentTimeMillis());
         return list;
     }
 
@@ -157,6 +160,7 @@ public class multi_chain {
         }
         this.mzlock.unlock();
         // update newest chainTip for myself.
+        // todo 是否有必要？感觉这一步很多余，之前都在锁里
         chainTipArray.set(this.NodeID, getMyChainPoolTip());
         return chainTipArray;
     }
@@ -181,9 +185,9 @@ public class multi_chain {
     }
 
     // TODO: to fix IndexOutOfBoundsException in line 198
-    public RequestList getsyncedRequestfromlist(List<Mz_BatchListItem> rev){
-        
-        RequestList reqlist=new RequestList();
+    public getsync_reply getsyncedRequestfromlist(List<Mz_BatchListItem> rev){
+
+        getsync_reply reply=new getsync_reply();
         System.out.println("Stage: getsyncedRequestfromlist try to getRequestfromlist");
         this.mzlock.lock();
         for (Mz_BatchListItem mz_batchListItem : rev) {
@@ -196,23 +200,23 @@ public class multi_chain {
                 continue;
             if (ed>this.ChainPool[nd].get(this.ChainPool[nd].size()-1).BatchId)
             {
-                reqlist.clear();
-                System.out.println("Stage: getsyncedRequestfromlist --ed>len --ed:"+ed+" --len: "+this.ChainPool[nd].get(this.ChainPool[nd].size()-1).BatchId+" --listsize: "+ 0);
-                return reqlist;
+                reply.setOk(false);
+                System.out.println("Stage: getsyncedRequestfromlist --ed>len --ed:"+ed+" --len: "+this.ChainPool[nd].get(this.ChainPool[nd].size()-1).BatchId);
+                return reply;
             }
             for (int j = st; j <= ed; j++) {
-                reqlist.addAll(this.ChainPool[nd].get(j).Req);
+                reply.list.addAll(this.ChainPool[nd].get(j).Req);
                 System.out.println("Stage: getsyncedRequestfromlist --Height: "+j+" req: "+this.ChainPool[nd].get(j).Req);
             }
         }
         this.mzlock.unlock();
         // System.out.println("Stage: getsyncedRequestfromlist --totoal reqlist"+reqlist);
-        System.out.printf("Stage: getsyncedRequestfromlist --total syncedRequesrequest size: %d, request: %s\n", reqlist.size(), reqlist.toString());
-        NPackedTx += reqlist.size();
-        if (reqlist.isEmpty() == false) {
+        System.out.printf("Stage: getsyncedRequestfromlist --total syncedRequesrequest size: %d, request: %s\n", reply.getlist().size(), reply.getlist().toString());
+        NPackedTx += reply.list.size();
+        if (!reply.list.isEmpty()) {
             System.out.printf("Node %d packed tx number: %d\n", NodeID, NPackedTx);
         }
-        return reqlist;
+        return reply;
     }
 
     public RequestList getnotsyncRequestfromlist(List<Mz_BatchListItem> rev){

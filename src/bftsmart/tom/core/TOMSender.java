@@ -15,6 +15,7 @@ limitations under the License.
 */
 package bftsmart.tom.core;
 
+import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
@@ -89,7 +90,7 @@ public abstract class TOMSender implements ReplyReceiver, Closeable, AutoCloseab
 		this.cs = CommunicationSystemClientSideFactory.getCommunicationSystemClientSide(clientId, this.viewController);
 		this.cs.setReplyReceiver(this); // This object itself shall be a reply receiver
 		this.me = this.viewController.getStaticConf().getProcessId();
-		this.useSignatures = this.viewController.getStaticConf().getUseSignatures()==1?true:false;
+		this.useSignatures = this.viewController.getStaticConf().getUseSignatures() == 1;
 		this.session = new Random().nextInt();
 	}
 	//******* EDUARDO END **************//
@@ -118,6 +119,7 @@ public abstract class TOMSender implements ReplyReceiver, Closeable, AutoCloseab
 	public void TOMulticast(TOMMessage sm) {
 		int[] replicaArray = (this.viewController.getCurrentViewProcesses());
 		int[] target = {(me % replicaArray.length)};
+		System.out.println("client id: "+me+" --target: "+ Arrays.toString(target));
 		// cs.send(useSignatures, this.viewController.getCurrentViewProcesses(), sm);
 		cs.send(useSignatures, target, sm);
 	}
@@ -129,6 +131,7 @@ public abstract class TOMSender implements ReplyReceiver, Closeable, AutoCloseab
 		// cs.send(useSignatures, viewController.getCurrentViewProcesses(),
 		// 		new TOMMessage(me, session, reqId, operationId, m, viewController.getCurrentViewId(),
 		// 				reqType));
+		System.out.println("client id: "+me+" --target: "+ Arrays.toString(target)+" --sequence: "+reqId);
 		cs.send(useSignatures, target,
 				new TOMMessage(me, session, reqId, operationId, m, viewController.getCurrentViewId(),
 						reqType));

@@ -37,10 +37,7 @@ import bftsmart.consensus.Epoch;
 import bftsmart.consensus.messages.ConsensusMessage;
 import bftsmart.consensus.messages.MessageFactory;
 import bftsmart.consensus.roles.Acceptor;
-import bftsmart.multi_zone.Mz_Batch;
-import bftsmart.multi_zone.Mz_BatchListItem;
-import bftsmart.multi_zone.Mz_Propose;
-import bftsmart.multi_zone.multi_chain;
+import bftsmart.multi_zone.*;
 import bftsmart.reconfiguration.ServerViewController;
 import bftsmart.statemanagement.StateManager;
 import bftsmart.tom.ServiceReplica;
@@ -353,7 +350,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
 
     //our propose
     public byte[] createMzPropose(Decision dec) {
-        System.out.println("Stage: createMzPropose --Node create a Mzpropose");
+        System.out.println("Stage: createMzPropose --Node create a Mzpropose at："+System.currentTimeMillis());
         // List<Mz_BatchListItem> pendingBatch = multiChain.packList();
         List<Mz_BatchListItem> pendingBatch = multiChain.packListWithTip();
         if (pendingBatch.size()==0){
@@ -410,12 +407,14 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                     // }
                     // messagesLock.unlock();
                     long interval = System.currentTimeMillis()-lastsend;
+                    //todo multiChain.getMyGeneratedHeight()!=-1 是否有必要？以及对于空batch只是用来更新的batchid是否需要递增，以及是否需要存？
                     if ((interval > 5 && clientsManager.havePendingRequests()) || (interval > 500 && multiChain.getUpdateTipState() && multiChain.getMyGeneratedHeight()!=-1)){
                         RequestList reqlist = clientsManager.getPendingRequests();
                         multiChain.updateMyGeneratedHeight();
-                        //multiChain.setUpdateTipState(false); //如果本来有更新，那么也无法发送了
+                        //multiChain.setUpdateTipState(false); //如果本来有更新，那么也无法发送了  如果注释掉，没有地方置为false，会一直处于更新的状态，发送很多无用的空batch
+                        multiChain.setUpdateTipState(false);
                         Map<Integer,Integer> chainPoolTip = multiChain.getMyChainPoolTip();
-                        chainPoolTip.put(myId, multiChain.getMyGeneratedHeight());
+                        //chainPoolTip.put(myId, multiChain.getMyGeneratedHeight()); 多余的操作
                         multiChain.add(new Mz_Batch(myId,multiChain.getMyGeneratedHeight(),reqlist,chainPoolTip));
                         byte[] batch = mzbb.makeMzBatch(myId, multiChain.getMyGeneratedHeight(), reqlist, useSignature==1, chainPoolTip);
                         ConsensusMessage batchMessage = messageFactory.createMzBatch(0,0,batch);
@@ -691,9 +690,10 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     }
 
     public void OnMzBatch(ConsensusMessage msg){
-        MzBatchReader mzbatchReader = new MzBatchReader(msg.getValue(),
-                this.controller.getStaticConf().getUseSignatures() == 1);
-        if (msg.getSender()!=this.controller.getStaticConf().getProcessId()){
+
+        if (msg.getSender()!=this.controller.getStaticConf().getProcessId()){ //拒绝来自自己的batch。避免重复存储
+            MzBatchReader mzbatchReader = new MzBatchReader(msg.getValue(),
+                    this.controller.getStaticConf().getUseSignatures() == 1);
             this.multiChain.add(mzbatchReader.deserialisemsg());
         }
     }
@@ -704,8 +704,8 @@ public final class TOMLayer extends Thread implements RequestReceiver {
 
         Mz_Propose mz_propose=mzproposeReader.deserialisemsg();
 
-        RequestList synclist=this.multiChain.getsyncedRequestfromlist(mz_propose.list);
-        if (synclist.size()==0)
+        getsync_reply reply=this.multiChain.getsyncedRequestfromlist(mz_propose.list);
+        if (!reply.getok())
             return;
         MessageFactory messageFactory=new MessageFactory(msg.getSender());
 
@@ -715,7 +715,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         if (mz_propose.numofnotsyncreq>0){
             totalreqlist.addAll(mz_propose.notsyncreq);
         }
-        totalreqlist.addAll(synclist);
+        totalreqlist.addAll(reply.getlist());
         this.acceptor.proposeReceived(epoch,messageFactory.createPropose(msg.getNumber(),msg.getEpoch(),bb.makeBatch(totalreqlist,mz_propose.numNounces,mz_propose.seed,mz_propose.timestamp,controller.getStaticConf().getUseSignatures() == 1)));
     }
 
@@ -725,9 +725,13 @@ public final class TOMLayer extends Thread implements RequestReceiver {
 
         Mz_Propose mz_propose=mzproposeReader.deserialisemsg();
 
-        RequestList synclist=this.multiChain.getsyncedRequestfromlist(mz_propose.list);
-        if (synclist.size()==0)
+        getsync_reply reply=this.multiChain.getsyncedRequestfromlist(mz_propose.list);
+        if (!reply.getok())
+        {
+            System.out.println("Stage:OnMzPropose2 --err in getsyncedRequestfromlist");
             return;
+        }
+
 
         MessageFactory messageFactory=new MessageFactory(msg.getSender());
 
@@ -736,7 +740,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         if (mz_propose.numofnotsyncreq>0){
             totalreqlist.addAll(mz_propose.notsyncreq);
         }
-        totalreqlist.addAll(synclist);
+        totalreqlist.addAll(reply.getlist());
         System.out.printf("Node %d receive a MzPropose contains %d requests\n", this.controller.getStaticConf().getProcessId(), totalreqlist.size());
         this.acceptor.deliver(messageFactory.createPropose(msg.getNumber(),msg.getEpoch(),bb.makeBatch(totalreqlist,mz_propose.numNounces,mz_propose.seed,mz_propose.timestamp,controller.getStaticConf().getUseSignatures() == 1)));
     }

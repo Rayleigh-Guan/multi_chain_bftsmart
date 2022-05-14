@@ -1,0 +1,1720 @@
+-- Using view stored on disk
+-- Diffie-Hellman complete with 0
+-- ID = 1
+-- N = 4
+-- F = 1
+-- Port = 11010
+-- requestTimeout = 0
+-- maxBatch = 400
+-- Using MACs
+-- Binded replica to IP address 127.0.0.1
+-- In current view: ID:0; F:1; Processes:0(/127.0.0.1:11000),1(/127.0.0.1:11010),2(/127.0.0.1:11020),3(/127.0.0.1:11030),
+-- Diffie-Hellman complete with 2
+-- Diffie-Hellman complete with 3
+-- Replica state is up to date
+-- Retrieving State
+-- Ready to process operations
+-- Session Created, active clients=0
+-- Session Created, active clients=0
+-- Session Created, active clients=0
+-- Session Created, active clients=0
+Stage: addbatch --Nodeid: 1, received Batch: 0 from 1, len: 1, req: [[1:1690249832:0]], tipArray: {0=-1, 1=-1, 2=-1, 3=-1}, total received Tx: 1, updateTip: false
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 0 from 0, len: 1, req: [[0:-1892244672:0]], tipArray: {0=-1, 1=-1, 2=-1, 3=-1}, total received Tx: 1, updateTip: true
+received a message: --message type: MZBATCH from 1
+Stage: packbatch --Node id: 1 create Mzbatch height:0 batch size: 1 batch req: [[1:1690249832:0]] at time: 1652514627060
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 0 from 2, len: 1, req: [[2:-133109881:0]], tipArray: {0=-1, 1=-1, 2=-1, 3=-1}, total received Tx: 1, updateTip: true
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 0 from 3, len: 1, req: [[3:350602721:0]], tipArray: {0=-1, 1=-1, 2=-1, 3=-1}, total received Tx: 1, updateTip: true
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 1 from 0, len: 2, req: [], tipArray: {0=0, 1=0, 2=0, 3=0}, total received Tx: 1, updateTip: true
+Stage: addbatch --Nodeid: 1, received Batch: 1 from 1, len: 2, req: [], tipArray: {0=1, 1=0, 2=0, 3=0}, total received Tx: 1, updateTip: false
+received a message: --message type: MZBATCH from 1
+Stage: packbatch --Node id: 1 create Mzbatch height:1 batch size: 0 batch req: [] at time: 1652514627561
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 1 from 2, len: 2, req: [], tipArray: {0=1, 1=1, 2=0, 3=0}, total received Tx: 1, updateTip: false
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 1 from 3, len: 2, req: [], tipArray: {0=1, 1=1, 2=1, 3=0}, total received Tx: 1, updateTip: false
+received a message: --message type: MZPROPOSE from 0
+Stage:OnMzPropose2 --Nodeid: 1 received mzpropose from: 0 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1652514628187
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 0 endheight: 1 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 0 endheight: 0 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 0 endheight: 0 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 0 endheight: 0 usebatch: 1
+Stage: getsyncedRequestfromlist try to getRequestfromlist
+Stage: getsyncedRequestfromlist --Node id :0 StartHeight: 0 EndHeight: 1 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 0 req: [[0:-1892244672:0]]
+Stage: getsyncedRequestfromlist --Height: 1 req: []
+Stage: getsyncedRequestfromlist --Node id :1 StartHeight: 0 EndHeight: 0 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 0 req: [[1:1690249832:0]]
+Stage: getsyncedRequestfromlist --Node id :2 StartHeight: 0 EndHeight: 0 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 0 req: [[2:-133109881:0]]
+Stage: getsyncedRequestfromlist --Node id :3 StartHeight: 0 EndHeight: 0 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 0 req: [[3:350602721:0]]
+Stage: getsyncedRequestfromlist --total syncedRequesrequest size: 4, request: [[0:-1892244672:0], [1:1690249832:0], [2:-133109881:0], [3:350602721:0]]
+Node 1 packed tx number: 4
+Node 1 receive a MzPropose contains 4 requests
+received a message: --message type: PROPOSE from 0
+received a message: --message type: PROPOSE but is regard as out of context, from 0
+Node 1 start to process msg PROPOSE from 0
+Stage: proposeReceived --from: 0
+Stage: executePropose --cid: 0, lastExec(): -1, executeSetInExec true 
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1652514628187
+Stage: deserialiseRequests --numberOfMessages:4
+Stage: Successfully deserialized batch
+Stage: executePropose --deserializedPropValue: [[0:-1892244672:0], [1:1690249832:0], [2:-133109881:0], [3:350602721:0]]
+Stage: addbatch --Nodeid: 1, received Batch: 2 from 1, len: 3, req: [[0:-1892244672:0], [2:-133109881:0], [3:350602721:0]], tipArray: {0=1, 1=1, 2=1, 3=1}, total received Tx: 4, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:2 batch size: 3 batch req: [[0:-1892244672:0], [2:-133109881:0], [3:350602721:0]] at time: 1652514628206
+Stage: executePropose --has write vote to consensus id: 0
+Received WRITE number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 2 from 2, len: 3, req: [[0:-1892244672:0], [1:1690249832:0], [3:350602721:0]], tipArray: {0=1, 1=1, 2=1, 3=1}, total received Tx: 4, updateTip: true
+received a message: --message type: WRITE from 2
+Node 1 start to process msg WRITE from 2
+Node 1 received a WRITE message from 2, cid: 0
+Received WRITE number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 2 from 3, len: 3, req: [[0:-1892244672:0]], tipArray: {0=1, 1=1, 2=1, 3=1}, total received Tx: 2, updateTip: true
+received a message: --message type: WRITE from 3
+Node 1 start to process msg WRITE from 3
+Node 1 received a WRITE message from 3, cid: 0
+Received WRITE number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 0
+Node 1 computeAccept for cid: 0
+Received ACCEPT number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 0
+Node 1 start to process msg WRITE from 0
+Node 1 received a WRITE message from 0, cid: 0
+Received WRITE number 4 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 0
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 2 from 0, len: 3, req: [[1:1690249832:0], [2:-133109881:0], [3:350602721:0]], tipArray: {0=1, 1=1, 2=1, 3=1}, total received Tx: 4, updateTip: true
+received a message: --message type: ACCEPT from 0
+Node 1 start to process msg ACCEPT from 0
+Node 1 received a ACCEPT message from 0, cid: 0
+Node 1 computeAccept for cid: 0
+Received ACCEPT number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: ACCEPT from 2
+Node 1 start to process msg ACCEPT from 2
+Node 1 received a ACCEPT message from 2, cid: 0
+Node 1 computeAccept for cid: 0
+Received ACCEPT number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough ACCEPT messages for cid: 0
+Leader node 0's consensus is reached, cid: 0, remove 4 requests from queue
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 3 from 3, len: 4, req: [[1:1690249832:0], [2:-133109881:0]], tipArray: {0=1, 1=1, 2=1, 3=2}, total received Tx: 4, updateTip: true
+received a message: --message type: ACCEPT from 3
+received a message: --message type: ACCEPT but is regard as out of context, from 3
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+received a message: --message type: MZPROPOSE from 0
+Stage:OnMzPropose2 --Nodeid: 1 received mzpropose from: 0 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1652514628261
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 2 endheight: 2 usebatch: 0
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 1 endheight: 1 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 1 endheight: 1 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 1 endheight: 1 usebatch: 1
+Stage: getsyncedRequestfromlist try to getRequestfromlist
+Stage: getsyncedRequestfromlist --Node id :0 StartHeight: 2 EndHeight: 2 usebatch 0
+Stage: getsyncedRequestfromlist --Node id :1 StartHeight: 1 EndHeight: 1 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 1 req: []
+Stage: getsyncedRequestfromlist --Node id :2 StartHeight: 1 EndHeight: 1 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 1 req: []
+Stage: getsyncedRequestfromlist --Node id :3 StartHeight: 1 EndHeight: 1 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 1 req: []
+Stage: getsyncedRequestfromlist --total syncedRequesrequest size: 0, request: []
+Node 1 receive a MzPropose contains 3 requests
+received a message: --message type: PROPOSE from 0
+received a message: --message type: PROPOSE but is regard as out of context, from 0
+Node 1 start to process msg PROPOSE from 0
+Stage: proposeReceived --from: 0
+Stage: executePropose --cid: 1, lastExec(): 0, executeSetInExec true 
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1652514628261
+Stage: deserialiseRequests --numberOfMessages:3
+Stage: Successfully deserialized batch
+Stage: executePropose --deserializedPropValue: [[1:1690249832:0], [2:-133109881:0], [3:350602721:0]]
+Stage: executePropose --has write vote to consensus id: 1
+Received WRITE number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 0
+Node 1 start to process msg WRITE from 0
+Node 1 received a WRITE message from 0, cid: 1
+Received WRITE number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 3
+Node 1 start to process msg WRITE from 3
+Node 1 received a WRITE message from 3, cid: 1
+Received WRITE number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 1
+Node 1 computeAccept for cid: 1
+Received ACCEPT number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: ACCEPT from 3
+Node 1 start to process msg ACCEPT from 3
+Node 1 received a ACCEPT message from 3, cid: 1
+Node 1 computeAccept for cid: 1
+Received ACCEPT number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: ACCEPT from 0
+Node 1 start to process msg ACCEPT from 0
+Node 1 received a ACCEPT message from 0, cid: 1
+Node 1 computeAccept for cid: 1
+Received ACCEPT number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough ACCEPT messages for cid: 1
+Leader node 0's consensus is reached, cid: 1, remove 3 requests from queue
+received a message: --message type: MZPROPOSE from 0
+Stage:OnMzPropose2 --Nodeid: 1 received mzpropose from: 0 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1652514628304
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 3
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 2 endheight: 2 usebatch: 0
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 2 endheight: 2 usebatch: 0
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 2 endheight: 2 usebatch: 0
+Stage: getsyncedRequestfromlist try to getRequestfromlist
+Stage: getsyncedRequestfromlist --Node id :1 StartHeight: 2 EndHeight: 2 usebatch 0
+Stage: getsyncedRequestfromlist --Node id :2 StartHeight: 2 EndHeight: 2 usebatch 0
+Stage: getsyncedRequestfromlist --Node id :3 StartHeight: 2 EndHeight: 2 usebatch 0
+Stage: getsyncedRequestfromlist --total syncedRequesrequest size: 0, request: []
+Node 1 receive a MzPropose contains 7 requests
+received a message: --message type: PROPOSE from 0
+received a message: --message type: PROPOSE but is regard as out of context, from 0
+Node 1 start to process msg PROPOSE from 0
+Stage: proposeReceived --from: 0
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+Stage: executePropose --cid: 2, lastExec(): 1, executeSetInExec true 
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1652514628304
+Stage: deserialiseRequests --numberOfMessages:7
+Stage: Successfully deserialized batch
+Stage: executePropose --deserializedPropValue: [[0:-1892244672:0], [2:-133109881:0], [3:350602721:0], [0:-1892244672:0], [1:1690249832:0], [3:350602721:0], [0:-1892244672:0]]
+Stage: executePropose --has write vote to consensus id: 2
+Received WRITE number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 0
+Node 1 start to process msg WRITE from 0
+Node 1 received a WRITE message from 0, cid: 2
+Received WRITE number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 2
+received a message: --message type: WRITE but is regard as out of context, from 2
+received a message: --message type: ACCEPT from 2
+received a message: --message type: ACCEPT but is regard as out of context, from 2
+received a message: --message type: WRITE from 3
+Node 1 start to process msg WRITE from 3
+Node 1 received a WRITE message from 3, cid: 2
+Received WRITE number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 2
+Node 1 computeAccept for cid: 2
+Received ACCEPT number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 2
+Node 1 start to process msg WRITE from 2
+Node 1 received a WRITE message from 2, cid: 2
+Received WRITE number 4 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 2
+received a message: --message type: ACCEPT from 2
+Node 1 start to process msg ACCEPT from 2
+Node 1 received a ACCEPT message from 2, cid: 2
+Node 1 computeAccept for cid: 2
+Received ACCEPT number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: ACCEPT from 0
+Node 1 start to process msg ACCEPT from 0
+Node 1 received a ACCEPT message from 0, cid: 2
+Node 1 computeAccept for cid: 2
+Received ACCEPT number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough ACCEPT messages for cid: 2
+Leader node 0's consensus is reached, cid: 2, remove 7 requests from queue
+received a message: --message type: ACCEPT from 3
+received a message: --message type: ACCEPT but is regard as out of context, from 3
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+received a message: --message type: MZPROPOSE from 0
+Stage:OnMzPropose2 --Nodeid: 1 received mzpropose from: 0 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1652514628350
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 3 endheight: 3 usebatch: 0
+Stage: getsyncedRequestfromlist try to getRequestfromlist
+Stage: getsyncedRequestfromlist --Node id :3 StartHeight: 3 EndHeight: 3 usebatch 0
+Stage: getsyncedRequestfromlist --total syncedRequesrequest size: 0, request: []
+Node 1 receive a MzPropose contains 2 requests
+received a message: --message type: PROPOSE from 0
+received a message: --message type: PROPOSE but is regard as out of context, from 0
+Node 1 start to process msg PROPOSE from 0
+Stage: proposeReceived --from: 0
+Stage: executePropose --cid: 3, lastExec(): 2, executeSetInExec true 
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1652514628350
+Stage: deserialiseRequests --numberOfMessages:2
+Stage: Successfully deserialized batch
+Stage: executePropose --deserializedPropValue: [[1:1690249832:0], [2:-133109881:0]]
+Stage: executePropose --has write vote to consensus id: 3
+Received WRITE number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 0
+Node 1 start to process msg WRITE from 0
+Node 1 received a WRITE message from 0, cid: 3
+Received WRITE number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 3
+Node 1 start to process msg WRITE from 3
+Node 1 received a WRITE message from 3, cid: 3
+Received WRITE number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 3
+Node 1 computeAccept for cid: 3
+Received ACCEPT number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 2
+Node 1 start to process msg WRITE from 2
+Node 1 received a WRITE message from 2, cid: 3
+Received WRITE number 4 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 3
+received a message: --message type: ACCEPT from 2
+Node 1 start to process msg ACCEPT from 2
+Node 1 received a ACCEPT message from 2, cid: 3
+Node 1 computeAccept for cid: 3
+Received ACCEPT number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: ACCEPT from 0
+Node 1 start to process msg ACCEPT from 0
+Node 1 received a ACCEPT message from 0, cid: 3
+Node 1 computeAccept for cid: 3
+Received ACCEPT number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough ACCEPT messages for cid: 3
+Leader node 0's consensus is reached, cid: 3, remove 2 requests from queue
+received a message: --message type: ACCEPT from 3
+received a message: --message type: ACCEPT but is regard as out of context, from 3
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 3 from 1, len: 4, req: [], tipArray: {0=2, 1=2, 2=2, 3=3}, total received Tx: 4, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:3 batch size: 0 batch req: [] at time: 1652514628707
+Stage: addbatch --Nodeid: 1, received Batch: 3 from 2, len: 4, req: [], tipArray: {0=2, 1=2, 2=2, 3=3}, total received Tx: 4, updateTip: false
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 3 from 0, len: 4, req: [], tipArray: {0=2, 1=2, 2=2, 3=3}, total received Tx: 4, updateTip: false
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 4 from 3, len: 5, req: [], tipArray: {0=3, 1=3, 2=3, 3=3}, total received Tx: 4, updateTip: false
+Stage: addbatch --Nodeid: 1, received Batch: 4 from 1, len: 5, req: [[1:1690249832:1]], tipArray: {0=3, 1=3, 2=3, 3=4}, total received Tx: 5, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:4 batch size: 1 batch req: [[1:1690249832:1]] at time: 1652514668009
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 4 from 0, len: 5, req: [[0:-1892244672:1]], tipArray: {0=3, 1=3, 2=3, 3=4}, total received Tx: 5, updateTip: true
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 5 from 3, len: 6, req: [[3:350602721:1]], tipArray: {0=3, 1=3, 2=3, 3=4}, total received Tx: 5, updateTip: true
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 4 from 2, len: 5, req: [[2:-133109881:1]], tipArray: {0=3, 1=3, 2=3, 3=4}, total received Tx: 5, updateTip: true
+Stage: addbatch --Nodeid: 1, received Batch: 5 from 1, len: 6, req: [], tipArray: {0=4, 1=4, 2=4, 3=5}, total received Tx: 5, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:5 batch size: 0 batch req: [] at time: 1652514668510
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 5 from 0, len: 6, req: [], tipArray: {0=4, 1=4, 2=4, 3=5}, total received Tx: 5, updateTip: false
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 5 from 2, len: 6, req: [], tipArray: {0=4, 1=4, 2=4, 3=5}, total received Tx: 5, updateTip: false
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 6 from 3, len: 7, req: [], tipArray: {0=4, 1=4, 2=4, 3=5}, total received Tx: 5, updateTip: false
+received a message: --message type: MZPROPOSE from 0
+Stage:OnMzPropose2 --Nodeid: 1 received mzpropose from: 0 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1652514670471
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 3 endheight: 4 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 3 endheight: 4 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 3 endheight: 4 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 4 endheight: 5 usebatch: 1
+Stage: getsyncedRequestfromlist try to getRequestfromlist
+Stage: getsyncedRequestfromlist --Node id :0 StartHeight: 3 EndHeight: 4 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 3 req: []
+Stage: getsyncedRequestfromlist --Height: 4 req: [[0:-1892244672:1]]
+Stage: getsyncedRequestfromlist --Node id :1 StartHeight: 3 EndHeight: 4 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 3 req: []
+Stage: getsyncedRequestfromlist --Height: 4 req: [[1:1690249832:1]]
+Stage: getsyncedRequestfromlist --Node id :2 StartHeight: 3 EndHeight: 4 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 3 req: []
+Stage: getsyncedRequestfromlist --Height: 4 req: [[2:-133109881:1]]
+Stage: getsyncedRequestfromlist --Node id :3 StartHeight: 4 EndHeight: 5 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 4 req: []
+Stage: getsyncedRequestfromlist --Height: 5 req: [[3:350602721:1]]
+Stage: getsyncedRequestfromlist --total syncedRequesrequest size: 4, request: [[0:-1892244672:1], [1:1690249832:1], [2:-133109881:1], [3:350602721:1]]
+Node 1 packed tx number: 8
+Node 1 receive a MzPropose contains 4 requests
+received a message: --message type: PROPOSE from 0
+received a message: --message type: PROPOSE but is regard as out of context, from 0
+Node 1 start to process msg PROPOSE from 0
+Stage: proposeReceived --from: 0
+Stage: executePropose --cid: 4, lastExec(): 3, executeSetInExec true 
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1652514670471
+Stage: deserialiseRequests --numberOfMessages:4
+Stage: addbatch --Nodeid: 1, received Batch: 6 from 1, len: 7, req: [[0:-1892244672:1]], tipArray: {0=5, 1=5, 2=5, 3=6}, total received Tx: 6, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:6 batch size: 1 batch req: [[0:-1892244672:1]] at time: 1652514670476
+Stage: Successfully deserialized batch
+Stage: executePropose --deserializedPropValue: [[0:-1892244672:1], [1:1690249832:1], [2:-133109881:1], [3:350602721:1]]
+Stage: executePropose --has write vote to consensus id: 4
+Received WRITE number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 7 from 3, len: 8, req: [[0:-1892244672:1]], tipArray: {0=5, 1=5, 2=5, 3=6}, total received Tx: 6, updateTip: true
+received a message: --message type: WRITE from 3
+Node 1 start to process msg WRITE from 3
+Node 1 received a WRITE message from 3, cid: 4
+Received WRITE number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 0
+Node 1 start to process msg WRITE from 0
+Node 1 received a WRITE message from 0, cid: 4
+Received WRITE number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 4
+Node 1 computeAccept for cid: 4
+Received ACCEPT number 1 more than quorum 2, : false, arrays equal: true
+Stage: addbatch --Nodeid: 1, received Batch: 7 from 1, len: 8, req: [[2:-133109881:1], [3:350602721:1]], tipArray: {0=5, 1=6, 2=5, 3=7}, total received Tx: 8, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:7 batch size: 2 batch req: [[2:-133109881:1], [3:350602721:1]] at time: 1652514670484
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 6 from 0, len: 7, req: [[1:1690249832:1], [2:-133109881:1], [3:350602721:1]], tipArray: {0=5, 1=5, 2=5, 3=6}, total received Tx: 8, updateTip: true
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 8 from 3, len: 9, req: [[1:1690249832:1], [2:-133109881:1]], tipArray: {0=5, 1=6, 2=5, 3=7}, total received Tx: 8, updateTip: true
+received a message: --message type: ACCEPT from 3
+Node 1 start to process msg ACCEPT from 3
+Node 1 received a ACCEPT message from 3, cid: 4
+Node 1 computeAccept for cid: 4
+Received ACCEPT number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: ACCEPT from 0
+Node 1 start to process msg ACCEPT from 0
+Node 1 received a ACCEPT message from 0, cid: 4
+Node 1 computeAccept for cid: 4
+Received ACCEPT number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough ACCEPT messages for cid: 4
+Leader node 0's consensus is reached, cid: 4, remove 4 requests from queue
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 6 from 2, len: 7, req: [], tipArray: {0=5, 1=7, 2=5, 3=8}, total received Tx: 5, updateTip: true
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 7 from 2, len: 8, req: [[0:-1892244672:1]], tipArray: {0=5, 1=7, 2=6, 3=8}, total received Tx: 6, updateTip: true
+received a message: --message type: WRITE from 2
+received a message: --message type: WRITE but is regard as out of context, from 2
+received a message: --message type: ACCEPT from 2
+received a message: --message type: ACCEPT but is regard as out of context, from 2
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 7 from 0, len: 8, req: [], tipArray: {0=6, 1=7, 2=7, 3=8}, total received Tx: 8, updateTip: true
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 9 from 3, len: 10, req: [], tipArray: {0=6, 1=7, 2=7, 3=8}, total received Tx: 8, updateTip: true
+Stage: addbatch --Nodeid: 1, received Batch: 8 from 1, len: 9, req: [], tipArray: {0=7, 1=7, 2=7, 3=9}, total received Tx: 8, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:8 batch size: 0 batch req: [] at time: 1652514670985
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 8 from 2, len: 9, req: [], tipArray: {0=7, 1=8, 2=7, 3=9}, total received Tx: 6, updateTip: false
+received a message: --message type: MZPROPOSE from 0
+Stage:OnMzPropose2 --Nodeid: 1 received mzpropose from: 0 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1652514672499
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 5 endheight: 6 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 5 endheight: 7 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 5 endheight: 7 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 6 endheight: 8 usebatch: 1
+Stage: getsyncedRequestfromlist try to getRequestfromlist
+Stage: getsyncedRequestfromlist --Node id :0 StartHeight: 5 EndHeight: 6 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 5 req: []
+Stage: getsyncedRequestfromlist --Height: 6 req: [[1:1690249832:1], [2:-133109881:1], [3:350602721:1]]
+Stage: getsyncedRequestfromlist --Node id :1 StartHeight: 5 EndHeight: 7 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 5 req: []
+Stage: getsyncedRequestfromlist --Height: 6 req: [[0:-1892244672:1]]
+Stage: getsyncedRequestfromlist --Height: 7 req: [[2:-133109881:1], [3:350602721:1]]
+Stage: getsyncedRequestfromlist --Node id :2 StartHeight: 5 EndHeight: 7 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 5 req: []
+Stage: getsyncedRequestfromlist --Height: 6 req: []
+Stage: getsyncedRequestfromlist --Height: 7 req: [[0:-1892244672:1]]
+Stage: getsyncedRequestfromlist --Node id :3 StartHeight: 6 EndHeight: 8 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 6 req: []
+Stage: getsyncedRequestfromlist --Height: 7 req: [[0:-1892244672:1]]
+Stage: getsyncedRequestfromlist --Height: 8 req: [[1:1690249832:1], [2:-133109881:1]]
+Stage: getsyncedRequestfromlist --total syncedRequesrequest size: 10, request: [[1:1690249832:1], [2:-133109881:1], [3:350602721:1], [0:-1892244672:1], [2:-133109881:1], [3:350602721:1], [0:-1892244672:1], [0:-1892244672:1], [1:1690249832:1], [2:-133109881:1]]
+Node 1 packed tx number: 18
+Node 1 receive a MzPropose contains 10 requests
+received a message: --message type: PROPOSE from 0
+received a message: --message type: PROPOSE but is regard as out of context, from 0
+Node 1 start to process msg PROPOSE from 0
+Stage: proposeReceived --from: 0
+Stage: executePropose --cid: 5, lastExec(): 4, executeSetInExec true 
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1652514672499
+Stage: deserialiseRequests --numberOfMessages:10
+Stage: Successfully deserialized batch
+Stage: executePropose --deserializedPropValue: [[1:1690249832:1], [2:-133109881:1], [3:350602721:1], [0:-1892244672:1], [2:-133109881:1], [3:350602721:1], [0:-1892244672:1], [0:-1892244672:1], [1:1690249832:1], [2:-133109881:1]]
+Stage: executePropose --has write vote to consensus id: 5
+Received WRITE number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 3
+Node 1 start to process msg WRITE from 3
+Node 1 received a WRITE message from 3, cid: 5
+Received WRITE number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 2
+Node 1 start to process msg WRITE from 2
+Node 1 received a WRITE message from 2, cid: 5
+Received WRITE number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 5
+Node 1 computeAccept for cid: 5
+Received ACCEPT number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 0
+Node 1 start to process msg WRITE from 0
+Node 1 received a WRITE message from 0, cid: 5
+Received WRITE number 4 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 5
+received a message: --message type: ACCEPT from 0
+Node 1 start to process msg ACCEPT from 0
+Node 1 received a ACCEPT message from 0, cid: 5
+Node 1 computeAccept for cid: 5
+Received ACCEPT number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: ACCEPT from 2
+Node 1 start to process msg ACCEPT from 2
+Node 1 received a ACCEPT message from 2, cid: 5
+Node 1 computeAccept for cid: 5
+Received ACCEPT number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough ACCEPT messages for cid: 5
+Leader node 0's consensus is reached, cid: 5, remove 10 requests from queue
+received a message: --message type: ACCEPT from 3
+received a message: --message type: ACCEPT but is regard as out of context, from 3
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+Stage: addbatch --Nodeid: 1, received Batch: 9 from 1, len: 10, req: [[1:1690249832:2]], tipArray: {0=7, 1=8, 2=8, 3=9}, total received Tx: 9, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:9 batch size: 1 batch req: [[1:1690249832:2]] at time: 1652514709020
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 8 from 0, len: 9, req: [[0:-1892244672:2]], tipArray: {0=7, 1=8, 2=8, 3=9}, total received Tx: 9, updateTip: true
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 10 from 3, len: 11, req: [[3:350602721:2]], tipArray: {0=7, 1=8, 2=8, 3=9}, total received Tx: 9, updateTip: true
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 9 from 2, len: 10, req: [[2:-133109881:2]], tipArray: {0=7, 1=8, 2=8, 3=9}, total received Tx: 7, updateTip: true
+Stage: addbatch --Nodeid: 1, received Batch: 10 from 1, len: 11, req: [], tipArray: {0=8, 1=9, 2=9, 3=10}, total received Tx: 9, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:10 batch size: 0 batch req: [] at time: 1652514709521
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 9 from 0, len: 10, req: [], tipArray: {0=8, 1=9, 2=9, 3=10}, total received Tx: 9, updateTip: false
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 10 from 2, len: 11, req: [], tipArray: {0=8, 1=9, 2=9, 3=10}, total received Tx: 7, updateTip: false
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 11 from 3, len: 12, req: [], tipArray: {0=8, 1=9, 2=9, 3=10}, total received Tx: 9, updateTip: false
+received a message: --message type: MZPROPOSE from 0
+Stage:OnMzPropose2 --Nodeid: 1 received mzpropose from: 0 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1652514710628
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 7 endheight: 8 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 8 endheight: 9 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 8 endheight: 9 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 9 endheight: 10 usebatch: 1
+Stage: getsyncedRequestfromlist try to getRequestfromlist
+Stage: getsyncedRequestfromlist --Node id :0 StartHeight: 7 EndHeight: 8 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 7 req: []
+Stage: getsyncedRequestfromlist --Height: 8 req: [[0:-1892244672:2]]
+Stage: getsyncedRequestfromlist --Node id :1 StartHeight: 8 EndHeight: 9 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 8 req: []
+Stage: getsyncedRequestfromlist --Height: 9 req: [[1:1690249832:2]]
+Stage: getsyncedRequestfromlist --Node id :2 StartHeight: 8 EndHeight: 9 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 8 req: []
+Stage: getsyncedRequestfromlist --Height: 9 req: [[2:-133109881:2]]
+Stage: getsyncedRequestfromlist --Node id :3 StartHeight: 9 EndHeight: 10 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 9 req: []
+Stage: getsyncedRequestfromlist --Height: 10 req: [[3:350602721:2]]
+Stage: getsyncedRequestfromlist --total syncedRequesrequest size: 4, request: [[0:-1892244672:2], [1:1690249832:2], [2:-133109881:2], [3:350602721:2]]
+Node 1 packed tx number: 22
+Node 1 receive a MzPropose contains 4 requests
+received a message: --message type: PROPOSE from 0
+received a message: --message type: PROPOSE but is regard as out of context, from 0
+Node 1 start to process msg PROPOSE from 0
+Stage: proposeReceived --from: 0
+Stage: executePropose --cid: 6, lastExec(): 5, executeSetInExec true 
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1652514710628
+Stage: deserialiseRequests --numberOfMessages:4
+Stage: addbatch --Nodeid: 1, received Batch: 11 from 1, len: 12, req: [[0:-1892244672:2], [2:-133109881:2], [3:350602721:2]], tipArray: {0=9, 1=10, 2=10, 3=11}, total received Tx: 12, updateTip: false
+Stage: Successfully deserialized batch
+Stage: executePropose --deserializedPropValue: [[0:-1892244672:2], [1:1690249832:2], [2:-133109881:2], [3:350602721:2]]
+Stage: packbatch --Node id: 1 create Mzbatch height:11 batch size: 3 batch req: [[0:-1892244672:2], [2:-133109881:2], [3:350602721:2]] at time: 1652514710632
+Stage: executePropose --has write vote to consensus id: 6
+Received WRITE number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 11 from 2, len: 12, req: [[0:-1892244672:2]], tipArray: {0=9, 1=10, 2=10, 3=11}, total received Tx: 8, updateTip: true
+received a message: --message type: WRITE from 2
+Node 1 start to process msg WRITE from 2
+Node 1 received a WRITE message from 2, cid: 6
+Received WRITE number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 10 from 0, len: 11, req: [[1:1690249832:2], [2:-133109881:2], [3:350602721:2]], tipArray: {0=9, 1=10, 2=10, 3=11}, total received Tx: 12, updateTip: true
+received a message: --message type: WRITE from 0
+Node 1 start to process msg WRITE from 0
+Node 1 received a WRITE message from 0, cid: 6
+Received WRITE number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 6
+Node 1 computeAccept for cid: 6
+Received ACCEPT number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 12 from 3, len: 13, req: [[0:-1892244672:2]], tipArray: {0=9, 1=10, 2=10, 3=11}, total received Tx: 10, updateTip: true
+received a message: --message type: WRITE from 3
+Node 1 start to process msg WRITE from 3
+Node 1 received a WRITE message from 3, cid: 6
+Received WRITE number 4 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 6
+received a message: --message type: ACCEPT from 0
+Node 1 start to process msg ACCEPT from 0
+Node 1 received a ACCEPT message from 0, cid: 6
+Node 1 computeAccept for cid: 6
+Received ACCEPT number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: ACCEPT from 3
+Node 1 start to process msg ACCEPT from 3
+Node 1 received a ACCEPT message from 3, cid: 6
+Node 1 computeAccept for cid: 6
+Received ACCEPT number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough ACCEPT messages for cid: 6
+Leader node 0's consensus is reached, cid: 6, remove 4 requests from queue
+received a message: --message type: ACCEPT from 2
+received a message: --message type: ACCEPT but is regard as out of context, from 2
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 12 from 2, len: 13, req: [[1:1690249832:2], [3:350602721:2]], tipArray: {0=10, 1=11, 2=11, 3=12}, total received Tx: 10, updateTip: true
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 13 from 3, len: 14, req: [[1:1690249832:2], [2:-133109881:2]], tipArray: {0=10, 1=11, 2=11, 3=12}, total received Tx: 12, updateTip: true
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+Stage: addbatch --Nodeid: 1, received Batch: 12 from 1, len: 13, req: [], tipArray: {0=10, 1=11, 2=12, 3=13}, total received Tx: 12, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:12 batch size: 0 batch req: [] at time: 1652514711133
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 11 from 0, len: 12, req: [], tipArray: {0=10, 1=11, 2=12, 3=13}, total received Tx: 12, updateTip: false
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 13 from 2, len: 14, req: [], tipArray: {0=11, 1=12, 2=12, 3=13}, total received Tx: 10, updateTip: false
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 14 from 3, len: 15, req: [], tipArray: {0=11, 1=12, 2=13, 3=13}, total received Tx: 12, updateTip: false
+received a message: --message type: MZPROPOSE from 0
+Stage:OnMzPropose2 --Nodeid: 1 received mzpropose from: 0 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1652514712659
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 9 endheight: 10 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 10 endheight: 11 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 10 endheight: 12 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 11 endheight: 13 usebatch: 1
+Stage: getsyncedRequestfromlist try to getRequestfromlist
+Stage: getsyncedRequestfromlist --Node id :0 StartHeight: 9 EndHeight: 10 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 9 req: []
+Stage: getsyncedRequestfromlist --Height: 10 req: [[1:1690249832:2], [2:-133109881:2], [3:350602721:2]]
+Stage: getsyncedRequestfromlist --Node id :1 StartHeight: 10 EndHeight: 11 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 10 req: []
+Stage: getsyncedRequestfromlist --Height: 11 req: [[0:-1892244672:2], [2:-133109881:2], [3:350602721:2]]
+Stage: getsyncedRequestfromlist --Node id :2 StartHeight: 10 EndHeight: 12 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 10 req: []
+Stage: getsyncedRequestfromlist --Height: 11 req: [[0:-1892244672:2]]
+Stage: getsyncedRequestfromlist --Height: 12 req: [[1:1690249832:2], [3:350602721:2]]
+Stage: getsyncedRequestfromlist --Node id :3 StartHeight: 11 EndHeight: 13 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 11 req: []
+Stage: getsyncedRequestfromlist --Height: 12 req: [[0:-1892244672:2]]
+Stage: getsyncedRequestfromlist --Height: 13 req: [[1:1690249832:2], [2:-133109881:2]]
+Stage: getsyncedRequestfromlist --total syncedRequesrequest size: 12, request: [[1:1690249832:2], [2:-133109881:2], [3:350602721:2], [0:-1892244672:2], [2:-133109881:2], [3:350602721:2], [0:-1892244672:2], [1:1690249832:2], [3:350602721:2], [0:-1892244672:2], [1:1690249832:2], [2:-133109881:2]]
+Node 1 packed tx number: 34
+Node 1 receive a MzPropose contains 12 requests
+received a message: --message type: PROPOSE from 0
+received a message: --message type: PROPOSE but is regard as out of context, from 0
+Node 1 start to process msg PROPOSE from 0
+Stage: proposeReceived --from: 0
+Stage: executePropose --cid: 7, lastExec(): 6, executeSetInExec true 
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1652514712659
+Stage: deserialiseRequests --numberOfMessages:12
+Stage: Successfully deserialized batch
+Stage: executePropose --deserializedPropValue: [[1:1690249832:2], [2:-133109881:2], [3:350602721:2], [0:-1892244672:2], [2:-133109881:2], [3:350602721:2], [0:-1892244672:2], [1:1690249832:2], [3:350602721:2], [0:-1892244672:2], [1:1690249832:2], [2:-133109881:2]]
+Stage: executePropose --has write vote to consensus id: 7
+Received WRITE number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 0
+Node 1 start to process msg WRITE from 0
+Node 1 received a WRITE message from 0, cid: 7
+Received WRITE number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 2
+Node 1 start to process msg WRITE from 2
+Node 1 received a WRITE message from 2, cid: 7
+Received WRITE number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 7
+Node 1 computeAccept for cid: 7
+Received ACCEPT number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: ACCEPT from 2
+Node 1 start to process msg ACCEPT from 2
+Node 1 received a ACCEPT message from 2, cid: 7
+Node 1 computeAccept for cid: 7
+Received ACCEPT number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 3
+Node 1 start to process msg WRITE from 3
+Node 1 received a WRITE message from 3, cid: 7
+Received WRITE number 4 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 7
+received a message: --message type: ACCEPT from 3
+Node 1 start to process msg ACCEPT from 3
+Node 1 received a ACCEPT message from 3, cid: 7
+Node 1 computeAccept for cid: 7
+Received ACCEPT number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough ACCEPT messages for cid: 7
+Leader node 0's consensus is reached, cid: 7, remove 12 requests from queue
+received a message: --message type: ACCEPT from 0
+received a message: --message type: ACCEPT but is regard as out of context, from 0
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+Stage: addbatch --Nodeid: 1, received Batch: 13 from 1, len: 14, req: [[1:1690249832:3]], tipArray: {0=11, 1=12, 2=13, 3=14}, total received Tx: 13, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:13 batch size: 1 batch req: [[1:1690249832:3]] at time: 1652514750027
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 14 from 2, len: 15, req: [[2:-133109881:3]], tipArray: {0=11, 1=12, 2=13, 3=14}, total received Tx: 11, updateTip: true
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 12 from 0, len: 13, req: [[0:-1892244672:3]], tipArray: {0=11, 1=12, 2=13, 3=14}, total received Tx: 13, updateTip: true
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 15 from 3, len: 16, req: [[3:350602721:3]], tipArray: {0=11, 1=12, 2=13, 3=14}, total received Tx: 13, updateTip: true
+Stage: addbatch --Nodeid: 1, received Batch: 14 from 1, len: 15, req: [], tipArray: {0=12, 1=13, 2=14, 3=15}, total received Tx: 13, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:14 batch size: 0 batch req: [] at time: 1652514750528
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 15 from 2, len: 16, req: [], tipArray: {0=12, 1=13, 2=14, 3=15}, total received Tx: 11, updateTip: false
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 16 from 3, len: 17, req: [], tipArray: {0=12, 1=13, 2=14, 3=15}, total received Tx: 13, updateTip: false
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 13 from 0, len: 14, req: [], tipArray: {0=12, 1=13, 2=14, 3=15}, total received Tx: 13, updateTip: false
+received a message: --message type: MZPROPOSE from 0
+Stage:OnMzPropose2 --Nodeid: 1 received mzpropose from: 0 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1652514750767
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 11 endheight: 12 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 12 endheight: 13 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 13 endheight: 14 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 14 endheight: 15 usebatch: 1
+Stage: getsyncedRequestfromlist try to getRequestfromlist
+Stage: getsyncedRequestfromlist --Node id :0 StartHeight: 11 EndHeight: 12 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 11 req: []
+Stage: getsyncedRequestfromlist --Height: 12 req: [[0:-1892244672:3]]
+Stage: getsyncedRequestfromlist --Node id :1 StartHeight: 12 EndHeight: 13 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 12 req: []
+Stage: getsyncedRequestfromlist --Height: 13 req: [[1:1690249832:3]]
+Stage: getsyncedRequestfromlist --Node id :2 StartHeight: 13 EndHeight: 14 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 13 req: []
+Stage: getsyncedRequestfromlist --Height: 14 req: [[2:-133109881:3]]
+Stage: getsyncedRequestfromlist --Node id :3 StartHeight: 14 EndHeight: 15 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 14 req: []
+Stage: getsyncedRequestfromlist --Height: 15 req: [[3:350602721:3]]
+Stage: getsyncedRequestfromlist --total syncedRequesrequest size: 4, request: [[0:-1892244672:3], [1:1690249832:3], [2:-133109881:3], [3:350602721:3]]
+Node 1 packed tx number: 38
+Node 1 receive a MzPropose contains 4 requests
+received a message: --message type: PROPOSE from 0
+received a message: --message type: PROPOSE but is regard as out of context, from 0
+Node 1 start to process msg PROPOSE from 0
+Stage: proposeReceived --from: 0
+Stage: executePropose --cid: 8, lastExec(): 7, executeSetInExec true 
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1652514750767
+Stage: deserialiseRequests --numberOfMessages:4
+Stage: addbatch --Nodeid: 1, received Batch: 15 from 1, len: 16, req: [[0:-1892244672:3]], tipArray: {0=13, 1=14, 2=15, 3=16}, total received Tx: 14, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:15 batch size: 1 batch req: [[0:-1892244672:3]] at time: 1652514750772
+Stage: Successfully deserialized batch
+Stage: executePropose --deserializedPropValue: [[0:-1892244672:3], [1:1690249832:3], [2:-133109881:3], [3:350602721:3]]
+Stage: executePropose --has write vote to consensus id: 8
+Received WRITE number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 16 from 2, len: 17, req: [[0:-1892244672:3]], tipArray: {0=13, 1=14, 2=15, 3=16}, total received Tx: 12, updateTip: true
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 17 from 3, len: 18, req: [[0:-1892244672:3]], tipArray: {0=13, 1=14, 2=15, 3=16}, total received Tx: 14, updateTip: true
+received a message: --message type: WRITE from 3
+Node 1 start to process msg WRITE from 3
+Node 1 received a WRITE message from 3, cid: 8
+Received WRITE number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 2
+Node 1 start to process msg WRITE from 2
+Node 1 received a WRITE message from 2, cid: 8
+Received WRITE number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 8
+Node 1 computeAccept for cid: 8
+Received ACCEPT number 1 more than quorum 2, : false, arrays equal: true
+Stage: addbatch --Nodeid: 1, received Batch: 16 from 1, len: 17, req: [[2:-133109881:3], [3:350602721:3]], tipArray: {0=13, 1=15, 2=16, 3=17}, total received Tx: 16, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:16 batch size: 2 batch req: [[2:-133109881:3], [3:350602721:3]] at time: 1652514750778
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 14 from 0, len: 15, req: [[1:1690249832:3], [2:-133109881:3], [3:350602721:3]], tipArray: {0=13, 1=14, 2=15, 3=16}, total received Tx: 16, updateTip: true
+received a message: --message type: WRITE from 0
+Node 1 start to process msg WRITE from 0
+Node 1 received a WRITE message from 0, cid: 8
+Received WRITE number 4 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 8
+received a message: --message type: ACCEPT from 0
+Node 1 start to process msg ACCEPT from 0
+Node 1 received a ACCEPT message from 0, cid: 8
+Node 1 computeAccept for cid: 8
+Received ACCEPT number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 18 from 3, len: 19, req: [[1:1690249832:3], [2:-133109881:3]], tipArray: {0=13, 1=15, 2=16, 3=17}, total received Tx: 16, updateTip: true
+received a message: --message type: ACCEPT from 3
+Node 1 start to process msg ACCEPT from 3
+Node 1 received a ACCEPT message from 3, cid: 8
+Node 1 computeAccept for cid: 8
+Received ACCEPT number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough ACCEPT messages for cid: 8
+Leader node 0's consensus is reached, cid: 8, remove 4 requests from queue
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 17 from 2, len: 18, req: [[1:1690249832:3], [3:350602721:3]], tipArray: {0=13, 1=15, 2=16, 3=17}, total received Tx: 14, updateTip: true
+received a message: --message type: ACCEPT from 2
+received a message: --message type: ACCEPT but is regard as out of context, from 2
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+received a message: --message type: MZPROPOSE from 0
+Stage:OnMzPropose2 --Nodeid: 1 received mzpropose from: 0 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1652514750794
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 13 endheight: 13 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 14 endheight: 15 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 15 endheight: 16 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 16 endheight: 17 usebatch: 1
+Stage: getsyncedRequestfromlist try to getRequestfromlist
+Stage: getsyncedRequestfromlist --Node id :0 StartHeight: 13 EndHeight: 13 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 13 req: []
+Stage: getsyncedRequestfromlist --Node id :1 StartHeight: 14 EndHeight: 15 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 14 req: []
+Stage: getsyncedRequestfromlist --Height: 15 req: [[0:-1892244672:3]]
+Stage: getsyncedRequestfromlist --Node id :2 StartHeight: 15 EndHeight: 16 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 15 req: []
+Stage: getsyncedRequestfromlist --Height: 16 req: [[0:-1892244672:3]]
+Stage: getsyncedRequestfromlist --Node id :3 StartHeight: 16 EndHeight: 17 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 16 req: []
+Stage: getsyncedRequestfromlist --Height: 17 req: [[0:-1892244672:3]]
+Stage: getsyncedRequestfromlist --total syncedRequesrequest size: 3, request: [[0:-1892244672:3], [0:-1892244672:3], [0:-1892244672:3]]
+Node 1 packed tx number: 41
+Node 1 receive a MzPropose contains 3 requests
+received a message: --message type: PROPOSE from 0
+received a message: --message type: PROPOSE but is regard as out of context, from 0
+Node 1 start to process msg PROPOSE from 0
+Stage: proposeReceived --from: 0
+Stage: executePropose --cid: 9, lastExec(): 8, executeSetInExec true 
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1652514750794
+Stage: deserialiseRequests --numberOfMessages:3
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+Stage: Successfully deserialized batch
+Stage: executePropose --deserializedPropValue: [[0:-1892244672:3], [0:-1892244672:3], [0:-1892244672:3]]
+Stage: executePropose --has write vote to consensus id: 9
+Received WRITE number 1 more than quorum 2, : false, arrays equal: true
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+received a message: --message type: WRITE from 2
+Node 1 start to process msg WRITE from 2
+Node 1 received a WRITE message from 2, cid: 9
+Received WRITE number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 0
+Node 1 start to process msg WRITE from 0
+Node 1 received a WRITE message from 0, cid: 9
+Received WRITE number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 9
+Node 1 computeAccept for cid: 9
+Received ACCEPT number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 3
+Node 1 start to process msg WRITE from 3
+Node 1 received a WRITE message from 3, cid: 9
+Received WRITE number 4 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 9
+received a message: --message type: ACCEPT from 0
+Node 1 start to process msg ACCEPT from 0
+Node 1 received a ACCEPT message from 0, cid: 9
+Node 1 computeAccept for cid: 9
+Received ACCEPT number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: ACCEPT from 3
+Node 1 start to process msg ACCEPT from 3
+Node 1 received a ACCEPT message from 3, cid: 9
+Node 1 computeAccept for cid: 9
+Received ACCEPT number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough ACCEPT messages for cid: 9
+Leader node 0's consensus is reached, cid: 9, remove 3 requests from queue
+received a message: --message type: ACCEPT from 2
+received a message: --message type: ACCEPT but is regard as out of context, from 2
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+received a message: --message type: MZPROPOSE from 0
+Stage:OnMzPropose2 --Nodeid: 1 received mzpropose from: 0 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1652514750830
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 14 endheight: 14 usebatch: 0
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 16 endheight: 16 usebatch: 0
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 17 endheight: 17 usebatch: 0
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 18 endheight: 18 usebatch: 0
+Stage: getsyncedRequestfromlist try to getRequestfromlist
+Stage: getsyncedRequestfromlist --Node id :0 StartHeight: 14 EndHeight: 14 usebatch 0
+Stage: getsyncedRequestfromlist --Node id :1 StartHeight: 16 EndHeight: 16 usebatch 0
+Stage: getsyncedRequestfromlist --Node id :2 StartHeight: 17 EndHeight: 17 usebatch 0
+Stage: getsyncedRequestfromlist --Node id :3 StartHeight: 18 EndHeight: 18 usebatch 0
+Stage: getsyncedRequestfromlist --total syncedRequesrequest size: 0, request: []
+Node 1 receive a MzPropose contains 9 requests
+received a message: --message type: PROPOSE from 0
+received a message: --message type: PROPOSE but is regard as out of context, from 0
+Node 1 start to process msg PROPOSE from 0
+Stage: proposeReceived --from: 0
+Stage: executePropose --cid: 10, lastExec(): 9, executeSetInExec true 
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1652514750830
+Stage: deserialiseRequests --numberOfMessages:9
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+Stage: Successfully deserialized batch
+Stage: executePropose --deserializedPropValue: [[1:1690249832:3], [2:-133109881:3], [3:350602721:3], [2:-133109881:3], [3:350602721:3], [1:1690249832:3], [3:350602721:3], [1:1690249832:3], [2:-133109881:3]]
+Stage: executePropose --has write vote to consensus id: 10
+Received WRITE number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 0
+Node 1 start to process msg WRITE from 0
+Node 1 received a WRITE message from 0, cid: 10
+Received WRITE number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 3
+Node 1 start to process msg WRITE from 3
+Node 1 received a WRITE message from 3, cid: 10
+Received WRITE number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 10
+Node 1 computeAccept for cid: 10
+Received ACCEPT number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 2
+Node 1 start to process msg WRITE from 2
+Node 1 received a WRITE message from 2, cid: 10
+Received WRITE number 4 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 10
+received a message: --message type: ACCEPT from 2
+Node 1 start to process msg ACCEPT from 2
+Node 1 received a ACCEPT message from 2, cid: 10
+Node 1 computeAccept for cid: 10
+Received ACCEPT number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: ACCEPT from 0
+Node 1 start to process msg ACCEPT from 0
+Node 1 received a ACCEPT message from 0, cid: 10
+Node 1 computeAccept for cid: 10
+Received ACCEPT number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough ACCEPT messages for cid: 10
+Leader node 0's consensus is reached, cid: 10, remove 9 requests from queue
+received a message: --message type: ACCEPT from 3
+received a message: --message type: ACCEPT but is regard as out of context, from 3
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 15 from 0, len: 16, req: [], tipArray: {0=14, 1=16, 2=17, 3=18}, total received Tx: 16, updateTip: true
+Stage: addbatch --Nodeid: 1, received Batch: 17 from 1, len: 18, req: [], tipArray: {0=15, 1=16, 2=17, 3=18}, total received Tx: 16, updateTip: false
+received a message: --message type: MZBATCH from 1
+Stage: packbatch --Node id: 1 create Mzbatch height:17 batch size: 0 batch req: [] at time: 1652514751279
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 19 from 3, len: 20, req: [], tipArray: {0=15, 1=17, 2=17, 3=18}, total received Tx: 16, updateTip: false
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 18 from 2, len: 19, req: [], tipArray: {0=15, 1=17, 2=17, 3=19}, total received Tx: 14, updateTip: false
+Stage: addbatch --Nodeid: 1, received Batch: 18 from 1, len: 19, req: [[1:1690249832:4]], tipArray: {0=15, 1=17, 2=18, 3=19}, total received Tx: 17, updateTip: false
+received a message: --message type: MZBATCH from 2
+Stage: packbatch --Node id: 1 create Mzbatch height:18 batch size: 1 batch req: [[1:1690249832:4]] at time: 1652514791039
+Stage: addbatch --Nodeid: 1, received Batch: 19 from 2, len: 20, req: [[2:-133109881:4]], tipArray: {0=15, 1=17, 2=18, 3=19}, total received Tx: 15, updateTip: true
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 16 from 0, len: 17, req: [[0:-1892244672:4]], tipArray: {0=15, 1=17, 2=18, 3=19}, total received Tx: 17, updateTip: true
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 20 from 3, len: 21, req: [[3:350602721:4]], tipArray: {0=15, 1=17, 2=18, 3=19}, total received Tx: 17, updateTip: true
+Stage: addbatch --Nodeid: 1, received Batch: 19 from 1, len: 20, req: [], tipArray: {0=16, 1=18, 2=19, 3=20}, total received Tx: 17, updateTip: false
+received a message: --message type: MZBATCH from 2
+Stage: packbatch --Node id: 1 create Mzbatch height:19 batch size: 0 batch req: [] at time: 1652514791540
+Stage: addbatch --Nodeid: 1, received Batch: 20 from 2, len: 21, req: [], tipArray: {0=16, 1=18, 2=19, 3=20}, total received Tx: 15, updateTip: false
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 21 from 3, len: 22, req: [], tipArray: {0=16, 1=18, 2=19, 3=20}, total received Tx: 17, updateTip: false
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 17 from 0, len: 18, req: [], tipArray: {0=16, 1=18, 2=19, 3=20}, total received Tx: 17, updateTip: false
+received a message: --message type: MZPROPOSE from 0
+Stage:OnMzPropose2 --Nodeid: 1 received mzpropose from: 0 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1652514792954
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 15 endheight: 16 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 17 endheight: 18 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 18 endheight: 19 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 19 endheight: 20 usebatch: 1
+Stage: getsyncedRequestfromlist try to getRequestfromlist
+Stage: getsyncedRequestfromlist --Node id :0 StartHeight: 15 EndHeight: 16 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 15 req: []
+Stage: getsyncedRequestfromlist --Height: 16 req: [[0:-1892244672:4]]
+Stage: getsyncedRequestfromlist --Node id :1 StartHeight: 17 EndHeight: 18 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 17 req: []
+Stage: getsyncedRequestfromlist --Height: 18 req: [[1:1690249832:4]]
+Stage: getsyncedRequestfromlist --Node id :2 StartHeight: 18 EndHeight: 19 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 18 req: []
+Stage: getsyncedRequestfromlist --Height: 19 req: [[2:-133109881:4]]
+Stage: getsyncedRequestfromlist --Node id :3 StartHeight: 19 EndHeight: 20 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 19 req: []
+Stage: getsyncedRequestfromlist --Height: 20 req: [[3:350602721:4]]
+Stage: getsyncedRequestfromlist --total syncedRequesrequest size: 4, request: [[0:-1892244672:4], [1:1690249832:4], [2:-133109881:4], [3:350602721:4]]
+Node 1 packed tx number: 45
+Node 1 receive a MzPropose contains 4 requests
+received a message: --message type: PROPOSE from 0
+received a message: --message type: PROPOSE but is regard as out of context, from 0
+Node 1 start to process msg PROPOSE from 0
+Stage: proposeReceived --from: 0
+Stage: executePropose --cid: 11, lastExec(): 10, executeSetInExec true 
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1652514792954
+Stage: deserialiseRequests --numberOfMessages:4
+Stage: addbatch --Nodeid: 1, received Batch: 20 from 1, len: 21, req: [[0:-1892244672:4]], tipArray: {0=17, 1=19, 2=20, 3=21}, total received Tx: 18, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:20 batch size: 1 batch req: [[0:-1892244672:4]] at time: 1652514792957
+Stage: Successfully deserialized batch
+Stage: executePropose --deserializedPropValue: [[0:-1892244672:4], [1:1690249832:4], [2:-133109881:4], [3:350602721:4]]
+Stage: executePropose --has write vote to consensus id: 11
+Received WRITE number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 18 from 0, len: 19, req: [[2:-133109881:4]], tipArray: {0=17, 1=19, 2=20, 3=21}, total received Tx: 18, updateTip: true
+received a message: --message type: WRITE from 0
+Node 1 start to process msg WRITE from 0
+Node 1 received a WRITE message from 0, cid: 11
+Received WRITE number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 22 from 3, len: 23, req: [[0:-1892244672:4]], tipArray: {0=17, 1=19, 2=20, 3=21}, total received Tx: 18, updateTip: true
+received a message: --message type: WRITE from 3
+Node 1 start to process msg WRITE from 3
+Node 1 received a WRITE message from 3, cid: 11
+Received WRITE number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 11
+Node 1 computeAccept for cid: 11
+Received ACCEPT number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 21 from 1, len: 22, req: [[2:-133109881:4], [3:350602721:4]], tipArray: {0=18, 1=20, 2=20, 3=22}, total received Tx: 20, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:21 batch size: 2 batch req: [[2:-133109881:4], [3:350602721:4]] at time: 1652514792963
+Stage: addbatch --Nodeid: 1, received Batch: 21 from 2, len: 22, req: [[0:-1892244672:4]], tipArray: {0=17, 1=19, 2=20, 3=21}, total received Tx: 16, updateTip: true
+received a message: --message type: WRITE from 2
+Node 1 start to process msg WRITE from 2
+Node 1 received a WRITE message from 2, cid: 11
+Received WRITE number 4 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 11
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 19 from 0, len: 20, req: [[1:1690249832:4], [3:350602721:4]], tipArray: {0=18, 1=20, 2=20, 3=22}, total received Tx: 20, updateTip: true
+received a message: --message type: ACCEPT from 2
+Node 1 start to process msg ACCEPT from 2
+Node 1 received a ACCEPT message from 2, cid: 11
+Node 1 computeAccept for cid: 11
+Received ACCEPT number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 23 from 3, len: 24, req: [[1:1690249832:4], [2:-133109881:4]], tipArray: {0=18, 1=20, 2=21, 3=22}, total received Tx: 20, updateTip: true
+received a message: --message type: ACCEPT from 3
+Node 1 start to process msg ACCEPT from 3
+Node 1 received a ACCEPT message from 3, cid: 11
+Node 1 computeAccept for cid: 11
+Received ACCEPT number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough ACCEPT messages for cid: 11
+Leader node 0's consensus is reached, cid: 11, remove 4 requests from queue
+received a message: --message type: ACCEPT from 0
+received a message: --message type: ACCEPT but is regard as out of context, from 0
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 22 from 2, len: 23, req: [[1:1690249832:4], [3:350602721:4]], tipArray: {0=18, 1=20, 2=21, 3=22}, total received Tx: 18, updateTip: true
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+Stage: addbatch --Nodeid: 1, received Batch: 22 from 1, len: 23, req: [], tipArray: {0=19, 1=21, 2=22, 3=23}, total received Tx: 20, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:22 batch size: 0 batch req: [] at time: 1652514793464
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 24 from 3, len: 25, req: [], tipArray: {0=19, 1=21, 2=22, 3=23}, total received Tx: 20, updateTip: false
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 20 from 0, len: 21, req: [], tipArray: {0=19, 1=21, 2=22, 3=23}, total received Tx: 20, updateTip: false
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 23 from 2, len: 24, req: [], tipArray: {0=20, 1=22, 2=22, 3=24}, total received Tx: 18, updateTip: false
+received a message: --message type: MZPROPOSE from 0
+Stage:OnMzPropose2 --Nodeid: 1 received mzpropose from: 0 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1652514794980
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 17 endheight: 19 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 19 endheight: 21 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 20 endheight: 22 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 21 endheight: 23 usebatch: 1
+Stage: getsyncedRequestfromlist try to getRequestfromlist
+Stage: getsyncedRequestfromlist --Node id :0 StartHeight: 17 EndHeight: 19 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 17 req: []
+Stage: getsyncedRequestfromlist --Height: 18 req: [[2:-133109881:4]]
+Stage: getsyncedRequestfromlist --Height: 19 req: [[1:1690249832:4], [3:350602721:4]]
+Stage: getsyncedRequestfromlist --Node id :1 StartHeight: 19 EndHeight: 21 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 19 req: []
+Stage: getsyncedRequestfromlist --Height: 20 req: [[0:-1892244672:4]]
+Stage: getsyncedRequestfromlist --Height: 21 req: [[2:-133109881:4], [3:350602721:4]]
+Stage: getsyncedRequestfromlist --Node id :2 StartHeight: 20 EndHeight: 22 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 20 req: []
+Stage: getsyncedRequestfromlist --Height: 21 req: [[0:-1892244672:4]]
+Stage: getsyncedRequestfromlist --Height: 22 req: [[1:1690249832:4], [3:350602721:4]]
+Stage: getsyncedRequestfromlist --Node id :3 StartHeight: 21 EndHeight: 23 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 21 req: []
+Stage: getsyncedRequestfromlist --Height: 22 req: [[0:-1892244672:4]]
+Stage: getsyncedRequestfromlist --Height: 23 req: [[1:1690249832:4], [2:-133109881:4]]
+Stage: getsyncedRequestfromlist --total syncedRequesrequest size: 12, request: [[2:-133109881:4], [1:1690249832:4], [3:350602721:4], [0:-1892244672:4], [2:-133109881:4], [3:350602721:4], [0:-1892244672:4], [1:1690249832:4], [3:350602721:4], [0:-1892244672:4], [1:1690249832:4], [2:-133109881:4]]
+Node 1 packed tx number: 57
+Node 1 receive a MzPropose contains 12 requests
+received a message: --message type: PROPOSE from 0
+received a message: --message type: PROPOSE but is regard as out of context, from 0
+Node 1 start to process msg PROPOSE from 0
+Stage: proposeReceived --from: 0
+Stage: executePropose --cid: 12, lastExec(): 11, executeSetInExec true 
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1652514794980
+Stage: deserialiseRequests --numberOfMessages:12
+Stage: Successfully deserialized batch
+Stage: executePropose --deserializedPropValue: [[2:-133109881:4], [1:1690249832:4], [3:350602721:4], [0:-1892244672:4], [2:-133109881:4], [3:350602721:4], [0:-1892244672:4], [1:1690249832:4], [3:350602721:4], [0:-1892244672:4], [1:1690249832:4], [2:-133109881:4]]
+Stage: executePropose --has write vote to consensus id: 12
+Received WRITE number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 3
+Node 1 start to process msg WRITE from 3
+Node 1 received a WRITE message from 3, cid: 12
+Received WRITE number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 2
+Node 1 start to process msg WRITE from 2
+Node 1 received a WRITE message from 2, cid: 12
+Received WRITE number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 12
+Node 1 computeAccept for cid: 12
+Received ACCEPT number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 0
+Node 1 start to process msg WRITE from 0
+Node 1 received a WRITE message from 0, cid: 12
+Received WRITE number 4 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 12
+received a message: --message type: ACCEPT from 2
+Node 1 start to process msg ACCEPT from 2
+Node 1 received a ACCEPT message from 2, cid: 12
+Node 1 computeAccept for cid: 12
+Received ACCEPT number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: ACCEPT from 0
+Node 1 start to process msg ACCEPT from 0
+Node 1 received a ACCEPT message from 0, cid: 12
+Node 1 computeAccept for cid: 12
+Received ACCEPT number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough ACCEPT messages for cid: 12
+Leader node 0's consensus is reached, cid: 12, remove 12 requests from queue
+received a message: --message type: ACCEPT from 3
+received a message: --message type: ACCEPT but is regard as out of context, from 3
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+Stage: addbatch --Nodeid: 1, received Batch: 23 from 1, len: 24, req: [[1:1690249832:5]], tipArray: {0=20, 1=22, 2=23, 3=24}, total received Tx: 21, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:23 batch size: 1 batch req: [[1:1690249832:5]] at time: 1652514832048
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 21 from 0, len: 22, req: [[0:-1892244672:5]], tipArray: {0=20, 1=22, 2=23, 3=24}, total received Tx: 21, updateTip: true
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 24 from 2, len: 25, req: [[2:-133109881:5]], tipArray: {0=20, 1=22, 2=23, 3=24}, total received Tx: 19, updateTip: true
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 25 from 3, len: 26, req: [[3:350602721:5]], tipArray: {0=20, 1=22, 2=23, 3=24}, total received Tx: 21, updateTip: true
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 22 from 0, len: 23, req: [], tipArray: {0=21, 1=23, 2=24, 3=25}, total received Tx: 21, updateTip: true
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 24 from 1, len: 25, req: [], tipArray: {0=22, 1=23, 2=24, 3=25}, total received Tx: 21, updateTip: false
+Stage: addbatch --Nodeid: 1, received Batch: 25 from 2, len: 26, req: [], tipArray: {0=21, 1=23, 2=24, 3=25}, total received Tx: 19, updateTip: false
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 26 from 3, len: 27, req: [], tipArray: {0=21, 1=23, 2=24, 3=25}, total received Tx: 21, updateTip: false
+received a message: --message type: MZBATCH from 1
+Stage: packbatch --Node id: 1 create Mzbatch height:24 batch size: 0 batch req: [] at time: 1652514832549
+received a message: --message type: MZPROPOSE from 0
+Stage:OnMzPropose2 --Nodeid: 1 received mzpropose from: 0 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1652514833092
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 20 endheight: 21 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 22 endheight: 23 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 23 endheight: 24 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 24 endheight: 25 usebatch: 1
+Stage: getsyncedRequestfromlist try to getRequestfromlist
+Stage: getsyncedRequestfromlist --Node id :0 StartHeight: 20 EndHeight: 21 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 20 req: []
+Stage: getsyncedRequestfromlist --Height: 21 req: [[0:-1892244672:5]]
+Stage: getsyncedRequestfromlist --Node id :1 StartHeight: 22 EndHeight: 23 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 22 req: []
+Stage: getsyncedRequestfromlist --Height: 23 req: [[1:1690249832:5]]
+Stage: getsyncedRequestfromlist --Node id :2 StartHeight: 23 EndHeight: 24 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 23 req: []
+Stage: getsyncedRequestfromlist --Height: 24 req: [[2:-133109881:5]]
+Stage: getsyncedRequestfromlist --Node id :3 StartHeight: 24 EndHeight: 25 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 24 req: []
+Stage: getsyncedRequestfromlist --Height: 25 req: [[3:350602721:5]]
+Stage: getsyncedRequestfromlist --total syncedRequesrequest size: 4, request: [[0:-1892244672:5], [1:1690249832:5], [2:-133109881:5], [3:350602721:5]]
+Node 1 packed tx number: 61
+Node 1 receive a MzPropose contains 4 requests
+received a message: --message type: PROPOSE from 0
+received a message: --message type: PROPOSE but is regard as out of context, from 0
+Node 1 start to process msg PROPOSE from 0
+Stage: proposeReceived --from: 0
+Stage: executePropose --cid: 13, lastExec(): 12, executeSetInExec true 
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1652514833092
+Stage: deserialiseRequests --numberOfMessages:4
+Stage: addbatch --Nodeid: 1, received Batch: 25 from 1, len: 26, req: [[0:-1892244672:5]], tipArray: {0=22, 1=24, 2=25, 3=26}, total received Tx: 22, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:25 batch size: 1 batch req: [[0:-1892244672:5]] at time: 1652514833095
+Stage: Successfully deserialized batch
+Stage: executePropose --deserializedPropValue: [[0:-1892244672:5], [1:1690249832:5], [2:-133109881:5], [3:350602721:5]]
+Stage: executePropose --has write vote to consensus id: 13
+Received WRITE number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 27 from 3, len: 28, req: [[0:-1892244672:5]], tipArray: {0=22, 1=24, 2=25, 3=26}, total received Tx: 22, updateTip: true
+received a message: --message type: WRITE from 3
+Node 1 start to process msg WRITE from 3
+Node 1 received a WRITE message from 3, cid: 13
+Received WRITE number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 26 from 2, len: 27, req: [[0:-1892244672:5]], tipArray: {0=22, 1=24, 2=25, 3=26}, total received Tx: 20, updateTip: true
+received a message: --message type: WRITE from 2
+Node 1 start to process msg WRITE from 2
+Node 1 received a WRITE message from 2, cid: 13
+Received WRITE number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 13
+Node 1 computeAccept for cid: 13
+Received ACCEPT number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 23 from 0, len: 24, req: [[2:-133109881:5]], tipArray: {0=22, 1=24, 2=25, 3=26}, total received Tx: 22, updateTip: true
+received a message: --message type: WRITE from 0
+Node 1 start to process msg WRITE from 0
+Node 1 received a WRITE message from 0, cid: 13
+Received WRITE number 4 more than quorum 2, : true, arrays equal: true
+Stage: addbatch --Nodeid: 1, received Batch: 26 from 1, len: 27, req: [[2:-133109881:5], [3:350602721:5]], tipArray: {0=23, 1=25, 2=26, 3=27}, total received Tx: 24, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:26 batch size: 2 batch req: [[2:-133109881:5], [3:350602721:5]] at time: 1652514833103
+Node 1 received enough WRITE messages for cid: 13
+received a message: --message type: ACCEPT from 0
+Node 1 start to process msg ACCEPT from 0
+Node 1 received a ACCEPT message from 0, cid: 13
+Node 1 computeAccept for cid: 13
+Received ACCEPT number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: ACCEPT from 2
+Node 1 start to process msg ACCEPT from 2
+Node 1 received a ACCEPT message from 2, cid: 13
+Node 1 computeAccept for cid: 13
+Received ACCEPT number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough ACCEPT messages for cid: 13
+Leader node 0's consensus is reached, cid: 13, remove 4 requests from queue
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 28 from 3, len: 29, req: [[1:1690249832:5], [2:-133109881:5]], tipArray: {0=23, 1=25, 2=26, 3=27}, total received Tx: 24, updateTip: true
+received a message: --message type: ACCEPT from 3
+received a message: --message type: ACCEPT but is regard as out of context, from 3
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 24 from 0, len: 25, req: [[1:1690249832:5], [3:350602721:5]], tipArray: {0=23, 1=25, 2=26, 3=27}, total received Tx: 24, updateTip: true
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 27 from 2, len: 28, req: [[1:1690249832:5], [3:350602721:5]], tipArray: {0=23, 1=25, 2=26, 3=27}, total received Tx: 22, updateTip: true
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 29 from 3, len: 30, req: [], tipArray: {0=24, 1=26, 2=27, 3=28}, total received Tx: 24, updateTip: true
+Stage: addbatch --Nodeid: 1, received Batch: 27 from 1, len: 28, req: [], tipArray: {0=24, 1=26, 2=27, 3=29}, total received Tx: 24, updateTip: false
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 25 from 0, len: 26, req: [], tipArray: {0=24, 1=26, 2=27, 3=29}, total received Tx: 24, updateTip: false
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 28 from 2, len: 29, req: [], tipArray: {0=24, 1=26, 2=27, 3=29}, total received Tx: 22, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:27 batch size: 0 batch req: [] at time: 1652514833604
+received a message: --message type: MZPROPOSE from 0
+Stage:OnMzPropose2 --Nodeid: 1 received mzpropose from: 0 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1652514835112
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 22 endheight: 24 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 24 endheight: 26 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 25 endheight: 27 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 26 endheight: 28 usebatch: 1
+Stage: getsyncedRequestfromlist try to getRequestfromlist
+Stage: getsyncedRequestfromlist --Node id :0 StartHeight: 22 EndHeight: 24 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 22 req: []
+Stage: getsyncedRequestfromlist --Height: 23 req: [[2:-133109881:5]]
+Stage: getsyncedRequestfromlist --Height: 24 req: [[1:1690249832:5], [3:350602721:5]]
+Stage: getsyncedRequestfromlist --Node id :1 StartHeight: 24 EndHeight: 26 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 24 req: []
+Stage: getsyncedRequestfromlist --Height: 25 req: [[0:-1892244672:5]]
+Stage: getsyncedRequestfromlist --Height: 26 req: [[2:-133109881:5], [3:350602721:5]]
+Stage: getsyncedRequestfromlist --Node id :2 StartHeight: 25 EndHeight: 27 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 25 req: []
+Stage: getsyncedRequestfromlist --Height: 26 req: [[0:-1892244672:5]]
+Stage: getsyncedRequestfromlist --Height: 27 req: [[1:1690249832:5], [3:350602721:5]]
+Stage: getsyncedRequestfromlist --Node id :3 StartHeight: 26 EndHeight: 28 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 26 req: []
+Stage: getsyncedRequestfromlist --Height: 27 req: [[0:-1892244672:5]]
+Stage: getsyncedRequestfromlist --Height: 28 req: [[1:1690249832:5], [2:-133109881:5]]
+Stage: getsyncedRequestfromlist --total syncedRequesrequest size: 12, request: [[2:-133109881:5], [1:1690249832:5], [3:350602721:5], [0:-1892244672:5], [2:-133109881:5], [3:350602721:5], [0:-1892244672:5], [1:1690249832:5], [3:350602721:5], [0:-1892244672:5], [1:1690249832:5], [2:-133109881:5]]
+Node 1 packed tx number: 73
+Node 1 receive a MzPropose contains 12 requests
+received a message: --message type: PROPOSE from 0
+received a message: --message type: PROPOSE but is regard as out of context, from 0
+Node 1 start to process msg PROPOSE from 0
+Stage: proposeReceived --from: 0
+Stage: executePropose --cid: 14, lastExec(): 13, executeSetInExec true 
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1652514835112
+Stage: deserialiseRequests --numberOfMessages:12
+Stage: Successfully deserialized batch
+Stage: executePropose --deserializedPropValue: [[2:-133109881:5], [1:1690249832:5], [3:350602721:5], [0:-1892244672:5], [2:-133109881:5], [3:350602721:5], [0:-1892244672:5], [1:1690249832:5], [3:350602721:5], [0:-1892244672:5], [1:1690249832:5], [2:-133109881:5]]
+Stage: executePropose --has write vote to consensus id: 14
+Received WRITE number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 0
+Node 1 start to process msg WRITE from 0
+Node 1 received a WRITE message from 0, cid: 14
+Received WRITE number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 3
+Node 1 start to process msg WRITE from 3
+Node 1 received a WRITE message from 3, cid: 14
+Received WRITE number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 14
+Node 1 computeAccept for cid: 14
+Received ACCEPT number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 2
+Node 1 start to process msg WRITE from 2
+Node 1 received a WRITE message from 2, cid: 14
+Received WRITE number 4 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 14
+received a message: --message type: ACCEPT from 2
+Node 1 start to process msg ACCEPT from 2
+Node 1 received a ACCEPT message from 2, cid: 14
+Node 1 computeAccept for cid: 14
+Received ACCEPT number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: ACCEPT from 3
+Node 1 start to process msg ACCEPT from 3
+Node 1 received a ACCEPT message from 3, cid: 14
+Node 1 computeAccept for cid: 14
+Received ACCEPT number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough ACCEPT messages for cid: 14
+Leader node 0's consensus is reached, cid: 14, remove 12 requests from queue
+received a message: --message type: ACCEPT from 0
+received a message: --message type: ACCEPT but is regard as out of context, from 0
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 3 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 0 before establishing Netty connection. Re-trying until connection is established
+-- Received request from 2 before establishing Netty connection. Re-trying until connection is established
+Stage: addbatch --Nodeid: 1, received Batch: 28 from 1, len: 29, req: [[1:1690249832:6]], tipArray: {0=25, 1=27, 2=28, 3=29}, total received Tx: 25, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:28 batch size: 1 batch req: [[1:1690249832:6]] at time: 1652514873058
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 30 from 3, len: 31, req: [[3:350602721:6]], tipArray: {0=25, 1=27, 2=28, 3=29}, total received Tx: 25, updateTip: true
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 26 from 0, len: 27, req: [[0:-1892244672:6]], tipArray: {0=25, 1=27, 2=28, 3=29}, total received Tx: 25, updateTip: true
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 29 from 2, len: 30, req: [[2:-133109881:6]], tipArray: {0=25, 1=27, 2=28, 3=29}, total received Tx: 23, updateTip: true
+Stage: addbatch --Nodeid: 1, received Batch: 29 from 1, len: 30, req: [], tipArray: {0=26, 1=28, 2=29, 3=30}, total received Tx: 25, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:29 batch size: 0 batch req: [] at time: 1652514873559
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 27 from 0, len: 28, req: [], tipArray: {0=26, 1=28, 2=29, 3=30}, total received Tx: 25, updateTip: false
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 30 from 2, len: 31, req: [], tipArray: {0=26, 1=28, 2=29, 3=30}, total received Tx: 23, updateTip: false
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 31 from 3, len: 32, req: [], tipArray: {0=26, 1=28, 2=29, 3=30}, total received Tx: 25, updateTip: false
+received a message: --message type: MZPROPOSE from 0
+Stage:OnMzPropose2 --Nodeid: 1 received mzpropose from: 0 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1652514875236
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 25 endheight: 26 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 27 endheight: 28 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 28 endheight: 29 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 29 endheight: 30 usebatch: 1
+Stage: getsyncedRequestfromlist try to getRequestfromlist
+Stage: getsyncedRequestfromlist --Node id :0 StartHeight: 25 EndHeight: 26 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 25 req: []
+Stage: getsyncedRequestfromlist --Height: 26 req: [[0:-1892244672:6]]
+Stage: getsyncedRequestfromlist --Node id :1 StartHeight: 27 EndHeight: 28 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 27 req: []
+Stage: getsyncedRequestfromlist --Height: 28 req: [[1:1690249832:6]]
+Stage: getsyncedRequestfromlist --Node id :2 StartHeight: 28 EndHeight: 29 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 28 req: []
+Stage: getsyncedRequestfromlist --Height: 29 req: [[2:-133109881:6]]
+Stage: getsyncedRequestfromlist --Node id :3 StartHeight: 29 EndHeight: 30 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 29 req: []
+Stage: getsyncedRequestfromlist --Height: 30 req: [[3:350602721:6]]
+Stage: getsyncedRequestfromlist --total syncedRequesrequest size: 4, request: [[0:-1892244672:6], [1:1690249832:6], [2:-133109881:6], [3:350602721:6]]
+Node 1 packed tx number: 77
+Node 1 receive a MzPropose contains 4 requests
+received a message: --message type: PROPOSE from 0
+received a message: --message type: PROPOSE but is regard as out of context, from 0
+Node 1 start to process msg PROPOSE from 0
+Stage: proposeReceived --from: 0
+Stage: executePropose --cid: 15, lastExec(): 14, executeSetInExec true 
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1652514875236
+Stage: deserialiseRequests --numberOfMessages:4
+Stage: addbatch --Nodeid: 1, received Batch: 30 from 1, len: 31, req: [[0:-1892244672:6]], tipArray: {0=27, 1=29, 2=30, 3=31}, total received Tx: 26, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:30 batch size: 1 batch req: [[0:-1892244672:6]] at time: 1652514875240
+Stage: Successfully deserialized batch
+Stage: executePropose --deserializedPropValue: [[0:-1892244672:6], [1:1690249832:6], [2:-133109881:6], [3:350602721:6]]
+Stage: executePropose --has write vote to consensus id: 15
+Received WRITE number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 0
+Node 1 start to process msg WRITE from 0
+Node 1 received a WRITE message from 0, cid: 15
+Received WRITE number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 28 from 0, len: 29, req: [[1:1690249832:6], [2:-133109881:6], [3:350602721:6]], tipArray: {0=27, 1=29, 2=30, 3=31}, total received Tx: 28, updateTip: true
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 32 from 3, len: 33, req: [[0:-1892244672:6]], tipArray: {0=27, 1=29, 2=30, 3=31}, total received Tx: 26, updateTip: true
+received a message: --message type: WRITE from 3
+Node 1 start to process msg WRITE from 3
+Node 1 received a WRITE message from 3, cid: 15
+Received WRITE number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 15
+Stage: addbatch --Nodeid: 1, received Batch: 31 from 1, len: 32, req: [[2:-133109881:6], [3:350602721:6]], tipArray: {0=28, 1=30, 2=30, 3=32}, total received Tx: 28, updateTip: false
+Node 1 computeAccept for cid: 15
+Received ACCEPT number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: MZBATCH from 1
+Stage: packbatch --Node id: 1 create Mzbatch height:31 batch size: 2 batch req: [[2:-133109881:6], [3:350602721:6]] at time: 1652514875246
+received a message: --message type: ACCEPT from 3
+Node 1 start to process msg ACCEPT from 3
+Node 1 received a ACCEPT message from 3, cid: 15
+Node 1 computeAccept for cid: 15
+Received ACCEPT number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: ACCEPT from 0
+Node 1 start to process msg ACCEPT from 0
+Node 1 received a ACCEPT message from 0, cid: 15
+Node 1 computeAccept for cid: 15
+Received ACCEPT number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough ACCEPT messages for cid: 15
+Leader node 0's consensus is reached, cid: 15, remove 4 requests from queue
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 6, ID; 0
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 6, ID; 2
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 6, ID; 3
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 33 from 3, len: 34, req: [[1:1690249832:6], [2:-133109881:6]], tipArray: {0=28, 1=30, 2=30, 3=32}, total received Tx: 28, updateTip: true
+received a message: --message type: WRITE from 2
+received a message: --message type: WRITE but is regard as out of context, from 2
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 31 from 2, len: 32, req: [[0:-1892244672:6]], tipArray: {0=27, 1=29, 2=30, 3=31}, total received Tx: 24, updateTip: true
+received a message: --message type: ACCEPT from 2
+received a message: --message type: ACCEPT but is regard as out of context, from 2
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 29 from 0, len: 30, req: [], tipArray: {0=28, 1=31, 2=31, 3=33}, total received Tx: 28, updateTip: true
+Stage: addbatch --Nodeid: 1, received Batch: 32 from 1, len: 33, req: [], tipArray: {0=29, 1=31, 2=31, 3=33}, total received Tx: 28, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:32 batch size: 0 batch req: [] at time: 1652514875748
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 34 from 3, len: 35, req: [], tipArray: {0=29, 1=32, 2=31, 3=33}, total received Tx: 28, updateTip: false
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 32 from 2, len: 33, req: [], tipArray: {0=29, 1=32, 2=31, 3=34}, total received Tx: 24, updateTip: false
+received a message: --message type: MZPROPOSE from 0
+Stage:OnMzPropose2 --Nodeid: 1 received mzpropose from: 0 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1652514877257
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 27 endheight: 29 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 29 endheight: 31 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 30 endheight: 31 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 31 endheight: 33 usebatch: 1
+Stage: getsyncedRequestfromlist try to getRequestfromlist
+Stage: getsyncedRequestfromlist --Node id :0 StartHeight: 27 EndHeight: 29 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 27 req: []
+Stage: getsyncedRequestfromlist --Height: 28 req: [[1:1690249832:6], [2:-133109881:6], [3:350602721:6]]
+Stage: getsyncedRequestfromlist --Height: 29 req: []
+Stage: getsyncedRequestfromlist --Node id :1 StartHeight: 29 EndHeight: 31 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 29 req: []
+Stage: getsyncedRequestfromlist --Height: 30 req: [[0:-1892244672:6]]
+Stage: getsyncedRequestfromlist --Height: 31 req: [[2:-133109881:6], [3:350602721:6]]
+Stage: getsyncedRequestfromlist --Node id :2 StartHeight: 30 EndHeight: 31 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 30 req: []
+Stage: getsyncedRequestfromlist --Height: 31 req: [[0:-1892244672:6]]
+Stage: getsyncedRequestfromlist --Node id :3 StartHeight: 31 EndHeight: 33 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 31 req: []
+Stage: getsyncedRequestfromlist --Height: 32 req: [[0:-1892244672:6]]
+Stage: getsyncedRequestfromlist --Height: 33 req: [[1:1690249832:6], [2:-133109881:6]]
+Stage: getsyncedRequestfromlist --total syncedRequesrequest size: 10, request: [[1:1690249832:6], [2:-133109881:6], [3:350602721:6], [0:-1892244672:6], [2:-133109881:6], [3:350602721:6], [0:-1892244672:6], [0:-1892244672:6], [1:1690249832:6], [2:-133109881:6]]
+Node 1 packed tx number: 87
+Node 1 receive a MzPropose contains 10 requests
+received a message: --message type: PROPOSE from 0
+received a message: --message type: PROPOSE but is regard as out of context, from 0
+Node 1 start to process msg PROPOSE from 0
+Stage: proposeReceived --from: 0
+Stage: executePropose --cid: 16, lastExec(): 15, executeSetInExec true 
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1652514877257
+Stage: deserialiseRequests --numberOfMessages:10
+Stage: Successfully deserialized batch
+Stage: executePropose --deserializedPropValue: [[1:1690249832:6], [2:-133109881:6], [3:350602721:6], [0:-1892244672:6], [2:-133109881:6], [3:350602721:6], [0:-1892244672:6], [0:-1892244672:6], [1:1690249832:6], [2:-133109881:6]]
+Stage: executePropose --has write vote to consensus id: 16
+Received WRITE number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 0
+Node 1 start to process msg WRITE from 0
+Node 1 received a WRITE message from 0, cid: 16
+Received WRITE number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 2
+Node 1 start to process msg WRITE from 2
+Node 1 received a WRITE message from 2, cid: 16
+Received WRITE number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 16
+Node 1 computeAccept for cid: 16
+Received ACCEPT number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: ACCEPT from 2
+Node 1 start to process msg ACCEPT from 2
+Node 1 received a ACCEPT message from 2, cid: 16
+Node 1 computeAccept for cid: 16
+Received ACCEPT number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 3
+Node 1 start to process msg WRITE from 3
+Node 1 received a WRITE message from 3, cid: 16
+Received WRITE number 4 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 16
+received a message: --message type: ACCEPT from 3
+Node 1 start to process msg ACCEPT from 3
+Node 1 received a ACCEPT message from 3, cid: 16
+Node 1 computeAccept for cid: 16
+Received ACCEPT number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough ACCEPT messages for cid: 16
+Leader node 0's consensus is reached, cid: 16, remove 10 requests from queue
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 6, ID; 2
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 6, ID; 3
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 6, ID; 0
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 6, ID; 2
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 6, ID; 3
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 6, ID; 0
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 6, ID; 0
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 6, ID; 2
+received a message: --message type: ACCEPT from 0
+received a message: --message type: ACCEPT but is regard as out of context, from 0
+Stage: addbatch --Nodeid: 1, received Batch: 33 from 1, len: 34, req: [[1:1690249832:7]], tipArray: {0=29, 1=32, 2=32, 3=34}, total received Tx: 29, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:33 batch size: 1 batch req: [[1:1690249832:7]] at time: 1652514914065
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 35 from 3, len: 36, req: [[3:350602721:7]], tipArray: {0=29, 1=32, 2=32, 3=34}, total received Tx: 29, updateTip: true
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 30 from 0, len: 31, req: [[0:-1892244672:7]], tipArray: {0=29, 1=32, 2=32, 3=34}, total received Tx: 29, updateTip: true
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 33 from 2, len: 34, req: [[2:-133109881:7]], tipArray: {0=29, 1=32, 2=32, 3=34}, total received Tx: 25, updateTip: true
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 34 from 1, len: 35, req: [], tipArray: {0=30, 1=33, 2=33, 3=35}, total received Tx: 29, updateTip: false
+Stage: addbatch --Nodeid: 1, received Batch: 36 from 3, len: 37, req: [], tipArray: {0=30, 1=33, 2=33, 3=35}, total received Tx: 29, updateTip: false
+received a message: --message type: MZBATCH from 1
+Stage: packbatch --Node id: 1 create Mzbatch height:34 batch size: 0 batch req: [] at time: 1652514914566
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 31 from 0, len: 32, req: [], tipArray: {0=30, 1=33, 2=33, 3=35}, total received Tx: 29, updateTip: false
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 34 from 2, len: 35, req: [], tipArray: {0=30, 1=33, 2=33, 3=36}, total received Tx: 25, updateTip: false
+received a message: --message type: MZPROPOSE from 0
+Stage:OnMzPropose2 --Nodeid: 1 received mzpropose from: 0 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1652514915375
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 30 endheight: 30 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 32 endheight: 33 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 32 endheight: 33 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 34 endheight: 35 usebatch: 1
+Stage: getsyncedRequestfromlist try to getRequestfromlist
+Stage: getsyncedRequestfromlist --Node id :0 StartHeight: 30 EndHeight: 30 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 30 req: [[0:-1892244672:7]]
+Stage: getsyncedRequestfromlist --Node id :1 StartHeight: 32 EndHeight: 33 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 32 req: []
+Stage: getsyncedRequestfromlist --Height: 33 req: [[1:1690249832:7]]
+Stage: getsyncedRequestfromlist --Node id :2 StartHeight: 32 EndHeight: 33 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 32 req: []
+Stage: getsyncedRequestfromlist --Height: 33 req: [[2:-133109881:7]]
+Stage: getsyncedRequestfromlist --Node id :3 StartHeight: 34 EndHeight: 35 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 34 req: []
+Stage: getsyncedRequestfromlist --Height: 35 req: [[3:350602721:7]]
+Stage: getsyncedRequestfromlist --total syncedRequesrequest size: 4, request: [[0:-1892244672:7], [1:1690249832:7], [2:-133109881:7], [3:350602721:7]]
+Node 1 packed tx number: 91
+Node 1 receive a MzPropose contains 4 requests
+received a message: --message type: PROPOSE from 0
+received a message: --message type: PROPOSE but is regard as out of context, from 0
+Node 1 start to process msg PROPOSE from 0
+Stage: proposeReceived --from: 0
+Stage: executePropose --cid: 17, lastExec(): 16, executeSetInExec true 
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1652514915375
+Stage: deserialiseRequests --numberOfMessages:4
+Stage: addbatch --Nodeid: 1, received Batch: 35 from 1, len: 36, req: [[0:-1892244672:7]], tipArray: {0=31, 1=34, 2=34, 3=36}, total received Tx: 30, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:35 batch size: 1 batch req: [[0:-1892244672:7]] at time: 1652514915378
+Stage: Successfully deserialized batch
+Stage: executePropose --deserializedPropValue: [[0:-1892244672:7], [1:1690249832:7], [2:-133109881:7], [3:350602721:7]]
+Stage: executePropose --has write vote to consensus id: 17
+Received WRITE number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 0
+Node 1 start to process msg WRITE from 0
+Node 1 received a WRITE message from 0, cid: 17
+Received WRITE number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 32 from 0, len: 33, req: [[1:1690249832:7], [3:350602721:7]], tipArray: {0=31, 1=34, 2=34, 3=36}, total received Tx: 31, updateTip: true
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 37 from 3, len: 38, req: [[0:-1892244672:7]], tipArray: {0=31, 1=34, 2=34, 3=36}, total received Tx: 30, updateTip: true
+received a message: --message type: WRITE from 3
+Node 1 start to process msg WRITE from 3
+Node 1 received a WRITE message from 3, cid: 17
+Received WRITE number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 17
+Node 1 computeAccept for cid: 17
+Received ACCEPT number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 35 from 2, len: 36, req: [[0:-1892244672:7]], tipArray: {0=31, 1=34, 2=34, 3=36}, total received Tx: 26, updateTip: true
+Stage: addbatch --Nodeid: 1, received Batch: 36 from 1, len: 37, req: [[2:-133109881:7], [3:350602721:7]], tipArray: {0=32, 1=35, 2=35, 3=37}, total received Tx: 32, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:36 batch size: 2 batch req: [[2:-133109881:7], [3:350602721:7]] at time: 1652514915384
+received a message: --message type: MZBATCH from 1
+received a message: --message type: WRITE from 2
+Node 1 start to process msg WRITE from 2
+Node 1 received a WRITE message from 2, cid: 17
+Received WRITE number 4 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 17
+received a message: --message type: ACCEPT from 2
+Node 1 start to process msg ACCEPT from 2
+Node 1 received a ACCEPT message from 2, cid: 17
+Node 1 computeAccept for cid: 17
+Received ACCEPT number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: ACCEPT from 0
+Node 1 start to process msg ACCEPT from 0
+Node 1 received a ACCEPT message from 0, cid: 17
+Node 1 computeAccept for cid: 17
+Received ACCEPT number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough ACCEPT messages for cid: 17
+Leader node 0's consensus is reached, cid: 17, remove 4 requests from queue
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 33 from 0, len: 34, req: [[2:-133109881:7]], tipArray: {0=32, 1=35, 2=35, 3=37}, total received Tx: 32, updateTip: true
+received a message: --message type: ACCEPT from 3
+received a message: --message type: ACCEPT but is regard as out of context, from 3
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 38 from 3, len: 39, req: [[1:1690249832:7], [2:-133109881:7]], tipArray: {0=32, 1=35, 2=34, 3=37}, total received Tx: 32, updateTip: true
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 36 from 2, len: 37, req: [[1:1690249832:7], [3:350602721:7]], tipArray: {0=32, 1=35, 2=35, 3=37}, total received Tx: 28, updateTip: true
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 7, ID; 0
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 7, ID; 2
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 7, ID; 3
+received a message: --message type: MZBATCH from 0
+Stage: addbatch --Nodeid: 1, received Batch: 34 from 0, len: 35, req: [], tipArray: {0=33, 1=36, 2=36, 3=38}, total received Tx: 32, updateTip: true
+Stage: addbatch --Nodeid: 1, received Batch: 37 from 1, len: 38, req: [], tipArray: {0=34, 1=36, 2=36, 3=38}, total received Tx: 32, updateTip: false
+Stage: packbatch --Node id: 1 create Mzbatch height:37 batch size: 0 batch req: [] at time: 1652514915885
+received a message: --message type: MZBATCH from 1
+received a message: --message type: MZBATCH from 2
+Stage: addbatch --Nodeid: 1, received Batch: 37 from 2, len: 38, req: [], tipArray: {0=34, 1=36, 2=36, 3=38}, total received Tx: 28, updateTip: false
+received a message: --message type: MZBATCH from 3
+Stage: addbatch --Nodeid: 1, received Batch: 39 from 3, len: 40, req: [], tipArray: {0=34, 1=36, 2=36, 3=38}, total received Tx: 32, updateTip: false
+received a message: --message type: MZPROPOSE from 0
+Stage:OnMzPropose2 --Nodeid: 1 received mzpropose from: 0 --msg type: 44784
+Stage: MzProposedeserialisemsg --timestamp: 1652514917398
+--numNounces: 10
+Stage: MzProposedeserialisemsg --numBatchlistItems: 4
+Stage: MzProposedeserialisemsg --batchListItem: node:0 start height: 31 endheight: 34 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:1 start height: 34 endheight: 36 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:2 start height: 34 endheight: 36 usebatch: 1
+Stage: MzProposedeserialisemsg --batchListItem: node:3 start height: 36 endheight: 38 usebatch: 1
+Stage: getsyncedRequestfromlist try to getRequestfromlist
+Stage: getsyncedRequestfromlist --Node id :0 StartHeight: 31 EndHeight: 34 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 31 req: []
+Stage: getsyncedRequestfromlist --Height: 32 req: [[1:1690249832:7], [3:350602721:7]]
+Stage: getsyncedRequestfromlist --Height: 33 req: [[2:-133109881:7]]
+Stage: getsyncedRequestfromlist --Height: 34 req: []
+Stage: getsyncedRequestfromlist --Node id :1 StartHeight: 34 EndHeight: 36 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 34 req: []
+Stage: getsyncedRequestfromlist --Height: 35 req: [[0:-1892244672:7]]
+Stage: getsyncedRequestfromlist --Height: 36 req: [[2:-133109881:7], [3:350602721:7]]
+Stage: getsyncedRequestfromlist --Node id :2 StartHeight: 34 EndHeight: 36 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 34 req: []
+Stage: getsyncedRequestfromlist --Height: 35 req: [[0:-1892244672:7]]
+Stage: getsyncedRequestfromlist --Height: 36 req: [[1:1690249832:7], [3:350602721:7]]
+Stage: getsyncedRequestfromlist --Node id :3 StartHeight: 36 EndHeight: 38 usebatch 1
+Stage: getsyncedRequestfromlist --Height: 36 req: []
+Stage: getsyncedRequestfromlist --Height: 37 req: [[0:-1892244672:7]]
+Stage: getsyncedRequestfromlist --Height: 38 req: [[1:1690249832:7], [2:-133109881:7]]
+Stage: getsyncedRequestfromlist --total syncedRequesrequest size: 12, request: [[1:1690249832:7], [3:350602721:7], [2:-133109881:7], [0:-1892244672:7], [2:-133109881:7], [3:350602721:7], [0:-1892244672:7], [1:1690249832:7], [3:350602721:7], [0:-1892244672:7], [1:1690249832:7], [2:-133109881:7]]
+Node 1 packed tx number: 103
+Node 1 receive a MzPropose contains 12 requests
+received a message: --message type: PROPOSE from 0
+received a message: --message type: PROPOSE but is regard as out of context, from 0
+Node 1 start to process msg PROPOSE from 0
+Stage: proposeReceived --from: 0
+Stage: executePropose --cid: 18, lastExec(): 17, executeSetInExec true 
+Stage: checkProposedValue --Checking proposed value
+Stage: deserialiseRequests --timestamp:1652514917398
+Stage: deserialiseRequests --numberOfMessages:12
+Stage: Successfully deserialized batch
+Stage: executePropose --deserializedPropValue: [[1:1690249832:7], [3:350602721:7], [2:-133109881:7], [0:-1892244672:7], [2:-133109881:7], [3:350602721:7], [0:-1892244672:7], [1:1690249832:7], [3:350602721:7], [0:-1892244672:7], [1:1690249832:7], [2:-133109881:7]]
+Stage: executePropose --has write vote to consensus id: 18
+Received WRITE number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 0
+Node 1 start to process msg WRITE from 0
+Node 1 received a WRITE message from 0, cid: 18
+Received WRITE number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 2
+Node 1 start to process msg WRITE from 2
+Node 1 received a WRITE message from 2, cid: 18
+Received WRITE number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 18
+Node 1 computeAccept for cid: 18
+Received ACCEPT number 1 more than quorum 2, : false, arrays equal: true
+received a message: --message type: WRITE from 3
+Node 1 start to process msg WRITE from 3
+Node 1 received a WRITE message from 3, cid: 18
+Received WRITE number 4 more than quorum 2, : true, arrays equal: true
+Node 1 received enough WRITE messages for cid: 18
+received a message: --message type: ACCEPT from 3
+Node 1 start to process msg ACCEPT from 3
+Node 1 received a ACCEPT message from 3, cid: 18
+Node 1 computeAccept for cid: 18
+Received ACCEPT number 2 more than quorum 2, : false, arrays equal: true
+received a message: --message type: ACCEPT from 2
+Node 1 start to process msg ACCEPT from 2
+Node 1 received a ACCEPT message from 2, cid: 18
+Node 1 computeAccept for cid: 18
+Received ACCEPT number 3 more than quorum 2, : true, arrays equal: true
+Node 1 received enough ACCEPT messages for cid: 18
+Leader node 0's consensus is reached, cid: 18, remove 12 requests from queue
+received a message: --message type: ACCEPT from 0
+received a message: --message type: ACCEPT but is regard as out of context, from 0
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 7, ID; 3
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 7, ID; 2
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 7, ID; 0
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 7, ID; 2
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 7, ID; 3
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 7, ID; 0
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 7, ID; 3
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 7, ID; 0
+-- !!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: 7, ID; 2
+-- 
+---------- DEBUG INFO ----------
+
+Current time: 15:55:28.392
+Current leader: 0
+Current regency: 0
+
+Last finished consensus: 18
+
+	 -- Consensus state: 
+
+		ETS=0 
+		WriteSet=[[0 :: 7sATUnyg67qa0LZK0gWgq4xWR0P8/g93jU9J13VvH5DFeCDsDUlObBQdQ6wq32QgjXgGxMxB4TLN9j71HQpISA==]] 
+		(VAL,TS)=[0 :: 7sATUnyg67qa0LZK0gWgq4xWR0P8/g93jU9J13VvH5DFeCDsDUlObBQdQ6wq32QgjXgGxMxB4TLN9j71HQpISA==]
+
+	 -- Epoch state: 
+
+		CID=18 
+		TS=0 
+		Propose=[7sATUnyg67qa0LZK0gWgq4xWR0P8/g93jU9J13VvH5DFeCDsDUlObBQdQ6wq32QgjXgGxMxB4TLN9j71HQpISA==] 
+		Writes=([7sATUnyg67qa0LZK0gWgq4xWR0P8/g93jU9J13VvH5DFeCDsDUlObBQdQ6wq32QgjXgGxMxB4TLN9j71HQpISA==], [7sATUnyg67qa0LZK0gWgq4xWR0P8/g93jU9J13VvH5DFeCDsDUlObBQdQ6wq32QgjXgGxMxB4TLN9j71HQpISA==], [7sATUnyg67qa0LZK0gWgq4xWR0P8/g93jU9J13VvH5DFeCDsDUlObBQdQ6wq32QgjXgGxMxB4TLN9j71HQpISA==], [7sATUnyg67qa0LZK0gWgq4xWR0P8/g93jU9J13VvH5DFeCDsDUlObBQdQ6wq32QgjXgGxMxB4TLN9j71HQpISA==]) 
+		Accepts=([null], [7sATUnyg67qa0LZK0gWgq4xWR0P8/g93jU9J13VvH5DFeCDsDUlObBQdQ6wq32QgjXgGxMxB4TLN9j71HQpISA==], [7sATUnyg67qa0LZK0gWgq4xWR0P8/g93jU9J13VvH5DFeCDsDUlObBQdQ6wq32QgjXgGxMxB4TLN9j71HQpISA==], [7sATUnyg67qa0LZK0gWgq4xWR0P8/g93jU9J13VvH5DFeCDsDUlObBQdQ6wq32QgjXgGxMxB4TLN9j71HQpISA==])
+
+Consensus in execution: None
+
+---------- ---------- ----------
+

@@ -228,7 +228,6 @@ public final class Acceptor {
                     System.out.println("Stage: executePropose --has write vote to consensus id: "+ cid);
                     logger.debug("WRITE sent for " + cid);
                     computeWrite(cid, epoch, epoch.propValueHash);
-                    tomLayer.updatepackedheight();
                     logger.debug("WRITE computed for " + cid);
                 
                 } else {
@@ -286,7 +285,8 @@ public final class Acceptor {
         boolean eq = Arrays.equals(value, epoch.propValueHash);
         System.out.printf("Received WRITE number %d more than quorum %d, : %b, arrays equal: %b\n", writeAccepted, controller.getQuorum(), wa, eq);
         if (writeAccepted > controller.getQuorum() && Arrays.equals(value, epoch.propValueHash)) {
-            System.out.printf("Node %d received enough WRITE messages for cid: %d\n", me, cid);            
+            tomLayer.updatepackedheight();//第一轮投票完成后，再更新。
+            System.out.printf("Node %d received enough WRITE messages for cid: %d\n", me, cid);
             if (!epoch.isAcceptSetted(me)) {
                 
                 logger.debug("Sending WRITE for " + cid);

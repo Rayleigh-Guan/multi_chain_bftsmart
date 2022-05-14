@@ -48,7 +48,9 @@ public class multi_chain {
     public void add(Mz_Batch value){
         this.mzlock.lock();
         int nodeid = value.NodeId;
-        this.ChainPool[nodeid].add(value);
+        if (!value.Req.isEmpty()){
+            this.ChainPool[nodeid].add(value);
+        }
         // received a new batch, we need to update our tip.
         if (nodeid != this.NodeID && !value.Req.isEmpty()) {
             setUpdateTipState(true);

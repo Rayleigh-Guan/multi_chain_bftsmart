@@ -410,7 +410,10 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                     //todo multiChain.getMyGeneratedHeight()!=-1 是否有必要？以及对于空batch只是用来更新的batchid是否需要递增，以及是否需要存？
                     if ((interval > 5 && clientsManager.havePendingRequests()) || (interval > 500 && multiChain.getUpdateTipState() && multiChain.getMyGeneratedHeight()!=-1)){
                         RequestList reqlist = clientsManager.getPendingRequests();
-                        multiChain.updateMyGeneratedHeight();
+                        if (!reqlist.isEmpty())
+                        {
+                            multiChain.updateMyGeneratedHeight();
+                        }
                         //multiChain.setUpdateTipState(false); //如果本来有更新，那么也无法发送了  如果注释掉，没有地方置为false，会一直处于更新的状态，发送很多无用的空batch
                         multiChain.setUpdateTipState(false);
                         Map<Integer,Integer> chainPoolTip = multiChain.getMyChainPoolTip();

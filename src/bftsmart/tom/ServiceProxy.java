@@ -405,26 +405,32 @@ public class ServiceProxy extends TOMSender {
 
 				}else{
 					if (replies[pos] == null) {
+						System.out.println("client id: "+getProcessId()+" --received reply from: "+reply.getSender()+" for "+reply.getSequence());
 						receivedReplies++;
 					}
 					replies[pos] = reply;
+					response = extractor.extractResponse(replies, sameContent, pos);
+					reqId = -1;
+					this.sm.release(); // resumes the thread that is executing the "invoke" method
+					canReceiveLock.unlock();
+					return;
 
 					// Compare the reply just received, to the others
 					
-					for (int i = 0; i < replies.length; i++) {
-
-						if ((i != pos || getViewManager().getCurrentViewN() == 1) && replies[i] != null
-								&& (comparator.compare(replies[i].getContent(), reply.getContent()) == 0)) {
-							sameContent++;
-							if (sameContent >= replyQuorum) {
-								response = extractor.extractResponse(replies, sameContent, pos);
-								reqId = -1;
-								this.sm.release(); // resumes the thread that is executing the "invoke" method
-								canReceiveLock.unlock();
-								return;
-							}
-						}
-					}
+//					for (int i = 0; i < replies.length; i++) {
+//
+//						if ((i != pos || getViewManager().getCurrentViewN() == 1) && replies[i] != null
+//								&& (comparator.compare(replies[i].getContent(), reply.getContent()) == 0)) {
+//							sameContent++;
+//							if (sameContent >= replyQuorum) {
+//								response = extractor.extractResponse(replies, sameContent, pos);
+//								reqId = -1;
+//								this.sm.release(); // resumes the thread that is executing the "invoke" method
+//								canReceiveLock.unlock();
+//								return;
+//							}
+//						}
+//					}
 				}
 				
 				if (response == null) {
@@ -465,12 +471,13 @@ public class ServiceProxy extends TOMSender {
          * @return The quorum size for the amount of replies
          */
 	protected int getReplyQuorum() {
-		if (getViewManager().getStaticConf().isBFT()) {
-			return (int) Math.ceil((getViewManager().getCurrentViewN()
-					+ getViewManager().getCurrentViewF()) / 2) + 1;
-		} else {
-			return (int) Math.ceil((getViewManager().getCurrentViewN()) / 2) + 1;
-		}
+//		if (getViewManager().getStaticConf().isBFT()) {
+//			return (int) Math.ceil((getViewManager().getCurrentViewN()
+//					+ getViewManager().getCurrentViewF()) / 2) + 1;
+//		} else {
+//			return (int) Math.ceil((getViewManager().getCurrentViewN()) / 2) + 1;
+//		}
+		return 0;
 	}
 
 	private int getRandomlyServerId(){

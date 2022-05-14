@@ -576,7 +576,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                             
                             //notifies the client manager that this request was received and get
                             //the result of its validation
-                            request.isValid = clientsManager.requestReceived(request, false);
+                            request.isValid = true;//clientsManager.requestReceived(request, false);
                             if (Thread.holdsLock(clientsManager.getClientsLock())) clientsManager.getClientsLock().unlock();
                             
                         }

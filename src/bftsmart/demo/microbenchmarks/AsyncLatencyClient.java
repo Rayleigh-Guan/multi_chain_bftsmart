@@ -24,6 +24,7 @@ import bftsmart.tom.RequestContext;
 import bftsmart.tom.core.messages.TOMMessage;
 import bftsmart.tom.core.messages.TOMMessageType;
 import bftsmart.tom.util.Storage;
+import bftsmart.demo.microbenchmarks.AsyncReplyListener;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
@@ -116,42 +117,19 @@ public class AsyncLatencyClient {
 
             try {
 
-                Storage st = new Storage(this.numberOfOps / 2);
-                
                 if (this.verbose) System.out.println("Executing experiment for " + this.numberOfOps + " ops");
-
+                AsyncReplyListener listener = new AsyncReplyListener(id, this.serviceProxy, this.verbose);
+                long startTime = System.nanoTime();
                 for (int i = 0; i < this.numberOfOps; i++) {
                     
                     long last_send_instant = System.nanoTime();
-                    this.serviceProxy.invokeAsynchRequest(this.request, new ReplyListener() {
+                    
+                    listener.storeRequest(i);
+                    this.serviceProxy.invokeAsynchRequest(this.request, listener, this.reqType);
 
-                        private int replies = 0;
-
-                        @Override
-                        public void reset() {
-
-                            if (verbose) System.out.println("[RequestContext] The proxy is re-issuing the request to the replicas");
-                            replies = 0;
-                        }
-
-                        @Override
-                        public void replyReceived(RequestContext context, TOMMessage reply) {
-                            StringBuilder builder = new StringBuilder();
-                            builder.append("[RequestContext] id: " + context.getReqId() + " type: " + context.getRequestType());
-                            builder.append("[TOMMessage reply] sender id: " + reply.getSender() + " Hash content: " + Arrays.toString(reply.getContent()));
-                            if (verbose) System.out.println(builder.toString());
-
-                            replies++;
-
-                            double q = Math.ceil((double) (serviceProxy.getViewManager().getCurrentViewN() + serviceProxy.getViewManager().getCurrentViewF() + 1) / 2.0);
-
-                            if (replies >= q) {
-                                if (verbose) System.out.println("[RequestContext] clean request context id: " + context.getReqId());
-                                serviceProxy.cleanAsynchRequest(context.getOperationId());
-                            }
-                        }
-                    }, this.reqType);
-                    if (i > (this.numberOfOps / 2)) st.store(System.nanoTime() - last_send_instant);
+                    long send_finish = System.nanoTime();
+                    if (i%250 == 0)
+                        System.out.printf("%d send request %d use %d us\n", this.id, i, (send_finish-last_send_instant));
 
                     if (this.interval > 0) {
                         Thread.sleep(this.interval);
@@ -159,16 +137,14 @@ public class AsyncLatencyClient {
                     
                     if (this.verbose) System.out.println("Sending " + (i + 1) + "th op");
                 }
-
-                Thread.sleep(100);//wait 100ms to receive the last replies
-                
-                if(this.id == initId) {
-                   System.out.println(this.id + " // Average time for " + numberOfOps / 2 + " executions (-10%) = " + st.getAverage(true) / 1000 + " us ");
-                   System.out.println(this.id + " // Standard desviation for " + numberOfOps / 2 + " executions (-10%) = " + st.getDP(true) / 1000 + " us ");
-                   System.out.println(this.id + " // Average time for " + numberOfOps / 2 + " executions (all samples) = " + st.getAverage(false) / 1000 + " us ");
-                   System.out.println(this.id + " // Standard desviation for " + numberOfOps / 2 + " executions (all samples) = " + st.getDP(false) / 1000 + " us ");
-                   System.out.println(this.id + " // Maximum time for " + numberOfOps / 2 + " executions (all samples) = " + st.getMax(false) / 1000 + " us ");
+                long endTime = System.nanoTime();
+                while (!listener.receiveAllReply(numberOfOps)) {
+                    // System.out.println(this.id + " waitting reply...");
+                    Thread.sleep(interval);//wait 100ms to receive the last replies
+                    
                 }
+                System.out.printf("%d generate %d requests in %d ms\n", this.id, numberOfOps, (endTime-startTime)/1000);
+                listener.printStaticsInfo();
 
             } catch (Exception e) {
                 e.printStackTrace();

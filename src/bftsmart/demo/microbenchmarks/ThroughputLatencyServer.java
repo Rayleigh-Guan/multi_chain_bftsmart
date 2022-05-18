@@ -20,6 +20,7 @@ import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultRecoverable;
 import bftsmart.tom.util.Storage;
 
+
 /**
  * Simple server that just acknowledge the reception of a request.
  */
@@ -29,7 +30,8 @@ public final class ThroughputLatencyServer extends DefaultRecoverable{
     private int replySize;
     private float maxTp = -1;
     private boolean context;
-    
+    private long lastExecuteBatchTime = 0;
+    private int nExecutedRequest = 0;
     private byte[] state;
     
     private int iterations = 0;
@@ -69,13 +71,18 @@ public final class ThroughputLatencyServer extends DefaultRecoverable{
     public byte[][] appExecuteBatch(byte[][] commands, MessageContext[] msgCtxs, boolean fromConsensus) {
         
         byte[][] replies = new byte[commands.length][];
-        
+        this.interval = msgCtxs.length;
+        this.iterations = 0;
         for (int i = 0; i < commands.length; i++) {
             
             replies[i] = execute(commands[i],msgCtxs[i]);
             
         }
-        
+        long now = System.currentTimeMillis();
+        long diff = (now - lastExecuteBatchTime);
+        nExecutedRequest += msgCtxs.length;
+        System.out.printf("Node %d execute a Batch at time %d, execute interval %d ms, batch txes num: %d, TPS: %d, total txes num: %d\n", replica.getId(), now, diff, msgCtxs.length, (msgCtxs.length*1000)/(diff), nExecutedRequest);
+        lastExecuteBatchTime = now;
         return replies;
     }
     

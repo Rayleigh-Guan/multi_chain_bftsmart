@@ -88,7 +88,8 @@ public class ClientsManager {
      */
     public RequestList getPendingRequests() {
         RequestList allReq = new RequestList();
-
+        int maxBatchsize = controller.getStaticConf().getMaxBatchSize()/(controller.getStaticConf().getN());
+        maxBatchsize = Math.min(maxBatchsize, 64);
         clientsLock.lock();
         /******* BEGIN CLIENTS CRITICAL SECTION ******/
         
@@ -99,7 +100,7 @@ public class ClientsManager {
             int noMoreMessages = 0;
 
             while (it.hasNext()
-                    && allReq.size() < controller.getStaticConf().getMaxBatchSize()
+                    && allReq.size() < maxBatchsize
                     && noMoreMessages < clientsEntrySet.size()) {
 
                 ClientData clientData = it.next().getValue();
@@ -124,7 +125,7 @@ public class ClientsManager {
                 }
             }
             
-            if(allReq.size() == controller.getStaticConf().getMaxBatchSize() ||
+            if(allReq.size() == maxBatchsize ||
                     noMoreMessages == clientsEntrySet.size()) {
                 
                 break;

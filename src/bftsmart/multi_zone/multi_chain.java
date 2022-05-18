@@ -2,6 +2,8 @@ package bftsmart.multi_zone;
 
 import bftsmart.clientsmanagement.RequestList;
 import bftsmart.tom.core.messages.TOMMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class multi_chain {
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
     private int replica_num=4;
 
     private List<Mz_Batch>[] ChainPool = new ArrayList[this.replica_num];
@@ -56,8 +59,9 @@ public class multi_chain {
             setUpdateTipState(true);
         }
         nTxArray[nodeid] += value.Req.size();
-        System.out.printf("Stage: addbatch --Nodeid: %d, received Batch: %d from %d, len: %d, req: %s, tipArray: %s, total received Tx: %d, updateTip: %b\n", 
-            this.NodeID, value.BatchId, nodeid, this.ChainPool[nodeid].size(), value.Req.toString(),value.chainPooltip.toString(), nTxArray[nodeid], getUpdateTipState());
+        logger.info("--Nodeid: {}, received Batch from {}, batchId: {}, request num:{}, current batch len: {}, tipArray: {}, total received Tx: {}, should I update my Tip: {}", 
+            this.NodeID, nodeid, value.BatchId, value.Req.size(), this.ChainPool[nodeid].size(), value.chainPooltip.toString(), nTxArray[nodeid], getUpdateTipState());
+        logger.debug("--Nodeid: {}, received Batch from {}, requests: {}",  this.NodeID, nodeid, value.BatchId, value.Req);
         this.mzlock.unlock();
     }
 
@@ -87,13 +91,13 @@ public class multi_chain {
             }
         }
         this.mzlock.unlock();
-//        System.out.println("Node try to packlist:"+list.toString());
+//        logger.debug("Node try to packlist:"+list.toString());
         return list;
     }
 
     public List<Mz_BatchListItem> packListWithTip(){
         List<Map<Integer,Integer>> chainTipArray = getReplicaChainPoolTip();
-        System.out.println("Stage packListWithTip: --start time: "+System.currentTimeMillis());
+        logger.debug("Stage packListWithTip: --start time: {}", System.currentTimeMillis());
         this.mzlock.lock();
         List<Mz_BatchListItem> list = new ArrayList<>();
         // int quorum = (replica_num/3)*2;
@@ -102,7 +106,6 @@ public class multi_chain {
         {
             int batchLen = this.ChainPool[i].size();
             if (batchLen <= 0)    continue;
-            System.out.printf("For batch chain %d, node %d's tip Array: %s\n", i, i, chainTipArray.get(i).toString());
             // find slowest node for a batch chain
             int startHeight = this.PackagedHeight[i]+1;
             int localTip = this.ChainPool[i].get(batchLen-1).BatchId;
@@ -124,14 +127,17 @@ public class multi_chain {
                 else
                     endHeight = startHeight;
                 Mz_BatchListItem temp = new Mz_BatchListItem(i, startHeight, endHeight, useBatchhash);
-                System.out.printf("Node %d packListWithTip for chain %d , startHeight: %d, endHeight:%d, tip: %d, usebatch: %d\n", NodeID, i, startHeight, endHeight, localTip, useBatchhash);
+                logger.info("Node {} packListWithTip for chain {} , startHeight: {}, endHeight:{}, tip: {}, usebatch: {}", NodeID, i, startHeight, endHeight, localTip, useBatchhash);
                 list.add(temp);
             }
         }
+        for (int i=0; i<this.replica_num; i++)
+            logger.info("Node {}'s tip Array: {}", i, i, chainTipArray.get(i).toString());
+        
         this.mzlock.unlock();
         // check the block before returned
         checkBlock(list); //这是由于空batch所带来的弊端
-        System.out.println("Stage packListWithTip: --end time: "+System.currentTimeMillis());
+        logger.debug("Stage packListWithTip: --end time: "+System.currentTimeMillis());
         return list;
     }
 
@@ -145,7 +151,7 @@ public class multi_chain {
         }
         if (nRequests == 0) {
             list.clear();
-            System.out.printf("There are no TXes in block, clear the list, list size: %d\n", list.size());
+            logger.debug("There are no TXes in block, clear the list, list size: {}\n", list.size());
         }
             
     }
@@ -190,33 +196,33 @@ public class multi_chain {
     public getsync_reply getsyncedRequestfromlist(List<Mz_BatchListItem> rev){
 
         getsync_reply reply=new getsync_reply();
-        System.out.println("Stage: getsyncedRequestfromlist try to getRequestfromlist");
+        logger.debug("Stage: getsyncedRequestfromlist try to getRequestfromlist");
         this.mzlock.lock();
         for (Mz_BatchListItem mz_batchListItem : rev) {
             int st = mz_batchListItem.StartHeight;
             int ed = mz_batchListItem.EndHeight;
             int nd = mz_batchListItem.NodeId;
             int uf = mz_batchListItem.usedful;
-            System.out.println("Stage: getsyncedRequestfromlist --Node id :"+nd+" StartHeight: "+st+" EndHeight: "+ed+" usebatch "+uf);
+            logger.debug("Stage: getsyncedRequestfromlist --Nodeid :"+nd+" StartHeight: "+st+" EndHeight: "+ed+" usebatch "+uf);
             if (uf == 0)
                 continue;
             if (ed>this.ChainPool[nd].get(this.ChainPool[nd].size()-1).BatchId)
             {
                 reply.setOk(false);
-                System.out.println("Stage: getsyncedRequestfromlist --ed>len --ed:"+ed+" --len: "+this.ChainPool[nd].get(this.ChainPool[nd].size()-1).BatchId);
+                logger.debug("Stage: getsyncedRequestfromlist --ed>len --ed:"+ed+" --len: "+this.ChainPool[nd].get(this.ChainPool[nd].size()-1).BatchId);
                 return reply;
             }
             for (int j = st; j <= ed; j++) {
                 reply.list.addAll(this.ChainPool[nd].get(j).Req);
-                System.out.println("Stage: getsyncedRequestfromlist --Height: "+j+" req: "+this.ChainPool[nd].get(j).Req);
+                logger.debug("Stage: getsyncedRequestfromlist --Height: "+j+" req: "+this.ChainPool[nd].get(j).Req);
             }
         }
         this.mzlock.unlock();
-        // System.out.println("Stage: getsyncedRequestfromlist --totoal reqlist"+reqlist);
-        System.out.printf("Stage: getsyncedRequestfromlist --total syncedRequesrequest size: %d, request: %s\n", reply.getlist().size(), reply.getlist().toString());
+        // logger.debug("Stage: getsyncedRequestfromlist --totoal reqlist"+reqlist);
+        logger.debug("Stage: getsyncedRequestfromlist --total syncedRequesrequest size: {}, request: {}", reply.getlist().size(), reply.getlist().toString());
         NPackedTx += reply.list.size();
         if (!reply.list.isEmpty()) {
-            System.out.printf("Node %d packed tx number: %d\n", NodeID, NPackedTx);
+            logger.info("Node {} packed {} batched request, NPackedTx: {}", NodeID, reply.list.size(), NPackedTx);
         }
         return reply;
     }
@@ -224,27 +230,27 @@ public class multi_chain {
     public RequestList getnotsyncRequestfromlist(List<Mz_BatchListItem> rev){
 
         RequestList reqlist=new RequestList();
-        System.out.println("Stage: getnotsyncRequestfromlist try to getnotsyncRequestfromlist");
+        logger.debug("Stage: getnotsyncRequestfromlist try to getnotsyncRequestfromlist");
         this.mzlock.lock();
         for (Mz_BatchListItem mz_batchListItem : rev) {
             int st = mz_batchListItem.StartHeight;
             int ed = mz_batchListItem.EndHeight;
             int nd = mz_batchListItem.NodeId;
             int uf = mz_batchListItem.usedful;
-            System.out.println("Stage: getnotsyncRequestfromlist --Node id: "+nd+" StartHeight: "+st+" EndHeight: "+ed+" usebatch "+uf);
+            logger.debug("Stage: getnotsyncRequestfromlist --Nodeid: "+nd+" StartHeight: "+st+" EndHeight: "+ed+" usebatch "+uf);
             if (uf == 1)
                 continue;
             for (int j = st; j <= ed; j++) {
                 reqlist.addAll(this.ChainPool[nd].get(j).Req);
-                System.out.println("Stage: getnotsyncRequestfromlist --Height: "+j+" req: "+this.ChainPool[nd].get(j).Req);
+                logger.debug("Stage: getnotsyncRequestfromlist --Height: "+j+" req: "+this.ChainPool[nd].get(j).Req);
             }
         }
         this.mzlock.unlock();
-        // System.out.println("Stage: getnotsyncRequestfromlist --totoal reqlist"+reqlist);
-        System.out.printf("Stage: getnotsyncRequestfromlist --total notsyncRequest size: %d, request: %s\n", reqlist.size(), reqlist.toString());
+        // logger.debug("Stage: getnotsyncRequestfromlist --totoal reqlist"+reqlist);
+        logger.debug("Stage: getnotsyncRequestfromlist --total notsyncRequest size: %d, request: %s\n", reqlist.size(), reqlist.toString());
         NPackedTx += reqlist.size();
         if (!reqlist.isEmpty()) {
-            System.out.printf("Node %d packed tx number: %d\n", NodeID, NPackedTx);
+            logger.info("Node {} packed {} full requests ,NPackedTx: {}", NodeID, reqlist.size(), NPackedTx);
         }
         return reqlist;
     }

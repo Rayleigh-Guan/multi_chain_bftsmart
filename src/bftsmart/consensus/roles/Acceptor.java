@@ -110,7 +110,7 @@ public final class Acceptor {
      * @param msg Paxos messages delivered by the communication layer
      */
     public final void deliver(ConsensusMessage msg) {
-        System.out.println("received a message: --message type: "+msg.getPaxosVerboseType()+" from "+ msg.getSender());
+        logger.debug("received a message: --message type: "+msg.getPaxosVerboseType()+" from "+ msg.getSender());
         if (msg.getType()==MessageFactory.MZBATCH)
         {
             MzBatchReceived(msg);
@@ -121,10 +121,10 @@ public final class Acceptor {
             logger.debug("Processing paxos msg with id " + msg.getNumber());
             processMessage(msg);
         } else {
-            System.out.println("received a message: --message type: "+msg.getPaxosVerboseType()+" but is regard as out of context, from "+ msg.getSender());
+            logger.info("received a message: --message type: "+msg.getPaxosVerboseType()+" but is regard as out of context, from "+ msg.getSender());
             if (msg.getType()==MessageFactory.MZPROPOSE)
             {
-                System.out.println("received a Mzporpose message from "+msg.getSender()+" but do not pass check limits");
+                logger.error("received a Mzporpose message from "+msg.getSender()+" but do not pass check limits");
             }
             logger.debug("Out of context msg with id " + msg.getNumber());
             tomLayer.processOutOfContext();
@@ -139,7 +139,7 @@ public final class Acceptor {
      */
     public final void processMessage(ConsensusMessage msg) {
         Consensus consensus = executionManager.getConsensus(msg.getNumber());
-        System.out.printf("Node %d start to process msg %s from %d\n", me, msg.getPaxosVerboseType(), msg.getSender());
+        logger.debug("Node {} start to process msg {} from {}", me, msg.getPaxosVerboseType(), msg.getSender());
         consensus.lock.lock();
         Epoch epoch = consensus.getEpoch(msg.getEpoch(), controller);
         switch (msg.getType()){
@@ -170,7 +170,7 @@ public final class Acceptor {
         int ts = epoch.getConsensus().getEts();
         int ets = executionManager.getConsensus(msg.getNumber()).getEts();
     	logger.debug("PROPOSE for consensus " + cid);
-        System.out.println("Stage: proposeReceived --from: "+msg.getSender());
+        logger.debug("Stage: proposeReceived --from: "+msg.getSender());
     	if (msg.getSender() == executionManager.getCurrentLeader() // Is the replica the leader?
                 && epoch.getTimestamp() == 0 && ts == ets && ets == 0) { // Is all this in epoch 0?
     		executePropose(epoch, msg.getValue());
@@ -205,9 +205,9 @@ public final class Acceptor {
             if (cid == tomLayer.getLastExec() + 1) {
                 tomLayer.setInExec(cid);
             }
-            System.out.printf("Stage: executePropose --cid: %d, lastExec(): %d, executeSetInExec %b \n", cid,tomLayer.getLastExec(), (cid == tomLayer.getLastExec() + 1));
+            logger.debug("Stage: executePropose --cid: {}, lastExec(): {}, executeSetInExec {}", cid,tomLayer.getLastExec(), (cid == tomLayer.getLastExec() + 1));
             epoch.deserializedPropValue = tomLayer.checkProposedValue(value, true);
-            System.out.println("Stage: executePropose --deserializedPropValue: "+ Arrays.toString(epoch.deserializedPropValue));
+            logger.debug("Stage: executePropose --deserializedPropValue: "+ Arrays.toString(epoch.deserializedPropValue));
             if (epoch.deserializedPropValue != null && !epoch.isWriteSetted(me)) {
                 if(epoch.getConsensus().getDecision().firstMessageProposed == null) {
                     epoch.getConsensus().getDecision().firstMessageProposed = epoch.deserializedPropValue[0];
@@ -225,7 +225,7 @@ public final class Acceptor {
                     epoch.getConsensus().getDecision().firstMessageProposed.writeSentTime = System.nanoTime();
                     communication.send(this.controller.getCurrentViewOtherAcceptors(),
                             factory.createWrite(cid, epoch.getTimestamp(), epoch.propValueHash));
-                    System.out.println("Stage: executePropose --has write vote to consensus id: "+ cid);
+                            logger.debug("Stage: executePropose --has write vote to consensus id: "+ cid);
                     logger.debug("WRITE sent for " + cid);
                     computeWrite(cid, epoch, epoch.propValueHash);
                     logger.debug("WRITE computed for " + cid);
@@ -262,7 +262,7 @@ public final class Acceptor {
      */
     private void writeReceived(Epoch epoch, int a, byte[] value) {
         int cid = epoch.getConsensus().getId();
-        System.out.printf("Node %d received a WRITE message from %d, cid: %d\n", me, a, cid);
+        logger.info("Node {} received a WRITE message from {}, cid: {}", me, a, cid);
         logger.debug("WRITE from " + a + " for consensus " + cid);
         epoch.setWrite(a, value);
         computeWrite(cid, epoch, value);
@@ -283,10 +283,10 @@ public final class Acceptor {
                 " WRITEs for " + cid + "," + epoch.getTimestamp());
         boolean wa = writeAccepted > controller.getQuorum();
         boolean eq = Arrays.equals(value, epoch.propValueHash);
-        System.out.printf("Received WRITE number %d more than quorum %d, : %b, arrays equal: %b\n", writeAccepted, controller.getQuorum(), wa, eq);
+        logger.debug("Received WRITE number {} more than quorum {}, : {}, arrays equal: {}", writeAccepted, controller.getQuorum(), wa, eq);
         if (writeAccepted > controller.getQuorum() && Arrays.equals(value, epoch.propValueHash)) {
             tomLayer.updatepackedheight();//第一轮投票完成后，再更新。
-            System.out.printf("Node %d received enough WRITE messages for cid: %d\n", me, cid);
+            logger.debug("Node {} received enough WRITE messages for cid: {}", me, cid);
             if (!epoch.isAcceptSetted(me)) {
                 
                 logger.debug("Sending WRITE for " + cid);
@@ -410,7 +410,7 @@ public final class Acceptor {
         logger.debug("ACCEPT from " + msg.getSender() + " for consensus " + cid);
         epoch.setAccept(msg.getSender(), msg.getValue());
         epoch.addToProof(msg);
-        System.out.printf("Node %d received a ACCEPT message from %d, cid: %d\n", me, msg.getSender(), cid);
+        logger.info("Node {} received a ACCEPT message from {}}, cid: {}", me, msg.getSender(), cid);
         computeAccept(cid, epoch, msg.getValue());
     }
 
@@ -423,12 +423,12 @@ public final class Acceptor {
     private void computeAccept(int cid, Epoch epoch, byte[] value) {
         logger.debug("I have " + epoch.countAccept(value) +
                 " ACCEPTs for " + cid + "," + epoch.getTimestamp());
-        System.out.printf("Node %d computeAccept for cid: %d\n", me, cid);
+        logger.info("Node {} computeAccept for cid: {}", me, cid);
         boolean nAc = epoch.countAccept(value) > controller.getQuorum();
         boolean csState =!epoch.getConsensus().isDecided();
-        System.out.printf("Received ACCEPT number %d more than quorum %d, : %b, arrays equal: %b\n", epoch.countAccept(value), controller.getQuorum(), nAc, csState);
+        logger.info("Received ACCEPT number {} more than quorum {}, : {}, arrays equal: {}", epoch.countAccept(value), controller.getQuorum(), nAc, csState);
         if (epoch.countAccept(value) > controller.getQuorum() && !epoch.getConsensus().isDecided()) {
-            System.out.printf("Node %d received enough ACCEPT messages for cid: %d\n", me, cid); 
+            logger.info("Node {} received enough ACCEPT messages for cid: {}", me, cid); 
             logger.debug("Deciding consensus " + cid);
             decide(epoch);
         }

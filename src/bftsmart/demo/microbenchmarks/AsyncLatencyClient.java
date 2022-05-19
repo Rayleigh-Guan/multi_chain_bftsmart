@@ -119,17 +119,17 @@ public class AsyncLatencyClient {
 
                 if (this.verbose) System.out.println("Executing experiment for " + this.numberOfOps + " ops");
                 AsyncReplyListener listener = new AsyncReplyListener(id, this.serviceProxy, this.verbose);
-                long startTime = System.nanoTime();
+                long startTime = System.currentTimeMillis();
                 for (int i = 0; i < this.numberOfOps; i++) {
                     
-                    long last_send_instant = System.nanoTime();
+                    long last_send_instant = System.currentTimeMillis();
                     
                     listener.storeRequest(i);
                     this.serviceProxy.invokeAsynchRequest(this.request, listener, this.reqType);
 
-                    long send_finish = System.nanoTime();
+                    long send_finish = System.currentTimeMillis();
                     if (i%250 == 0)
-                        System.out.printf("%d send request %d use %d us\n", this.id, i, (send_finish-last_send_instant));
+                        System.out.printf("%d send request %d use %d ms\n", this.id, i, (send_finish-last_send_instant));
 
                     if (this.interval > 0) {
                         Thread.sleep(this.interval);
@@ -137,13 +137,10 @@ public class AsyncLatencyClient {
                     
                     if (this.verbose) System.out.println("Sending " + (i + 1) + "th op");
                 }
-                long endTime = System.nanoTime();
-                while (!listener.receiveAllReply(numberOfOps)) {
-                    // System.out.println(this.id + " waitting reply...");
-                    Thread.sleep(interval);//wait 100ms to receive the last replies
-                    
-                }
-                System.out.printf("%d generate %d requests in %d ms\n", this.id, numberOfOps, (endTime-startTime)/1000);
+                long endTime = System.currentTimeMillis();
+                System.out.printf("%d generate %d requests in %d ms\n", this.id, numberOfOps, endTime-startTime);
+                // wait 2 minutes and print results.
+                Thread.sleep(120000);
                 listener.printStaticsInfo();
 
             } catch (Exception e) {

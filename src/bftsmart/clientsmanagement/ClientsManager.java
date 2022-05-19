@@ -325,6 +325,7 @@ public class ClientsManager {
                 accounted = true;
             } else {
                 //a too forward message... the client must be malicious
+                logger.warn("WARN-Received a request seq:{} larger than latsRecved msg seq: {}, request msg: {}", request.getSequence(), clientData.getLastMessageReceived(),request);
                 accounted = false;
             }
         }

@@ -14,7 +14,7 @@ public class MzProposeBuilder {
     public MzProposeBuilder(long seed){
         rnd = new Random(seed);
     }
-    private void putMessage(ByteBuffer MzproposalBuffer, byte[] message, boolean addSig, byte[] signature) {
+    private void putMessage(ByteBuffer MzproposalBuffer, byte[] message, boolean addSig, byte[] signature,Long recp) {
         MzproposalBuffer.putInt(message.length);
         MzproposalBuffer.put(message);
 
@@ -26,9 +26,10 @@ public class MzProposeBuilder {
                 MzproposalBuffer.putInt(0);
             }
         }
+        MzproposalBuffer.putLong(recp);
     }
     public byte[] createMzBatch(List<Mz_BatchListItem> msgs,int numNounces, long timestamp,int numberOfreq, int totalreqSize,
-                                boolean useSignatures, byte[][] messages, byte[][] signatures) {
+                                boolean useSignatures, byte[][] messages, byte[][] signatures,Long[] recptime) {
         System.out.println("Stage: makeMzPropose --Node make a Mzpropose to byte");
 
         int sigsSize = 0;
@@ -48,6 +49,7 @@ public class MzProposeBuilder {
         int size = 20 + //timestamp 8, nonces 4, notsyncrequestnum 4,numBatchlistItems 4
                 (numNounces > 0 ? 8 : 0) + //seed if needed
                 (Integer.BYTES * numberOfreq) + // messages length
+                (Long.BYTES*numberOfreq)+
                 sigsSize + // signatures size
                 totalreqSize +
                 (4*4*numBatchlistItems);// Items length
@@ -67,7 +69,7 @@ public class MzProposeBuilder {
 
         MzProposeBuffer.putInt(numberOfreq);
         for (int i = 0; i < numberOfreq; i++) {
-            putMessage(MzProposeBuffer,messages[i], useSignatures, signatures[i]);
+            putMessage(MzProposeBuffer,messages[i], useSignatures, signatures[i],recptime[i]);
         }
 
         MzProposeBuffer.putInt(numBatchlistItems);
@@ -125,20 +127,20 @@ public class MzProposeBuilder {
 
         byte[][] messages = new byte[numnotsyncreq][]; //bytes of the message (or its hash)
         byte[][] signatures = new byte[numnotsyncreq][]; //bytes of the message (or its hash)
-
+        Long []  recptime=new Long[numnotsyncreq];
         // Fill the array of bytes for the messages/signatures being batched
         int i = 0;
 
         for (TOMMessage req : list) {
             messages[i] = req.serializedMessage;
             signatures[i] = req.serializedMessageSignature;
-
+            recptime[i]=req.receptionTime;
             totalreqSize += messages[i].length;
             i++;
         }
 
         // return the batch
-        return createMzBatch(msgs,numNounces,timestamp, numnotsyncreq, totalreqSize, useSignature, messages, signatures);
+        return createMzBatch(msgs,numNounces,timestamp, numnotsyncreq, totalreqSize, useSignature, messages, signatures,recptime);
 
     }
 }

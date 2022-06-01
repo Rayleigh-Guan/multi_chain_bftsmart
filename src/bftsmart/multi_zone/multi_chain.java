@@ -61,8 +61,10 @@ public class multi_chain {
         nTxArray[nodeid] += value.Req.size();
         logger.info("--Nodeid: {}, received Batch from {}, batchId: {}, request num:{}, current batch len: {}, tipArray: {}, total received Tx: {}, should I update my Tip: {}", 
             this.NodeID, nodeid, value.BatchId, value.Req.size(), this.ChainPool[nodeid].size(), value.chainPooltip.toString(), nTxArray[nodeid], getUpdateTipState());
-        logger.debug("--Nodeid: {}, received Batch from {}, requests: {}",  this.NodeID, nodeid, value.BatchId, value.Req);
+        logger.info("--Nodeid: {}, received Batch from {}, requests: {}",  this.NodeID, nodeid, value.BatchId, value.Req);
         this.mzlock.unlock();
+        System.out.println("--Nodeid: "+this.NodeID+", received Batch from "+nodeid+", requests: "+value.Req+" at time: "+System.currentTimeMillis());
+       
     }
 
 

@@ -79,7 +79,7 @@ public final class BatchReader {
                     proposalBuffer.get(signature);
                 }
             }
-            
+            Long recep=proposalBuffer.getLong();
             //obtain the nonces to be delivered to the application
             byte[] nonces = new byte[numberOfNonces];
             if (nonces.length > 0) {
@@ -90,14 +90,16 @@ public final class BatchReader {
                 DataInputStream ois = new DataInputStream(new ByteArrayInputStream(message));
                 TOMMessage tm = new TOMMessage();
                 tm.rExternal(ois);
-
+                ois.close();
+                
                 tm.serializedMessage = message;
                 tm.serializedMessageSignature = signature;
                 tm.numOfNonces = numberOfNonces;
                 tm.seed = seed;
                 tm.timestamp = timestamp;
+                tm.receptionTime=recep;
                 requests[i] = tm;
-
+                
             } catch (Exception e) {
                 LoggerFactory.getLogger(this.getClass()).error("Failed to deserialize batch",e);
             }

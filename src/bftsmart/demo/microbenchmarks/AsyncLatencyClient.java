@@ -126,11 +126,14 @@ public class AsyncLatencyClient {
                     
                     listener.storeRequest(i);
                     this.serviceProxy.invokeAsynchRequest(this.request, listener, this.reqType);
-
+                    listener.sotreCompletetime(i);
+                    
                     long send_finish = System.currentTimeMillis();
                     if (i%250 == 0)
                         System.out.printf("%d send request %d use %d ms\n", this.id, i, (send_finish-last_send_instant));
-
+                    // if (i%500==0){
+                    //     Thread.sleep(2000);
+                    // }
                     if (this.interval > 0) {
                         Thread.sleep(this.interval);
                     }

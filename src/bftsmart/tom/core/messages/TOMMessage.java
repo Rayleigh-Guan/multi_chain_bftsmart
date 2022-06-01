@@ -299,11 +299,13 @@ public class TOMMessage extends SystemMessage implements Externalizable, Compara
 		 TOMMessage m = new TOMMessage();
 		 try{
 			 m.rExternal(dis);
+			 bais.close();
+		 	 dis.close();
 		 }catch(Exception e) {
 			 LoggerFactory.getLogger(TOMMessage.class).error("Failed to deserialize TOMMessage",e);
 			 return null;
 		 }
-
+		 
 		 return m;
 	 }
 

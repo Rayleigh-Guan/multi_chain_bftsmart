@@ -19,6 +19,8 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Random;
 
+import javax.sound.midi.Receiver;
+
 import bftsmart.reconfiguration.ServerViewController;
 import bftsmart.tom.core.messages.TOMMessage;
 
@@ -46,7 +48,7 @@ public final class BatchBuilder {
 
         /** build buffer */
 	private byte[] createBatch(long timestamp, int numberOfNonces, long seed, int numberOfMessages, int totalMessagesSize,
-			boolean useSignatures, byte[][] messages, byte[][] signatures) {
+			boolean useSignatures, byte[][] messages, byte[][] signatures,Long[] receptime) {
             
                 int sigsSize = 0;
                 
@@ -63,6 +65,7 @@ public final class BatchBuilder {
 		int size = 20 + //timestamp 8, nonces 4, nummessages 4
 				(numberOfNonces > 0 ? 8 : 0) + //seed if needed
 				(Integer.BYTES * numberOfMessages) + // messages length
+				(Long.BYTES*numberOfMessages)+
                                 sigsSize + // signatures size
 				totalMessagesSize; //size of all msges
 
@@ -79,13 +82,13 @@ public final class BatchBuilder {
 		proposalBuffer.putInt(numberOfMessages);
 
 		for (int i = 0; i < numberOfMessages; i++) {
-			putMessage(proposalBuffer,messages[i], useSignatures, signatures[i]);
+			putMessage(proposalBuffer,messages[i], useSignatures, signatures[i],receptime[i]);
 		}
 
 		return proposalBuffer.array();
 	}
           
-	private void putMessage(ByteBuffer proposalBuffer, byte[] message, boolean addSig, byte[] signature) {
+	private void putMessage(ByteBuffer proposalBuffer, byte[] message, boolean addSig, byte[] signature,Long recep) {
 		proposalBuffer.putInt(message.length);
 		proposalBuffer.put(message);
 
@@ -97,6 +100,7 @@ public final class BatchBuilder {
                         proposalBuffer.putInt(0);
                     }
                 }
+		proposalBuffer.putLong(recep);
 	}
 
 	public byte[] makeBatch(List<TOMMessage> msgs, int numNounces, long timestamp, boolean useSignatures) {
@@ -106,7 +110,7 @@ public final class BatchBuilder {
 
 		byte[][] messages = new byte[numMsgs][]; //bytes of the message (or its hash)
 		byte[][] signatures = new byte[numMsgs][]; //bytes of the message (or its hash)
-
+		Long[] receptime=new Long[numMsgs];
 		// Fill the array of bytes for the messages/signatures being batched
 		int i = 0;
                 
@@ -115,14 +119,14 @@ public final class BatchBuilder {
 			logger.debug("Adding request from client " + msg.getSender() + " with sequence number " + msg.getSequence() + " for session " + msg.getSession() + " to PROPOSE");
 			messages[i] = msg.serializedMessage;
 			signatures[i] = msg.serializedMessageSignature;
-
+			receptime[i]=msg.receptionTime;
 			totalMessageSize += messages[i].length;
 			i++;
 		}
 
 		// return the batch
 		return createBatch(timestamp, numNounces,rnd.nextLong(), numMsgs, totalMessageSize,
-				useSignatures, messages, signatures);
+				useSignatures, messages, signatures,receptime);
 
 	}
 	public byte[] makeBatch(List<TOMMessage> msgs, int numNounces, long seed, long timestamp, boolean useSignatures) {
@@ -132,7 +136,7 @@ public final class BatchBuilder {
 
 		byte[][] messages = new byte[numMsgs][]; //bytes of the message (or its hash)
 		byte[][] signatures = new byte[numMsgs][]; //bytes of the message (or its hash)
-
+		Long[] receptime=new Long[numMsgs];
 		// Fill the array of bytes for the messages/signatures being batched
 		int i = 0;
                 
@@ -141,14 +145,14 @@ public final class BatchBuilder {
 			//Logger.println("(TOMLayer.run) adding req " + msg + " to PROPOSE");
 			messages[i] = msg.serializedMessage;
 			signatures[i] = msg.serializedMessageSignature;
-
+			receptime[i]=msg.receptionTime;
 			totalMessageSize += messages[i].length;
 			i++;
 		}
 
 		// return the batch
 		return createBatch(timestamp, numNounces,seed, numMsgs, totalMessageSize,
-				useSignatures, messages, signatures);
+				useSignatures, messages, signatures,receptime);
 
 	}
 }

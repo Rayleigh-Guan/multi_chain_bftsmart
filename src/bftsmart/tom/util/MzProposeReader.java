@@ -55,12 +55,15 @@ public class MzProposeReader {
                         MzProposeBuffer.get(signature);
                     }
                 }
+                Long recp=MzProposeBuffer.getLong();
                 try {
                     DataInputStream ois = new DataInputStream(new ByteArrayInputStream(message));
                     TOMMessage tm = new TOMMessage();
                     tm.rExternal(ois);
+                    ois.close();
                     tm.serializedMessage = message;
                     tm.serializedMessageSignature = signature;
+                    tm.receptionTime=recp;
                     Req.add(tm);
 
                 } catch (Exception e) {

@@ -341,7 +341,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         //for benchmarking
         if (dec.getConsensusId() > -1) { // if this is from the leader change, it doesnt matter
             dec.firstMessageProposed = pendingRequests.getFirst();
-            dec.firstMessageProposed.consensusStartTime = System.nanoTime();
+            dec.firstMessageProposed.consensusStartTime = System.currentTimeMillis();
         }
         dec.batchSize = numberOfMessages;
 
@@ -361,7 +361,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         }else{
             logger.info("Stage: createMzPropose --Node create a mzpropose ,and success get a packlist,list size:"+pendingBatch.size());
         }
-
+        System.out.println("Stage: createMzPropose --Node create a Mzpropose at："+System.currentTimeMillis());
         RequestList requestnotsync = multiChain.getnotsyncRequestfromlist(pendingBatch);
 
         int numberOfItems = pendingBatch.size(); // number of messages retrieved
@@ -373,10 +373,10 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             if (requestnotsync.size()==0)
             {
                 dec.firstMessageProposed = multiChain.getFirstRequest(pendingBatch);
-                dec.firstMessageProposed.consensusStartTime = System.nanoTime();
+                dec.firstMessageProposed.consensusStartTime = System.currentTimeMillis();
             }else {
                 dec.firstMessageProposed = requestnotsync.get(0);
-                dec.firstMessageProposed.consensusStartTime = System.nanoTime();
+                dec.firstMessageProposed.consensusStartTime = System.currentTimeMillis();
             }
         }
         dec.batchSize = numberOfItems;
@@ -423,7 +423,10 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                         multiChain.add(new Mz_Batch(myId,multiChain.getMyGeneratedHeight(),reqlist,chainPoolTip));
                         byte[] batch = mzbb.makeMzBatch(myId, multiChain.getMyGeneratedHeight(), reqlist, useSignature==1, chainPoolTip);
                         ConsensusMessage batchMessage = messageFactory.createMzBatch(0,0,batch);
+                        System.out.println("Stage: packbatch try to send --Nodeid: "+myId+" create Mzbatch height:"+(multiChain.getMyGeneratedHeight())+" batch size: "+reqlist.size()+" at time: "+System.currentTimeMillis());
                         communication.send(controller.getCurrentViewAcceptors(),batchMessage);
+                        System.out.println("Stage: packbatch have sended --Nodeid: "+myId+" create Mzbatch height:"+(multiChain.getMyGeneratedHeight())+" batch size: "+reqlist.size()+" at time: "+System.currentTimeMillis());
+                        
                         logger.info("Stage: packbatch --Nodeid: "+myId+" create Mzbatch height:"+(multiChain.getMyGeneratedHeight())+" batch size: "+reqlist.size()+" at time: "+System.currentTimeMillis());
                         logger.debug("Batch Request: {}", reqlist.toString());
                         lastsend=System.currentTimeMillis();
@@ -731,9 +734,8 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         MzProposeReader mzproposeReader = new MzProposeReader(msg.getValue(),controller.getStaticConf().getUseSignatures() == 1);
         int myId = this.controller.getStaticConf().getProcessId();
         logger.debug("Stage:OnMzPropose2 --Nodeid: "+myId+" received mzpropose from: "+msg.getSender()+" --msg type: "+msg.getType());
-
+        System.out.println("Stage: received Mzpropose at："+System.currentTimeMillis());
         Mz_Propose mz_propose=mzproposeReader.deserialisemsg();
-
         getsync_reply reply=this.multiChain.getsyncedRequestfromlist(mz_propose.list);
         if (!reply.getok())
         {
@@ -747,6 +749,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         this.multiChain.setLastbatchlist(mz_propose.list);
         RequestList totalreqlist=new RequestList();
         int numNotSyncReq = 0, numSyncReq = 0;
+        
         if (mz_propose.numofnotsyncreq>0){
             numNotSyncReq = mz_propose.notsyncreq.size();
             totalreqlist.addAll(mz_propose.notsyncreq);

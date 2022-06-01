@@ -49,12 +49,15 @@ public class MzBatchReader
                     MzBatchBuffer.get(signature);
                 }
             }
+            Long recp=MzBatchBuffer.getLong();
             try {
                 DataInputStream ois = new DataInputStream(new ByteArrayInputStream(message));
                 TOMMessage tm = new TOMMessage();
                 tm.rExternal(ois);
+                ois.close();
                 tm.serializedMessage = message;
                 tm.serializedMessageSignature = signature;
+                tm.receptionTime=recp;
                 Req.add(tm);
 
             } catch (Exception e) {

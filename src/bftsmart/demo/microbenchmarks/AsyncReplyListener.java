@@ -16,6 +16,7 @@ public class AsyncReplyListener implements ReplyListener {
     private int replies ;
     private boolean verbose;
     private HashMap<Integer, Long> reqSendTime;
+    private HashMap<Integer, Long> reqCompletedSendime;
 	private HashMap<Integer, Long> replyRecvTime;
     private int id; 
     private AsynchServiceProxy serviceProxy;        
@@ -24,20 +25,25 @@ public class AsyncReplyListener implements ReplyListener {
         super();
         id = clientid;
         reqSendTime = new HashMap<>();
+        reqCompletedSendime=new HashMap<>();
         replyRecvTime = new HashMap<>();
         serviceProxy = service;
         replies = 0;
         verbose = vb;
     }
-
+    public void sotreCompletetime(int reqId)
+    {
+        if (reqCompletedSendime.containsKey(reqId) == false) 
+        reqCompletedSendime.put(reqId, System.currentTimeMillis());
+    }
     public void storeRequest(int reqId) {
         if (reqSendTime.containsKey(reqId) == false) 
-            reqSendTime.put(reqId, System.nanoTime());
+            reqSendTime.put(reqId, System.currentTimeMillis());
     }
 
     public void storeReply(int reqId) {
         if (replyRecvTime.containsKey(reqId) == false)
-            replyRecvTime.put(reqId, System.nanoTime());
+            replyRecvTime.put(reqId, System.currentTimeMillis());
     }
 
     public int getNumberofReply(){
@@ -61,20 +67,24 @@ public class AsyncReplyListener implements ReplyListener {
             if (reqSendTime.containsKey(reqId)==false)
                 System.out.printf("Error: %d received reply %d, but have not corresponding request\n", this.id, entry.getKey());
             else
+            {
                 st.store(recvTime - reqSendTime.get(reqId));
+                System.out.println(this.id+" "+reqId+" "+reqSendTime.get(reqId)+" "+reqCompletedSendime.get(reqId)+" "+recvTime);
+            }
+                
         }
             
         System.out.println(this.id + "// Total send " + reqSendTime.size() +" cmds, receives "+ replyRecvTime.size());
         System.out.println(this.id + " // Average time for " + numberOfOps + " executions (-10%) = "
-        + st.getAverage(true) / 1000 + " us ");
+        + st.getAverage(true) + " ms ");
         System.out.println(this.id + " // Standard desviation for " + numberOfOps + " executions (-10%) = "
-                + st.getDP(true) / 1000 + " us ");
+                + st.getDP(true) + " ms ");
         System.out.println(this.id + " // Average time for " + numberOfOps + " executions (all samples) = "
-                + st.getAverage(false) / 1000 + " us ");
+                + st.getAverage(false) + " ms ");
         System.out.println(this.id + " // Standard desviation for " + numberOfOps / 2
-                + " executions (all samples) = " + st.getDP(false) / 1000 + " us ");
+                + " executions (all samples) = " + st.getDP(false)  + " ms ");
         System.out.println(this.id + " // Maximum time for " + numberOfOps + " executions (all samples) = "
-                + st.getMax(false) / 1000 + " us ");
+                + st.getMax(false) + " ms ");
     }
     
     @Override

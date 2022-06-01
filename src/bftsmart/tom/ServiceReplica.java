@@ -318,7 +318,7 @@ public class ServiceReplica {
                             if (requestCount + 1 == requestsFromConsensus.length) {
                                 
                                 msgCtx.setLastInBatch();
-                            }   request.deliveryTime = System.nanoTime();
+                            }   request.deliveryTime = System.currentTimeMillis();
                             if (executor instanceof BatchExecutable) {
                                 
                                logger.debug("Batching request from " + request.getSender());
@@ -442,9 +442,11 @@ public class ServiceReplica {
 
                 if (SVController.getStaticConf().getNumRepliers() > 0) {
                     logger.debug("Sending reply to " + request.getSender() + " with sequence number " + request.getSequence() + " and operation ID " + request.getOperationId() +" via ReplyManager");
+                    System.out.println("Sending reply to " + request.getSender() + " with sequence number " + request.getSequence() + " and operation ID " + request.getOperationId() +"at time: "+System.currentTimeMillis());
                     repMan.send(request);
                 } else {
                     logger.debug("Sending reply to " + request.getSender() + " with sequence number " + request.getSequence() + " and operation ID " + request.getOperationId());
+                    System.out.println("Sending reply to " + request.getSender() + " with sequence number " + request.getSequence() + " and operation ID " + request.getOperationId() +" via ReplyManager at time: "+System.currentTimeMillis());
                     replier.manageReply(request, msgContexts[index]);
                     //cs.send(new int[]{request.getSender()}, request.reply);
                 }

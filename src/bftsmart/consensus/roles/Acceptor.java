@@ -189,7 +189,7 @@ public final class Acceptor {
         int cid = epoch.getConsensus().getId();
         logger.debug("Executing propose for " + cid + "," + epoch.getTimestamp());
 
-        long consensusStartTime = System.nanoTime();
+        long consensusStartTime = System.currentTimeMillis();//System.nanoTime();
 
 
         if(epoch.propValue == null) { //only accept one propose per epoch
@@ -216,24 +216,24 @@ public final class Acceptor {
                     epoch.getConsensus().getDecision().firstMessageProposed.consensusStartTime = consensusStartTime;
                     
                 }
-                epoch.getConsensus().getDecision().firstMessageProposed.proposeReceivedTime = System.nanoTime();
+                epoch.getConsensus().getDecision().firstMessageProposed.proposeReceivedTime = System.currentTimeMillis();
                 
                 if(controller.getStaticConf().isBFT()){
                     logger.debug("Sending WRITE for " + cid);
 
                     epoch.setWrite(me, epoch.propValueHash);
-                    epoch.getConsensus().getDecision().firstMessageProposed.writeSentTime = System.nanoTime();
+                    epoch.getConsensus().getDecision().firstMessageProposed.writeSentTime = System.currentTimeMillis();
                     communication.send(this.controller.getCurrentViewOtherAcceptors(),
                             factory.createWrite(cid, epoch.getTimestamp(), epoch.propValueHash));
-                            logger.debug("Stage: executePropose --has write vote to consensus id: "+ cid);
+                    logger.debug("Stage: executePropose --has write vote to consensus id: "+ cid);
                     logger.debug("WRITE sent for " + cid);
                     computeWrite(cid, epoch, epoch.propValueHash);
                     logger.debug("WRITE computed for " + cid);
                 
                 } else {
                  	epoch.setAccept(me, epoch.propValueHash);
-                 	epoch.getConsensus().getDecision().firstMessageProposed.writeSentTime = System.nanoTime();
-                        epoch.getConsensus().getDecision().firstMessageProposed.acceptSentTime = System.nanoTime();
+                 	epoch.getConsensus().getDecision().firstMessageProposed.writeSentTime = System.currentTimeMillis();
+                        epoch.getConsensus().getDecision().firstMessageProposed.acceptSentTime = System.currentTimeMillis();
                  	/**** LEADER CHANGE CODE! ******/
                         logger.debug("[CFT Mode] Setting consensus " + cid + " QuorumWrite tiemstamp to " + epoch.getConsensus().getEts() + " and value " + Arrays.toString(epoch.propValueHash));
  	                epoch.getConsensus().setQuorumWrites(epoch.propValueHash);
@@ -300,7 +300,7 @@ public final class Acceptor {
 
                 if(epoch.getConsensus().getDecision().firstMessageProposed!=null) {
 
-                        epoch.getConsensus().getDecision().firstMessageProposed.acceptSentTime = System.nanoTime();
+                        epoch.getConsensus().getDecision().firstMessageProposed.acceptSentTime = System.currentTimeMillis();
                 }
                         
                 ConsensusMessage cm = factory.createAccept(cid, epoch.getTimestamp(), value);
@@ -440,7 +440,7 @@ public final class Acceptor {
      */
     private void decide(Epoch epoch) {        
         if (epoch.getConsensus().getDecision().firstMessageProposed != null)
-            epoch.getConsensus().getDecision().firstMessageProposed.decisionTime = System.nanoTime();
+            epoch.getConsensus().getDecision().firstMessageProposed.decisionTime = System.currentTimeMillis();
 
         epoch.getConsensus().decided(epoch, true);
     }

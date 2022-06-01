@@ -101,7 +101,7 @@ public final class ThroughputLatencyServer extends DefaultRecoverable{
 
             readOnly = msgCtx.readOnly;
                     
-            msgCtx.getFirstInBatch().executedTime = System.nanoTime();
+            msgCtx.getFirstInBatch().executedTime = System.currentTimeMillis();
                         
             totalLatency.store(msgCtx.getFirstInBatch().executedTime - msgCtx.getFirstInBatch().receptionTime);
 
@@ -114,6 +114,7 @@ public final class ThroughputLatencyServer extends DefaultRecoverable{
                 proposeLatency.store(msgCtx.getFirstInBatch().writeSentTime - msgCtx.getFirstInBatch().consensusStartTime);
                 writeLatency.store(msgCtx.getFirstInBatch().acceptSentTime - msgCtx.getFirstInBatch().writeSentTime);
                 acceptLatency.store(msgCtx.getFirstInBatch().decisionTime - msgCtx.getFirstInBatch().acceptSentTime);
+                System.out.println("latencyana: "+msgCtx.getFirstInBatch().getSequence()+" "+msgCtx.getFirstInBatch().getSender()+" "+msgCtx.getFirstInBatch().receptionTime+" "+msgCtx.getFirstInBatch().executedTime);
                 
 
             } else {
@@ -154,19 +155,19 @@ public final class ThroughputLatencyServer extends DefaultRecoverable{
             
             System.out.println("Throughput = " + tp +" operations/sec (Maximum observed: " + maxTp + " ops/sec)");            
             
-            System.out.println("Total latency = " + totalLatency.getAverage(false) / 1000 + " (+/- "+ (long)totalLatency.getDP(false) / 1000 +") us ");
+            System.out.println("Total latency = " + totalLatency.getAverage(false) + " (+/- "+ (long)totalLatency.getDP(false) +") us ");
             totalLatency.reset();
-            System.out.println("Consensus latency = " + consensusLatency.getAverage(false) / 1000 + " (+/- "+ (long)consensusLatency.getDP(false) / 1000 +") us ");
+            System.out.println("Consensus latency = " + consensusLatency.getAverage(false) + " (+/- "+ (long)consensusLatency.getDP(false)  +") ms ");
             consensusLatency.reset();
-            System.out.println("Pre-consensus latency = " + preConsLatency.getAverage(false) / 1000 + " (+/- "+ (long)preConsLatency.getDP(false) / 1000 +") us ");
+            System.out.println("Pre-consensus latency = " + preConsLatency.getAverage(false) + " (+/- "+ (long)preConsLatency.getDP(false) +") ms ");
             preConsLatency.reset();
-            System.out.println("Pos-consensus latency = " + posConsLatency.getAverage(false) / 1000 + " (+/- "+ (long)posConsLatency.getDP(false) / 1000 +") us ");
+            System.out.println("Pos-consensus latency = " + posConsLatency.getAverage(false) + " (+/- "+ (long)posConsLatency.getDP(false) +") ms ");
             posConsLatency.reset();
-            System.out.println("Propose latency = " + proposeLatency.getAverage(false) / 1000 + " (+/- "+ (long)proposeLatency.getDP(false) / 1000 +") us ");
+            System.out.println("Propose latency = " + proposeLatency.getAverage(false)  + " (+/- "+ (long)proposeLatency.getDP(false)  +") ms ");
             proposeLatency.reset();
-            System.out.println("Write latency = " + writeLatency.getAverage(false) / 1000 + " (+/- "+ (long)writeLatency.getDP(false) / 1000 +") us ");
+            System.out.println("Write latency = " + writeLatency.getAverage(false)  + " (+/- "+ (long)writeLatency.getDP(false)   +") ms ");
             writeLatency.reset();
-            System.out.println("Accept latency = " + acceptLatency.getAverage(false) / 1000 + " (+/- "+ (long)acceptLatency.getDP(false) / 1000 +") us ");
+            System.out.println("Accept latency = " + acceptLatency.getAverage(false) + " (+/- "+ (long)acceptLatency.getDP(false)  +") ms ");
             acceptLatency.reset();
             
             throughputMeasurementStartTime = System.currentTimeMillis();

@@ -220,7 +220,7 @@ public class ClientsManager {
      */
     public boolean requestReceived(TOMMessage request, boolean fromClient, ServerCommunicationSystem cs) {
                 
-        long receptionTime = System.nanoTime();
+        long receptionTime = System.currentTimeMillis();
         long receptionTimestamp = System.currentTimeMillis();
         
         int clientId = request.getSender();
@@ -314,7 +314,8 @@ public class ClientsManager {
                     if (reply.recvFromClient && fromClient) {
                         logger.info("[CACHE] re-send reply [Sender: " + reply.getSender() + ", sequence: " + reply.getSequence()+", session: " + reply.getSession()+ "]");
                         cs.send(new int[]{request.getSender()}, reply);
-
+                        //the time i send reply to client
+                        System.out.println("[CACHE] re-send reply [Sender: " + reply.getSender() + ", sequence: " + reply.getSequence()+"] at time"+System.currentTimeMillis());
                     } 
                     
                     else if (!reply.recvFromClient && fromClient) {

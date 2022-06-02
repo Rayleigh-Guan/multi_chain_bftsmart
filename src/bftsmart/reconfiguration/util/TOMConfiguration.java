@@ -63,6 +63,10 @@ public class TOMConfiguration extends Configuration {
     private boolean sameBatchSize;
     private String bindAddress;
 
+    private String dataDisStrategy;
+    private int minConWithConseususNode;
+    private int minConWithRelayerNode;
+    
     /** Creates a new instance of TOMConfiguration */
     public TOMConfiguration(int processId, KeyLoader loader) {
         super(processId, loader);
@@ -336,7 +340,38 @@ public class TOMConfiguration extends Configuration {
             } else {
                 sameBatchSize = false;
             }
+            
+            // configure parameters for multi-zone
+            s = (String) configs.remove("system.qc");
+            if (s == null){
+                minConWithConseususNode = Integer.parseInt(s);
+            }
+            else {
+                minConWithConseususNode = n;
+            }
 
+            s = (String) configs.remove("system.qr");
+            if (s == null){
+                minConWithRelayerNode = Integer.parseInt(s);
+            }
+            else {
+                minConWithRelayerNode = n;
+            }
+
+            s = (String) configs.remove("system.ds");
+            if (s == null){
+                dataDisStrategy = "None";
+            }
+            else {
+                dataDisStrategy = "MZ";
+            }
+
+            logger = LoggerFactory.getLogger(this.getClass());
+            logger.info("Qc(Quorum connections to consensus node) = " + minConWithConseususNode);
+            logger.info("Qr(Quorum connections to relay node) = " + minConWithRelayerNode );
+            logger.info("Data distribution strategy is "+ dataDisStrategy);
+            logger.info("Initialview: {}", initialView);
+            
         } catch (Exception e) {
             logger.error("Could not parse system configuration file", e);
         }
@@ -513,5 +548,17 @@ public class TOMConfiguration extends Configuration {
 
     public String getBindAddress() {
         return bindAddress;
+    }
+
+    public String getDataDisStrategy() {
+        return dataDisStrategy;
+    }
+
+    public int getMinConWithConsensusNode(){
+        return minConWithConseususNode;
+    }
+
+    public int getMinConWithRelayerNode(){
+        return minConWithRelayerNode;
     }
 }

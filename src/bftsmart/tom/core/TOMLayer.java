@@ -38,6 +38,12 @@ import bftsmart.consensus.messages.ConsensusMessage;
 import bftsmart.consensus.messages.MessageFactory;
 import bftsmart.consensus.roles.Acceptor;
 import bftsmart.multi_zone.*;
+import bftsmart.multi_zone.MZNodeMan;
+import bftsmart.multi_zone.MZMessage;
+import bftsmart.multi_zone.Mz_Batch;
+import bftsmart.multi_zone.Mz_BatchListItem;
+import bftsmart.multi_zone.Mz_Propose;
+import bftsmart.multi_zone.multi_chain;
 import bftsmart.reconfiguration.ServerViewController;
 import bftsmart.statemanagement.StateManager;
 import bftsmart.tom.ServiceReplica;
@@ -65,6 +71,8 @@ import java.util.concurrent.Executors;
 public final class TOMLayer extends Thread implements RequestReceiver {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    public MZNodeMan mzNodeMan;
 
     private boolean doWork = true;
     // other components used by the TOMLayer (they are never changed)
@@ -121,6 +129,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
 
     private multi_chain multiChain;
     private Thread packbatchthread;
+    private Thread mznodeThread;
     private MzBatchBuilder mzbb = new MzBatchBuilder();
     private MzProposeBuilder mzpb = new MzProposeBuilder(System.nanoTime());
 
@@ -141,7 +150,9 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             Acceptor a,
             ServerCommunicationSystem cs,
             ServerViewController controller,
-            RequestVerifier verifier) {
+            RequestVerifier verifier,
+            MZNodeMan mzNodeMan
+            ) {
 
         super("TOM Layer");
 
@@ -189,6 +200,14 @@ public final class TOMLayer extends Thread implements RequestReceiver {
 
         this.syncher = new Synchronizer(this); // create synchronizer
         this.multiChain = new multi_chain(receiver.getId());
+
+        this.mzNodeMan = mzNodeMan;
+        if (this.controller.isInCurrentView())
+            this.mzNodeMan.setConsensusNode(true);
+        
+            initPackBatchThread();
+
+            initMZNodeThread();
     }
 
     /**
@@ -404,161 +423,14 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     @Override
     public void run() {
         logger.debug("Running."); // TODO: can't this be outside of the loop?
-        this.packbatchthread = new Thread() {
-            @Override
-            public void run() {
-                long lastsend = System.currentTimeMillis();
-                int myId = controller.getStaticConf().getProcessId();
-                int useSignature = controller.getStaticConf().getUseSignatures();
-                MessageFactory messageFactory = new MessageFactory(myId);
-                while (!Thread.interrupted()) {
-                    // // blocks until there are requests to be packed or the batch tip need to be
-                    // updated.
-                    // messagesLock.lock();
-                    // if (! && multiChain.getUpdateTipState() == false) {
-                    // haveMessages.awaitUninterruptibly();
-                    // }
-                    // messagesLock.unlock();
-                    long interval = System.currentTimeMillis() - lastsend;
-                    // todo multiChain.getMyGeneratedHeight()!=-1
-                    // 是否有必要？以及对于空batch只是用来更新的batchid是否需要递增，以及是否需要存？
-                    if ((interval > 5 && clientsManager.havePendingRequests()) || (interval > 500
-                            && multiChain.getUpdateTipState() && multiChain.getMyGeneratedHeight() != -1)) {
-                        RequestList reqlist = clientsManager.getPendingRequests();
-                        if (!reqlist.isEmpty()) {
-                            multiChain.updateMyGeneratedHeight();
-                        }
-                        // multiChain.setUpdateTipState(false); //如果本来有更新，那么也无法发送了
-                        // 如果注释掉，没有地方置为false，会一直处于更新的状态，发送很多无用的空batch
-                        multiChain.setUpdateTipState(false);
-                        Map<Integer, Integer> chainPoolTip = multiChain.getMyChainPoolTip();
-                        // chainPoolTip.put(myId, multiChain.getMyGeneratedHeight()); 多余的操作
-                        multiChain.add(new Mz_Batch(myId, multiChain.getMyGeneratedHeight(), reqlist, chainPoolTip));
-                        byte[] batch = mzbb.makeMzBatch(myId, multiChain.getMyGeneratedHeight(), reqlist,
-                                useSignature == 1, chainPoolTip);
-                        ConsensusMessage batchMessage = messageFactory.createMzBatch(0, 0, batch);
-                        System.out.println("Stage: packbatch try to send --Nodeid: " + myId + " create Mzbatch height:"
-                                + (multiChain.getMyGeneratedHeight()) + " batch size: " + reqlist.size() + " at time: "
-                                + System.currentTimeMillis());
-                        communication.send(controller.getCurrentViewAcceptors(), batchMessage);
-                        System.out.println("Stage: packbatch have sended --Nodeid: " + myId + " create Mzbatch height:"
-                                + (multiChain.getMyGeneratedHeight()) + " batch size: " + reqlist.size() + " at time: "
-                                + System.currentTimeMillis());
-
-                        logger.info("Stage: packbatch --Nodeid: " + myId + " create Mzbatch height:"
-                                + (multiChain.getMyGeneratedHeight()) + " batch size: " + reqlist.size() + " at time: "
-                                + System.currentTimeMillis());
-                        logger.debug("Batch Request: {}", reqlist.toString());
-                        lastsend = System.currentTimeMillis();
-                    }
-                }
-            }
-        };
-        this.packbatchthread.start();
-        int myId = this.controller.getStaticConf().getProcessId();
-        while (doWork) {
-
-            // blocks until this replica learns to be the leader for the current epoch of
-            // the current consensus
-            leaderLock.lock();
-            logger.debug("Next leader for CID=" + (getLastExec() + 1) + ": " + execManager.getCurrentLeader());
-
-            // ******* EDUARDO BEGIN **************//
-            if (execManager.getCurrentLeader() != this.controller.getStaticConf().getProcessId()) {
-                iAmLeader.awaitUninterruptibly();
-                // waitForPaxosToFinish();
-            }
-            // ******* EDUARDO END **************//
-            leaderLock.unlock();
-
-            if (!doWork)
-                break;
-
-            // blocks until the current consensus finishes
-            proposeLock.lock();
-            logger.debug("Node %d judge if there is some consensus running...\n", myId);
-            if (getInExec() != -1) { // there is some consensus running
-                logger.debug("Waiting for consensus " + getInExec() + " termination.");
-                canPropose.awaitUninterruptibly();
-            }
-            proposeLock.unlock();
-
-            if (!doWork)
-                break;
-
-            logger.debug("Node %d start to create Propose\n", myId);
-
-            logger.debug("I'm the leader.");
-
-            // blocks until there are requests to be processed/ordered
-            // messagesLock.lock();
-            // if (!clientsManager.havePendingRequests()) {
-            // haveMessages.awaitUninterruptibly();
-            // }
-            // messagesLock.unlock();
-
-            if (!doWork)
-                break;
-
-            logger.debug("There are messages to be ordered.");
-
-            logger.debug("I can try to propose.");
-
-            if ((execManager.getCurrentLeader() == this.controller.getStaticConf().getProcessId()) && // I'm the leader
-            // (clientsManager.havePendingRequests()) && //there are messages to be ordered
-                    (getInExec() == -1)) { // there is no consensus in execution
-
-                // Sets the current consensus
-                int execId = getLastExec() + 1;
-                setInExec(execId);
-
-                Decision dec = execManager.getConsensus(execId).getDecision();
-
-                // Bypass protocol if service is not replicated
-                if (controller.getCurrentViewN() == 1) {
-
-                    logger.debug("Only one replica, bypassing consensus.");
-
-                    byte[] value = createMzPropose(dec);
-                    if (value == null)
-                        continue;
-                    Consensus consensus = execManager.getConsensus(dec.getConsensusId());
-                    Epoch epoch = consensus.getEpoch(0, controller);
-                    epoch.propValue = value;
-                    epoch.propValueHash = computeHash(value);
-                    epoch.getConsensus().addWritten(value);
-                    epoch.deserializedPropValue = checkProposedValue(value, true);
-                    epoch.getConsensus().getDecision().firstMessageProposed = epoch.deserializedPropValue[0];
-                    dec.setDecisionEpoch(epoch);
-
-                    // System.out.println("ESTOU AQUI!");
-                    dt.delivery(dec);
-                    continue;
-
-                }
-                byte[] value = createMzPropose(dec);
-                if (value != null) {
-                    long now = System.currentTimeMillis();
-                    logger.info("Leader {} create mzpropose at time {}, interval: {}", myId, now,
-                            now - lastTimeCreatePropose);
-                    lastTimeCreatePropose = now;
-                    execManager.getProposer().startConsensus(execId, value);
-                }
-                // set In exec to -1
-                else {
-                    // setInExec(-1);
-                    setNoExec();
-                    // try{
-                    // Thread.sleep(2000);
-                    // }
-                    // catch (Exception e){
-                    // logger.error("Node: {}, opps, error: {}", myId, e.toString());
-                    // }
-                }
-            }
+        this.mznodeThread.start();
+        if (this.controller.isInCurrentView()){
+            // pack batch
+            this.packbatchthread.start();
+            // create propose
+            startCreatePropose();
         }
-        logger.info("Node %d oops, I jump out of run function\n", myId);
-        logger.info("TOMLayer stopped.");
+
     }
 
     /**
@@ -573,6 +445,9 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         dec.setLeader(execManager.getCurrentLeader());
 
         this.dt.delivery(dec); // Sends the decision to the delivery thread
+        // forward candidate block
+        Epoch epoch = dec.getDecisionEpoch();
+        this.mzNodeMan.forwardNewBlock(epoch.propValueHash, epoch.getProof());
     }
 
     /**
@@ -768,6 +643,8 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     }
 
     public void OnMzPropose(ConsensusMessage msg) {
+        byte[] blockHash = computeHash(msg.getValue());
+        this.mzNodeMan.addCandidateBlock(blockHash, msg);
         MzProposeReader mzproposeReader = new MzProposeReader(msg.getValue(),
                 controller.getStaticConf().getUseSignatures() == 1);
         int myId = this.controller.getStaticConf().getProcessId();
@@ -780,7 +657,6 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             logger.error("Stage:OnMzPropose2 --err in getsyncedRequestfromlist");
             return;
         }
-
         MessageFactory messageFactory = new MessageFactory(msg.getSender());
 
         this.multiChain.setLastbatchlist(mz_propose.list);
@@ -810,4 +686,190 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     public void updatepackedheight() {
         this.multiChain.updatePackagedHeight();
     }
+
+    public void initPackBatchThread(){
+        this.packbatchthread = new Thread() {
+            @Override
+            public void run() {
+                long lastsend = System.currentTimeMillis();
+                int myId = controller.getStaticConf().getProcessId();
+                int useSignature = controller.getStaticConf().getUseSignatures();
+                MessageFactory messageFactory = new MessageFactory(myId);
+                while (!Thread.interrupted()) {
+                    // // blocks until there are requests to be packed or the batch tip need to be
+                    // updated.
+                    // messagesLock.lock();
+                    // if (! && multiChain.getUpdateTipState() == false) {
+                    // haveMessages.awaitUninterruptibly();
+                    // }
+                    // messagesLock.unlock();
+                    long interval = System.currentTimeMillis() - lastsend;
+                    // todo multiChain.getMyGeneratedHeight()!=-1
+                    // 是否有必要？以及对于空batch只是用来更新的batchid是否需要递增，以及是否需要存？
+                    if ((interval > 5 && clientsManager.havePendingRequests()) || (interval > 500
+                            && multiChain.getUpdateTipState() && multiChain.getMyGeneratedHeight() != -1)) {
+                        RequestList reqlist = clientsManager.getPendingRequests();
+                        if (!reqlist.isEmpty()) {
+                            multiChain.updateMyGeneratedHeight();
+                        }
+                        // multiChain.setUpdateTipState(false); //如果本来有更新，那么也无法发送了
+                        // 如果注释掉，没有地方置为false，会一直处于更新的状态，发送很多无用的空batch
+                        multiChain.setUpdateTipState(false);
+                        Map<Integer, Integer> chainPoolTip = multiChain.getMyChainPoolTip();
+                        // chainPoolTip.put(myId, multiChain.getMyGeneratedHeight()); 多余的操作
+                        multiChain.add(new Mz_Batch(myId, multiChain.getMyGeneratedHeight(), reqlist, chainPoolTip));
+                        byte[] batch = mzbb.makeMzBatch(myId, multiChain.getMyGeneratedHeight(), reqlist,
+                                useSignature == 1, chainPoolTip);
+                        ConsensusMessage batchMessage = messageFactory.createMzBatch(0, 0, batch);
+                        System.out.println("Stage: packbatch try to send --Nodeid: " + myId + " create Mzbatch height:"
+                                + (multiChain.getMyGeneratedHeight()) + " batch size: " + reqlist.size() + " at time: "
+                                + System.currentTimeMillis());
+                        communication.send(controller.getCurrentViewAcceptors(), batchMessage);
+                        System.out.println("Stage: packbatch have sended --Nodeid: " + myId + " create Mzbatch height:"
+                                + (multiChain.getMyGeneratedHeight()) + " batch size: " + reqlist.size() + " at time: "
+                                + System.currentTimeMillis());
+
+                        logger.info("Stage: packbatch --Nodeid: " + myId + " create Mzbatch height:"
+                                + (multiChain.getMyGeneratedHeight()) + " batch size: " + reqlist.size() + " at time: "
+                                + System.currentTimeMillis());
+                        logger.debug("Batch Request: {}", reqlist.toString());
+                        lastsend = System.currentTimeMillis();
+                    }
+                }
+            }
+        };
+    }
+        public void startCreatePropose(){
+            int myId = this.controller.getStaticConf().getProcessId();
+            while (doWork) {
+
+                // blocks until this replica learns to be the leader for the current epoch of
+                // the current consensus
+                leaderLock.lock();
+                logger.debug("Next leader for CID=" + (getLastExec() + 1) + ": " + execManager.getCurrentLeader());
+    
+                // ******* EDUARDO BEGIN **************//
+                if (execManager.getCurrentLeader() != this.controller.getStaticConf().getProcessId()) {
+                    iAmLeader.awaitUninterruptibly();
+                    // waitForPaxosToFinish();
+                }
+                // ******* EDUARDO END **************//
+                leaderLock.unlock();
+    
+                if (!doWork)
+                    break;
+    
+                // blocks until the current consensus finishes
+                proposeLock.lock();
+                logger.debug("Node %d judge if there is some consensus running...\n", myId);
+                if (getInExec() != -1) { // there is some consensus running
+                    logger.debug("Waiting for consensus " + getInExec() + " termination.");
+                    canPropose.awaitUninterruptibly();
+                }
+                proposeLock.unlock();
+    
+                if (!doWork)
+                    break;
+    
+                logger.debug("Node %d start to create Propose\n", myId);
+    
+                logger.debug("I'm the leader.");
+    
+                // blocks until there are requests to be processed/ordered
+                // messagesLock.lock();
+                // if (!clientsManager.havePendingRequests()) {
+                // haveMessages.awaitUninterruptibly();
+                // }
+                // messagesLock.unlock();
+    
+                if (!doWork)
+                    break;
+    
+                logger.debug("There are messages to be ordered.");
+    
+                logger.debug("I can try to propose.");
+    
+                if ((execManager.getCurrentLeader() == this.controller.getStaticConf().getProcessId()) && // I'm the leader
+                // (clientsManager.havePendingRequests()) && //there are messages to be ordered
+                        (getInExec() == -1)) { // there is no consensus in execution
+    
+                    // Sets the current consensus
+                    int execId = getLastExec() + 1;
+                    setInExec(execId);
+    
+                    Decision dec = execManager.getConsensus(execId).getDecision();
+    
+                    // Bypass protocol if service is not replicated
+                    if (controller.getCurrentViewN() == 1) {
+    
+                        logger.debug("Only one replica, bypassing consensus.");
+    
+                        byte[] value = createMzPropose(dec);
+                        if (value == null)
+                            continue;
+                        Consensus consensus = execManager.getConsensus(dec.getConsensusId());
+                        Epoch epoch = consensus.getEpoch(0, controller);
+                        epoch.propValue = value;
+                        epoch.propValueHash = computeHash(value);
+                        epoch.getConsensus().addWritten(value);
+                        epoch.deserializedPropValue = checkProposedValue(value, true);
+                        epoch.getConsensus().getDecision().firstMessageProposed = epoch.deserializedPropValue[0];
+                        dec.setDecisionEpoch(epoch);
+    
+                        // System.out.println("ESTOU AQUI!");
+                        dt.delivery(dec);
+                        continue;
+    
+                    }
+                    byte[] value = createMzPropose(dec);
+                    if (value != null) {
+                        long now = System.currentTimeMillis();
+                        logger.info("Leader {} create mzpropose at time {}, interval: {}", myId, now,
+                                now - lastTimeCreatePropose);
+                        lastTimeCreatePropose = now;
+                        execManager.getProposer().startConsensus(execId, value);
+                    }
+                    // set In exec to -1
+                    else {
+                        // setInExec(-1);
+                        setNoExec();
+                        // try{
+                        // Thread.sleep(2000);
+                        // }
+                        // catch (Exception e){
+                        // logger.error("Node: {}, opps, error: {}", myId, e.toString());
+                        // }
+                    }
+                }
+            }
+            logger.info("Node %d oops, I jump out of run function\n", myId);
+            logger.info("TOMLayer stopped."); 
+    }
+
+    public void initMZNodeThread(){
+            this.mznodeThread = new Thread() {
+                @Override 
+                public void run(){
+                int myId = controller.getStaticConf().getProcessId();
+                logger.info("Node {} starts MZNodeThread", myId);
+                // ask relayNodes
+                if (controller.isCurrentViewMember(myId) == false)
+                    mzNodeMan.askRelayNodes();
+                
+                while(doWork) {
+                    // subscribe stripe 
+                    mzNodeMan.adjustFromReceivedRelayNodeMsgs();    
+                    // if I am a relayer
+                    mzNodeMan.broadcastRelayerMsg();
+                    // if I am a consensus node.
+                    mzNodeMan.broadcastLatencyDetectMsg();
+                    // forward message
+                    mzNodeMan.ForwardDataToSubscriber();
+                    // Todo change routing table
+                }
+                logger.info("TOMLayer stopped.");
+                }
+            };      
+        }
+    
 }

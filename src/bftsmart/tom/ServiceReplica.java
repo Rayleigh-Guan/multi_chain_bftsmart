@@ -18,11 +18,14 @@ package bftsmart.tom;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+
 import bftsmart.clientsmanagement.RequestList;
 import bftsmart.communication.ServerCommunicationSystem;
+import bftsmart.communication.SystemMessage;
 import bftsmart.multi_zone.Mz_Batch;
 import bftsmart.multi_zone.multi_chain;
 import bftsmart.tom.core.ExecutionManager;
@@ -35,6 +38,7 @@ import bftsmart.reconfiguration.VMMessage;
 import bftsmart.tom.core.ReplyManager;
 import bftsmart.tom.core.TOMLayer;
 import bftsmart.tom.core.messages.TOMMessage;
+import bftsmart.multi_zone.MZMessage;
 import bftsmart.tom.core.messages.TOMMessageType;
 import bftsmart.tom.leaderchange.CertifiedDecision;
 import bftsmart.tom.server.BatchExecutable;
@@ -48,6 +52,8 @@ import bftsmart.tom.server.defaultservices.DefaultReplier;
 import bftsmart.tom.util.KeyLoader;
 import bftsmart.tom.util.ShutdownHookThread;
 import bftsmart.tom.util.TOMUtil;
+import bftsmart.multi_zone.MZNodeMan;
+
 import java.security.Provider;
 
 import org.slf4j.Logger;
@@ -81,6 +87,7 @@ public class ServiceReplica {
     private ReplicaContext replicaCtx = null;
     private Replier replier = null;
     private RequestVerifier verifier = null;
+    private MZNodeMan mzNodeMan = null;
 
     /**
      * Constructor
@@ -154,30 +161,35 @@ public class ServiceReplica {
     private void init() {
         try {
             cs = new ServerCommunicationSystem(this.SVController, this);
+            this.mzNodeMan = new MZNodeMan(SVController, cs);
+            cs.setMZNodeMan(this.mzNodeMan);
+
         } catch (Exception ex) {
             logger.error("Failed to initialize replica-to-replica communication system", ex);
             throw new RuntimeException("Unable to build a communication system.");
         }
 
-        if (this.SVController.isInCurrentView()) {
-            logger.info("In current view: " + this.SVController.getCurrentView());
-            initTOMLayer(); // initiaze the TOM layer
-        } else {
-            logger.info("Not in current view: " + this.SVController.getCurrentView());
+        initTOMLayer();
+        // if (this.SVController.isInCurrentView()) {
+        //     logger.info("In current view: " + this.SVController.getCurrentView());
+        //     initTOMLayer(); // initiaze the TOM layer
+        // } else {
 
-            // Not in the initial view, just waiting for the view where the join has been
-            // executed
-            logger.info("Waiting for the TTP: " + this.SVController.getCurrentView());
-            waitTTPJoinMsgLock.lock();
-            try {
-                canProceed.awaitUninterruptibly();
-            } finally {
-                waitTTPJoinMsgLock.unlock();
-            }
+            // else{
+            //     logger.info("Not in current view: " + this.SVController.getCurrentView());
 
-        }
+            //     // Not in the initial view, just waiting for the view where the join has been
+            //     // executed
+            //     logger.info("Waiting for the TTP: " + this.SVController.getCurrentView());
+            //     waitTTPJoinMsgLock.lock();
+            //     try {
+            //         canProceed.awaitUninterruptibly();
+            //     } finally {
+            //         waitTTPJoinMsgLock.unlock();
+            //     }
+            // }
+        // }
         initReplica();
-
     }
 
     /**
@@ -486,16 +498,10 @@ public class ServiceReplica {
                     logger.debug(
                             "Sending reply to " + request.getSender() + " with sequence number " + request.getSequence()
                                     + " and operation ID " + request.getOperationId() + " via ReplyManager");
-                    System.out.println("Sending reply to " + request.getSender() + " with sequence number "
-                            + request.getSequence() + " and operation ID " + request.getOperationId() + "at time: "
-                            + System.currentTimeMillis());
                     repMan.send(request);
                 } else {
                     logger.debug("Sending reply to " + request.getSender() + " with sequence number "
                             + request.getSequence() + " and operation ID " + request.getOperationId());
-                    System.out.println("Sending reply to " + request.getSender() + " with sequence number "
-                            + request.getSequence() + " and operation ID " + request.getOperationId()
-                            + " via ReplyManager at time: " + System.currentTimeMillis());
                     replier.manageReply(request, msgContexts[index]);
                     // cs.send(new int[]{request.getSender()}, request.reply);
                 }
@@ -516,15 +522,16 @@ public class ServiceReplica {
             return;
         }
 
-        if (!SVController.isInCurrentView()) {
-            throw new RuntimeException("I'm not an acceptor!");
-        }
+        // if (!SVController.isInCurrentView()) {
+        //     throw new RuntimeException("I'm not an acceptor!");
+        // }
 
         // Assemble the total order messaging layer
         MessageFactory messageFactory = new MessageFactory(id);
 
         Acceptor acceptor = new Acceptor(cs, messageFactory, SVController);
         cs.setAcceptor(acceptor);
+        
 
         Proposer proposer = new Proposer(cs, messageFactory, SVController);
 
@@ -532,7 +539,7 @@ public class ServiceReplica {
 
         acceptor.setExecutionManager(executionManager);
 
-        tomLayer = new TOMLayer(executionManager, this, recoverer, acceptor, cs, SVController, verifier);
+        tomLayer = new TOMLayer(executionManager, this, recoverer, acceptor, cs, SVController, verifier, this.mzNodeMan);
 
         executionManager.setTOMLayer(tomLayer);
 
@@ -547,8 +554,9 @@ public class ServiceReplica {
             Runtime.getRuntime().addShutdownHook(new ShutdownHookThread(tomLayer));
         }
         replicaCtx = new ReplicaContext(cs, SVController);
-
-        tomLayer.start(); // start the layer execution
+        // if (SVController.isInCurrentView()) {
+            tomLayer.start(); // start the layer execution
+        // }
         tomStackCreated = true;
 
     }

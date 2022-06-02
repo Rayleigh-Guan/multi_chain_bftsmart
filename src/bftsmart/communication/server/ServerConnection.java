@@ -103,7 +103,7 @@ public class ServerConnection {
                 ServersCommunicationLayer.setSocketOptions(this.socket);
                 new DataOutputStream(this.socket.getOutputStream())
                         .writeInt(this.controller.getStaticConf().getProcessId());
-
+                logger.info("Connect to replica {}", remoteId);
             } catch (UnknownHostException ex) {
                 logger.error("Failed to connect to replica", ex);
             } catch (IOException ex) {
@@ -205,7 +205,6 @@ public class ServerConnection {
                     } else {
                         System.arraycopy(new byte[] { (byte) 0 }, 0, data, 4 + messageData.length, 1);
                     }
-
                     socketOutStream.write(data);
 
                     return;
@@ -236,7 +235,7 @@ public class ServerConnection {
         if (this.controller.isInCurrentView()) {
 
             // in this case, the node with higher ID starts the connection
-            if (this.controller.getStaticConf().getProcessId() > remoteId) {
+            if (this.controller.getStaticConf().getProcessId() > remoteId && this.controller.isCurrentViewMember(remoteId)) {
                 ret = true;
             }
 
@@ -273,6 +272,11 @@ public class ServerConnection {
              * 
              */
         }
+        else {
+            ret = (this.controller.getStaticConf().getDataDisStrategy() != "None" && this.socket == null);
+            
+        }
+        // logger.info("Node {} should connects to {}, result is {} ", this.controller.getStaticConf().getProcessId(), remoteId, ret);
         return ret;
     }
     // ******* EDUARDO END **************//
@@ -292,8 +296,8 @@ public class ServerConnection {
             try {
 
                 // ******* EDUARDO BEGIN **************//
-                if (isToConnect()) {
-
+                if (this.controller.isInCurrentView() && isToConnect()) {
+                    logger.info("Reconnect to node {}", remoteId);
                     socket = new Socket(this.controller.getStaticConf().getHost(remoteId),
                             this.controller.getStaticConf().getServerToServerPort(remoteId));
                     ServersCommunicationLayer.setSocketOptions(socket);
@@ -497,7 +501,6 @@ public class ServerConnection {
             } catch (NoSuchAlgorithmException ex) {
                 logger.error("Failed to get MAC vector object", ex);
             }
-
             while (doWork) {
                 if (socket != null && socketInStream != null) {
                     try {
@@ -523,12 +526,14 @@ public class ServerConnection {
 
                             result = Arrays.equals(macReceive.doFinal(data), receivedMac);
                         }
-
                         if (result) {
+                            // if (controller.isCurrentViewMember(remoteId) == false)
+                            //     logger.info("Starto to decode msg for {}", remoteId);
                             SystemMessage sm = (SystemMessage) (new ObjectInputStream(new ByteArrayInputStream(data))
                                     .readObject());
+                            // if (controller.isCurrentViewMember(remoteId) == false) 
+                            //     logger.info("Successfully decode msg from {}", remoteId);
                             sm.authenticated = (controller.getStaticConf().getUseMACs() == 1 && hasMAC == 1);
-
                             if (sm.getSender() == remoteId) {
                                 if (!inQueue.offer(sm)) {
                                     logger.warn("Inqueue full (message from " + remoteId + " discarded).");
@@ -540,7 +545,9 @@ public class ServerConnection {
                         }
                     } catch (ClassNotFoundException ex) {
                         // invalid message sent, just ignore;
+                        logger.error("class not found exception, msg from {}", remoteId);
                     } catch (IOException ex) {
+                        logger.error("IO exception from {}, exception: {}", remoteId, ex.toString());
                         if (doWork) {
                             logger.debug("Closing socket and reconnecting");
                             closeSocket();

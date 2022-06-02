@@ -18,15 +18,19 @@ package bftsmart.communication;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+
 import bftsmart.communication.client.CommunicationSystemServerSide;
 import bftsmart.communication.client.CommunicationSystemServerSideFactory;
 import bftsmart.communication.client.RequestReceiver;
 import bftsmart.communication.server.ServersCommunicationLayer;
 import bftsmart.consensus.roles.Acceptor;
+import bftsmart.multi_zone.MZMessage;
+import bftsmart.multi_zone.MZNodeMan;
 import bftsmart.reconfiguration.ServerViewController;
 import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.core.TOMLayer;
 import bftsmart.tom.core.messages.TOMMessage;
+import bftsmart.tom.util.TOMUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,6 +77,7 @@ public class ServerCommunicationSystem extends Thread {
         // }
         // ******* EDUARDO END **************//
         // start();
+
     }
 
     // ******* EDUARDO BEGIN **************//
@@ -91,6 +96,10 @@ public class ServerCommunicationSystem extends Thread {
     // ******* EDUARDO END **************//
     public void setAcceptor(Acceptor acceptor) {
         messageHandler.setAcceptor(acceptor);
+    }
+
+    public void setMZNodeMan(MZNodeMan mzNodeMan) {
+        messageHandler.setMZNodeMan(mzNodeMan);
     }
 
     public void setTOMLayer(TOMLayer tomLayer) {
@@ -121,6 +130,9 @@ public class ServerCommunicationSystem extends Thread {
 
                 if (sm != null) {
                     logger.debug("<-------receiving---------- " + sm);
+                    // if (sm instanceof MZMessage) {
+                    //     logger.info("receive a MZMessage{} from {}", sm, sm.getSender());
+                    // }
                     messageHandler.processData(sm);
                     count++;
                 } else {
@@ -144,6 +156,7 @@ public class ServerCommunicationSystem extends Thread {
      * @param sm      the message to be sent
      */
     public void send(int[] targets, SystemMessage sm) {
+        if (targets == null)   return;
         if (sm instanceof TOMMessage) {
             clientsConn.send(targets, (TOMMessage) sm, false);
         } else {

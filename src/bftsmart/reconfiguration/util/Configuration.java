@@ -25,6 +25,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.slf4j.LoggerFactory;
@@ -62,6 +63,7 @@ public class Configuration {
     private String secretKeyAlgorithmProvider;
     private String signatureAlgorithmProvider;
     private String hashAlgorithmProvider;
+    
 
     protected String configHome = "";
 
@@ -291,6 +293,14 @@ public class Configuration {
         return hosts.getPort(id);
     }
 
+    public final int getZoneId(int id) {
+        return hosts.getZoneId(id);
+    }
+
+    public final Set<Integer> getZoneSet(int zoneId){
+        return hosts.getZoneNodeSet(zoneId);
+    }
+
     public final int getServerToServerPort(int id) {
         return hosts.getServerToServerPort(id);
     }
@@ -303,8 +313,8 @@ public class Configuration {
         this.processId = processId;
     }
 
-    public final void addHostInfo(int id, String host, int port) {
-        this.hosts.add(id, host, port);
+    public final void addHostInfo(int id, String host, int port, int zoneId) {
+        this.hosts.add(id, host, port, zoneId);
     }
 
     public PublicKey getPublicKey() {

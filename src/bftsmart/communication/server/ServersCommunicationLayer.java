@@ -26,14 +26,19 @@ import java.net.SocketTimeoutException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.Set;
+
 
 import bftsmart.communication.SystemMessage;
 import bftsmart.reconfiguration.ServerViewController;
 import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.util.TOMUtil;
+
+
 import java.net.InetAddress;
 import java.security.SecureRandom;
 import java.util.HashMap;
@@ -82,6 +87,20 @@ public class ServersCommunicationLayer extends Thread {
             for (int i = 0; i < initialV.length; i++) {
                 if (initialV[i] != me) {
                     getConnection(initialV[i]);
+                }
+            }
+        }
+        else {
+            // connects to consensus nodes first
+            if(this.controller.getStaticConf().getDataDisStrategy() != "None") {
+                int myId = this.controller.getStaticConf().getProcessId();
+                int myZoneId = this.controller.getStaticConf().getZoneId(myId);
+                logger.info("Node Id = {}, ZoneId = {}, current consensus nodes are {}", myId, myZoneId, this.controller.getCurrentView());
+                int[] initialV = controller.getCurrentViewAcceptors();
+                for (int i = 0; i < initialV.length; i++) {
+                    if (initialV[i] != me) {
+                        getConnection(initialV[i]);
+                    }
                 }
             }
         }
@@ -141,6 +160,18 @@ public class ServersCommunicationLayer extends Thread {
             return connections.get(id).getSecretKey();
     }
 
+    /**
+     * return neighbors' nodeId
+     * @return
+     */
+    public ArrayList<Integer> getNeighborNodes(){
+        ArrayList<Integer> neighbors = new ArrayList<>();
+        for (Integer key : this.connections.keySet()) {
+            neighbors.add(key);
+        }
+        return neighbors;
+    }
+
     // ******* EDUARDO BEGIN **************//
     public void updateConnections() {
         connectionsLock.lock();
@@ -176,7 +207,7 @@ public class ServersCommunicationLayer extends Thread {
         connectionsLock.unlock();
     }
 
-    private ServerConnection getConnection(int remoteId) {
+    public ServerConnection getConnection(int remoteId) {
         connectionsLock.lock();
         ServerConnection ret = this.connections.get(remoteId);
         if (ret == null) {
@@ -264,13 +295,14 @@ public class ServersCommunicationLayer extends Thread {
 
                 ServersCommunicationLayer.setSocketOptions(newSocket);
                 int remoteId = new DataInputStream(newSocket.getInputStream()).readInt();
-
+                logger.info("Receive a connection from {}", remoteId);
                 // ******* EDUARDO BEGIN **************//
-                if (!this.controller.isInCurrentView() &&
+                if (!this.controller.isInCurrentView() && this.controller.getStaticConf().getDataDisStrategy() == "None" &&
                         (this.controller.getStaticConf().getTTPId() != remoteId)) {
                     waitViewLock.lock();
                     pendingConn.add(new PendingConnection(newSocket, remoteId));
                     waitViewLock.unlock();
+                    logger.error("Put connection from {} into pendingConn", remoteId);
                 } else {
                     establishConnection(newSocket, remoteId);
                 }
@@ -295,7 +327,8 @@ public class ServersCommunicationLayer extends Thread {
 
     // ******* EDUARDO BEGIN **************//
     private void establishConnection(Socket newSocket, int remoteId) throws IOException {
-        if ((this.controller.getStaticConf().getTTPId() == remoteId) || this.controller.isCurrentViewMember(remoteId)) {
+        if ((this.controller.getStaticConf().getTTPId() == remoteId) || this.controller.isCurrentViewMember(remoteId) 
+        || this.controller.getStaticConf().getDataDisStrategy() != "None") {
             connectionsLock.lock();
             // System.out.println("Vai se conectar com: "+remoteId);
             if (this.connections.get(remoteId) == null) { // This must never happen!!!

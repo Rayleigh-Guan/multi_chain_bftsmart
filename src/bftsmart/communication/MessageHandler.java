@@ -24,6 +24,9 @@ import bftsmart.tom.core.messages.TOMMessage;
 import bftsmart.tom.core.messages.ForwardedMessage;
 import bftsmart.tom.leaderchange.LCMessage;
 import bftsmart.tom.util.TOMUtil;
+import bftsmart.multi_zone.MZMessage;
+import bftsmart.multi_zone.MZNodeMan;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -47,6 +50,7 @@ public class MessageHandler {
     private Acceptor acceptor;
     private TOMLayer tomLayer;
     private Mac mac;
+    private MZNodeMan mzNodeMan;
 
     public MessageHandler() {
         try {
@@ -54,6 +58,10 @@ public class MessageHandler {
         } catch (NoSuchAlgorithmException /* | NoSuchPaddingException */ ex) {
             logger.error("Failed to create MAC engine", ex);
         }
+    }
+
+    public void setMZNodeMan(MZNodeMan mzNodeMan) {
+        this.mzNodeMan = mzNodeMan;
     }
 
     public void setAcceptor(Acceptor acceptor) {
@@ -124,7 +132,12 @@ public class MessageHandler {
                 logger.warn("Discarding unauthenticated message from " + sm.getSender());
             }
 
-        } else {
+        } 
+        else if (sm instanceof MZMessage) {
+            MZMessage mzMessage = (MZMessage) sm;
+            this.mzNodeMan.deliver(mzMessage);  
+        }
+        else {
             if (tomLayer.controller.getStaticConf().getUseMACs() == 0 || sm.authenticated) {
                 /*** This is Joao's code, related to leader change */
                 if (sm instanceof LCMessage) {

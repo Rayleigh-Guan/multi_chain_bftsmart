@@ -21,13 +21,14 @@ import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.HashSet;
 import java.util.StringTokenizer;
 import org.slf4j.LoggerFactory;
 
 public class HostsConfig {
 
     private HashMap<Integer, Config> servers = new HashMap<>();
-
+    protected HashMap<Integer, Set<Integer>> zones = new HashMap<>();
     /** Creates a new instance of ServersConfig */
     public HostsConfig(String configHome, String fileName) {
         loadConfig(configHome, fileName);
@@ -58,7 +59,13 @@ public class HostsConfig {
                         int id = Integer.valueOf(str.nextToken());
                         String host = str.nextToken();
                         int port = Integer.valueOf(str.nextToken());
-                        this.servers.put(id, new Config(id, host, port));
+                        int zoneId = Integer.valueOf(str.nextToken());
+                        this.servers.put(id, new Config(id, host, port, zoneId));
+                        if (this.zones.containsKey(id) == false) {
+                            Set<Integer> s = new HashSet<>();
+                            this.zones.put(id, s);
+                        }
+                        this.zones.get(id).add(zoneId);
                     }
                 }
             }
@@ -69,9 +76,9 @@ public class HostsConfig {
         }
     }
 
-    public void add(int id, String host, int port) {
+    public void add(int id, String host, int port, int zoneId) {
         if (this.servers.get(id) == null) {
-            this.servers.put(id, new Config(id, host, port));
+            this.servers.put(id, new Config(id, host, port, zoneId));
         }
     }
 
@@ -110,6 +117,23 @@ public class HostsConfig {
         }
         return -1;
     }
+
+    public Set<Integer> getZoneNodeSet(int zoneId){
+        Set<Integer> s = this.zones.get(zoneId);
+        if (s != null) {
+            return s;
+        }
+        return new HashSet<Integer>();
+    }
+
+    public int getZoneId(int id) {
+        Config c = (Config) this.servers.get(id);
+        if (c!=null) {
+            return c.zoneId;
+        }
+        return -1;
+    }
+
 
     public int[] getHostsIds() {
         Set s = this.servers.keySet();
@@ -150,11 +174,13 @@ public class HostsConfig {
         public int id;
         public String host;
         public int port;
+        public int zoneId;
 
-        public Config(int id, String host, int port) {
+        public Config(int id, String host, int port, int zoneId) {
             this.id = id;
             this.host = host;
             this.port = port;
+            this.zoneId = zoneId;
         }
     }
 }

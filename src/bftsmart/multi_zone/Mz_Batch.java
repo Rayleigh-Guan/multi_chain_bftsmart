@@ -15,4 +15,8 @@ public class Mz_Batch {
         this.Req = req;
         chainPooltip = tipMap;
     }
+
+    public int getNodeId() {
+        return NodeId;
+    }
 }

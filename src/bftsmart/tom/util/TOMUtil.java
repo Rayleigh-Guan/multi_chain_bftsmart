@@ -58,6 +58,17 @@ public class TOMUtil {
     public static final int TRIGGER_LC_LOCALLY = 8;
     public static final int TRIGGER_SM_LOCALLY = 9;
 
+    public static final int GET_RELAY_NODE = 100;
+    public static final int RELAY_NODES = 101;
+    public static final int SUBSCRIBE = 102;
+    public static final int UNSUBSCRIBE = 103;
+    public static final int ACCEPT_SUBSCRIBE = 104;
+    public static final int STRIPE = 105;
+    public static final int RELAYER = 106;
+    public static final int LATENCY_DETECT = 107;
+    public static final int INV = 108;
+    
+
     private static int signatureSize = -1;
     private static boolean init = false;
 

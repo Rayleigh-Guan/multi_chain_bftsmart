@@ -63,7 +63,7 @@ public class VMServices {
 
         ViewManager viewManager = new ViewManager(configDir, keyLoader);
 
-        viewManager.addServer(id, ipAddress, port);
+        viewManager.addServer(id, ipAddress, port, -1);
 
         execute(viewManager);
 

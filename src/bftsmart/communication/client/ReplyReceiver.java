@@ -22,9 +22,9 @@ import bftsmart.tom.core.messages.TOMMessage;
  */
 public interface ReplyReceiver {
 
-
     /**
-     * This is the method invoked by the client side comunication system, and where the
+     * This is the method invoked by the client side comunication system, and where
+     * the
      * code to handle the reply is to be written
      *
      * @param reply The reply delivered by the client side comunication system
@@ -32,4 +32,3 @@ public interface ReplyReceiver {
     public void replyReceived(TOMMessage reply);
 
 }
-

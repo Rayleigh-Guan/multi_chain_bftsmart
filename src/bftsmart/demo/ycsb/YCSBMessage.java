@@ -76,7 +76,8 @@ public class YCSBMessage implements Serializable {
         return message;
     }
 
-    public static YCSBMessage newReadRequest(String table, String key, Set<String> fields, HashMap<String, byte[]> results) {
+    public static YCSBMessage newReadRequest(String table, String key, Set<String> fields,
+            HashMap<String, byte[]> results) {
         YCSBMessage message = new YCSBMessage();
         message.type = Type.READ;
         message.entity = Entity.RECORD;

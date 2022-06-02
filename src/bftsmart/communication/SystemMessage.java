@@ -36,18 +36,21 @@ public abstract class SystemMessage implements Externalizable {
     /**
      * Creates a new instance of SystemMessage
      */
-    public SystemMessage(){}
-    
+    public SystemMessage() {
+    }
+
     /**
      * Creates a new instance of SystemMessage
+     * 
      * @param sender ID of the process which sent the message
      */
-    public SystemMessage(int sender){
+    public SystemMessage(int sender) {
         this.sender = sender;
     }
-    
+
     /**
      * Returns the ID of the process which sent the message
+     * 
      * @return
      */
     public final int getSender() {
@@ -59,7 +62,7 @@ public abstract class SystemMessage implements Externalizable {
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeInt(sender);
     }
-    
+
     @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         sender = in.readInt();

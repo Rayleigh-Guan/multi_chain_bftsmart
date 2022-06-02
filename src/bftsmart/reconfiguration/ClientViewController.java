@@ -29,10 +29,10 @@ public class ClientViewController extends ViewController {
     public ClientViewController(int procId, KeyLoader loader) {
         super(procId, loader);
         View cv = getViewStore().readView();
-        if(cv == null){
-            reconfigureTo(new View(0, getStaticConf().getInitialView(), 
-                getStaticConf().getF(), getInitAdddresses()));
-        }else{
+        if (cv == null) {
+            reconfigureTo(new View(0, getStaticConf().getInitialView(),
+                    getStaticConf().getF(), getInitAdddresses()));
+        } else {
             reconfigureTo(cv);
         }
     }
@@ -40,18 +40,18 @@ public class ClientViewController extends ViewController {
     public ClientViewController(int procId, String configHome, KeyLoader loader) {
         super(procId, configHome, loader);
         View cv = getViewStore().readView();
-        if(cv == null){
-            reconfigureTo(new View(0, getStaticConf().getInitialView(), 
-                getStaticConf().getF(), getInitAdddresses()));
-        }else{
+        if (cv == null) {
+            reconfigureTo(new View(0, getStaticConf().getInitialView(),
+                    getStaticConf().getF(), getInitAdddresses()));
+        } else {
             reconfigureTo(cv);
         }
     }
 
-    public void updateCurrentViewFromRepository(){
-         this.currentView = getViewStore().readView();
+    public void updateCurrentViewFromRepository() {
+        this.currentView = getViewStore().readView();
     }
-    
+
     private InetSocketAddress[] getInitAdddresses() {
         int nextV[] = getStaticConf().getInitialView();
         InetSocketAddress[] addresses = new InetSocketAddress[nextV.length];

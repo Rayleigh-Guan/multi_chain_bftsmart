@@ -32,32 +32,31 @@ public class View implements Serializable {
 	private int id;
 	private int f;
 	private int[] processes;
-	private Map<Integer,InetSocketAddress> addresses;
+	private Map<Integer, InetSocketAddress> addresses;
 
-	public View(int id, int[] processes, int f, InetSocketAddress[] addresses){
+	public View(int id, int[] processes, int f, InetSocketAddress[] addresses) {
 		this.id = id;
 		this.processes = processes;
 		this.addresses = new HashMap<Integer, InetSocketAddress>();
 
-		for(int i = 0; i < this.processes.length;i++)
-			this.addresses.put(processes[i],addresses[i]);
+		for (int i = 0; i < this.processes.length; i++)
+			this.addresses.put(processes[i], addresses[i]);
 		Arrays.sort(this.processes);
 		this.f = f;
 	}
 
-	public boolean isMember(int id){
-		for(int i = 0; i < this.processes.length;i++){
-			if(this.processes[i] == id){
+	public boolean isMember(int id) {
+		for (int i = 0; i < this.processes.length; i++) {
+			if (this.processes[i] == id) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-
-	public int getPos(int id){
-		for(int i = 0; i < this.processes.length;i++){
-			if(this.processes[i] == id){
+	public int getPos(int id) {
+		for (int i = 0; i < this.processes.length; i++) {
+			if (this.processes[i] == id) {
 				return i;
 			}
 		}
@@ -72,7 +71,7 @@ public class View implements Serializable {
 		return f;
 	}
 
-	public int getN(){
+	public int getN() {
 		return this.processes.length;
 	}
 
@@ -81,14 +80,15 @@ public class View implements Serializable {
 	}
 
 	@Override
-	public String toString(){
-		String ret = "ID:"+id+"; F:"+f+"; Processes:";
-		for(int i = 0; i < processes.length;i++){
-			ret = ret+processes[i]+"("+addresses.get(processes[i])+"),";
+	public String toString() {
+		String ret = "ID:" + id + "; F:" + f + "; Processes:";
+		for (int i = 0; i < processes.length; i++) {
+			ret = ret + processes[i] + "(" + addresses.get(processes[i]) + "),";
 		}
 
 		return ret;
 	}
+
 	public InetSocketAddress getAddress(int id) {
 		return addresses.get(id);
 	}

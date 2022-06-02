@@ -25,31 +25,32 @@ import bftsmart.statemanagement.SMMessage;
 
 public class CSTSMMessage extends SMMessage {
 
-	private CSTRequestF1 cstConfig;
-	
-    public CSTSMMessage(int sender, int cid, int type, CSTRequestF1 cstConfig, ApplicationState state, View view, int regency, int leader) {
-    	super(sender, cid, type, state, view, regency, leader);
-    	this.cstConfig = cstConfig;
+    private CSTRequestF1 cstConfig;
+
+    public CSTSMMessage(int sender, int cid, int type, CSTRequestF1 cstConfig, ApplicationState state, View view,
+            int regency, int leader) {
+        super(sender, cid, type, state, view, regency, leader);
+        this.cstConfig = cstConfig;
     }
-    
+
     public CSTSMMessage() {
-    	super();
+        super();
     }
 
     public CSTRequestF1 getCstConfig() {
-    	return cstConfig;
+        return cstConfig;
     }
-    
+
     @Override
-    public void writeExternal(ObjectOutput out) throws IOException{
+    public void writeExternal(ObjectOutput out) throws IOException {
         super.writeExternal(out);
         out.writeObject(cstConfig);
     }
 
     @Override
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException{
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         super.readExternal(in);
-        cstConfig = (CSTRequestF1)in.readObject();
+        cstConfig = (CSTRequestF1) in.readObject();
     }
-	
+
 }

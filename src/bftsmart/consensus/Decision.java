@@ -31,16 +31,17 @@ public class Decision {
     private Epoch decisionEpoch = null; // Epoch in which the value was decided
     private int regency; // Regency in which the value was decided
     private int leader; // Leader with which the value was decided
-    
+
     private byte[] value = null; // decided value
     private TOMMessage[] deserializedValue = null; // decided value (deserialized)
-    
-    //for benchmarking
+
+    // for benchmarking
     public TOMMessage firstMessageProposed = null;
     public int batchSize = 0;
 
     /**
      * Creates a new instance of Decision
+     * 
      * @param cid The ID for the respective consensus
      */
     public Decision(int cid) {
@@ -49,6 +50,7 @@ public class Decision {
 
     /**
      * Set regency in which the value was decided
+     * 
      * @param regency Regency in which the value was decided
      */
     public void setRegency(int regency) {
@@ -57,6 +59,7 @@ public class Decision {
 
     /**
      * Set leader with which the value was decided
+     * 
      * @param leader Leader with which the value was decided
      */
     public void setLeader(int leader) {
@@ -65,6 +68,7 @@ public class Decision {
 
     /**
      * Returns regency in which the value was decided
+     * 
      * @return Regency in which the value was decided
      */
     public int getRegency() {
@@ -73,20 +77,21 @@ public class Decision {
 
     /**
      * Returns leader with which the value was decided
+     * 
      * @return Leader with which the value was decided
      */
     public int getLeader() {
         return leader;
     }
-    
+
     /**
      * Set epoch in which the value was decided
+     * 
      * @param epoch The epoch in which the value was decided
      */
     public void setDecisionEpoch(Epoch epoch) {
         this.decisionEpoch = epoch;
     }
-
 
     /**
      * Get epoch in which the value was decided
@@ -96,14 +101,16 @@ public class Decision {
     public Epoch getDecisionEpoch() {
         return decisionEpoch;
     }
-    
+
     /**
      * Sets the decided value
+     * 
      * @return Decided Value
      */
     public byte[] getValue() {
         while (value == null) {
-            waitForPropose(); // Eduardo: should have a separate waitForDecision  (works for now, because it is just a sleep)
+            waitForPropose(); // Eduardo: should have a separate waitForDecision (works for now, because it is
+                              // just a sleep)
             value = decisionEpoch.propValue;
         }
         return value;
@@ -119,6 +126,7 @@ public class Decision {
 
     /**
      * The ID for the associated consensus
+     * 
      * @return ID for the associated consensus
      */
     public int getConsensusId() {
@@ -132,8 +140,8 @@ public class Decision {
                 LoggerFactory.getLogger(this.getClass()).info("waiting for propose for consensus " + cid);
                 Thread.sleep(1);
             } catch (InterruptedException ie) {
-                
-                LoggerFactory.getLogger(this.getClass()).error("Interruption during sleep",ie);
+
+                LoggerFactory.getLogger(this.getClass()).error("Interruption during sleep", ie);
             }
         }
     }

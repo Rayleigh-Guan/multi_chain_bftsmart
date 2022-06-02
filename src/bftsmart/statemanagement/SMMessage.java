@@ -41,11 +41,12 @@ public abstract class SMMessage extends SystemMessage {
 
     /**
      * Constructs a SMMessage
-     * @param sender Process Id of the sender
-     * @param cid Consensus ID up to which the sender needs to be updated
-     * @param type Message type
+     * 
+     * @param sender  Process Id of the sender
+     * @param cid     Consensus ID up to which the sender needs to be updated
+     * @param type    Message type
      * @param replica Replica that should send the state
-     * @param state State log
+     * @param state   State log
      */
     protected SMMessage(int sender, int cid, int type, ApplicationState state, View view, int regency, int leader) {
         super(sender);
@@ -57,32 +58,38 @@ public abstract class SMMessage extends SystemMessage {
         this.regency = regency;
         this.leader = leader;
 
-        if (type == TOMUtil.TRIGGER_SM_LOCALLY && sender == -1) this.TRIGGER_SM_LOCALLY = true;
-        else this.TRIGGER_SM_LOCALLY  = false;
+        if (type == TOMUtil.TRIGGER_SM_LOCALLY && sender == -1)
+            this.TRIGGER_SM_LOCALLY = true;
+        else
+            this.TRIGGER_SM_LOCALLY = false;
 
     }
 
     protected SMMessage() {
         this.TRIGGER_SM_LOCALLY = false;
     }
+
     /**
      * Retrieves the state log
+     * 
      * @return The state Log
      */
     public ApplicationState getState() {
         return state;
     }
-    
+
     /**
      * Retrieves the state log
+     * 
      * @return The state Log
      */
     public View getView() {
         return view;
     }
-    
+
     /**
      * Retrieves the type of the message
+     * 
      * @return The type of the message
      */
     public int getType() {
@@ -91,6 +98,7 @@ public abstract class SMMessage extends SystemMessage {
 
     /**
      * Retrieves the consensus ID up to which the sender needs to be updated
+     * 
      * @return The consensus ID up to which the sender needs to be updated
      */
     public int getCID() {
@@ -99,22 +107,24 @@ public abstract class SMMessage extends SystemMessage {
 
     /**
      * Retrieves the regency that the replica had when sending the state
+     * 
      * @return The regency that the replica had when sending the state
      */
     public int getRegency() {
         return regency;
     }
-    
+
     /**
      * Retrieves the leader that the replica had when sending the state
+     * 
      * @return The leader that the replica had when sending the state
      */
     public int getLeader() {
         return leader;
     }
-    
+
     @Override
-    public void writeExternal(ObjectOutput out) throws IOException{
+    public void writeExternal(ObjectOutput out) throws IOException {
         super.writeExternal(out);
         out.writeInt(sender);
         out.writeInt(cid);
@@ -126,7 +136,7 @@ public abstract class SMMessage extends SystemMessage {
     }
 
     @Override
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException{
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         super.readExternal(in);
         sender = in.readInt();
         cid = in.readInt();

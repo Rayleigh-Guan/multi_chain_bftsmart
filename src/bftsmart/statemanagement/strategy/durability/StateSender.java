@@ -27,19 +27,19 @@ import org.slf4j.LoggerFactory;
 
 public class StateSender implements Runnable {
 
-        private Logger logger = LoggerFactory.getLogger(this.getClass());
-    
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
+
 	private final Socket socket;
 	private ApplicationState state;
-	
+
 	public StateSender(Socket socket) {
 		this.socket = socket;
 	}
-	
+
 	public void setState(ApplicationState state) {
 		this.state = state;
 	}
-	
+
 	@Override
 	public void run() {
 		try {
@@ -52,7 +52,7 @@ public class StateSender implements Runnable {
 			socket.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			logger.error("Could not send state",e);
+			logger.error("Could not send state", e);
 		}
 	}
 

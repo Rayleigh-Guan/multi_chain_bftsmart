@@ -25,23 +25,23 @@ import bftsmart.communication.SystemMessage;
  *
  * @author eduardo
  */
-public class VMMessage extends SystemMessage{
+public class VMMessage extends SystemMessage {
     private ReconfigureReply reply;
-    
-    public VMMessage(){}
-    
-    public VMMessage(ReconfigureReply reply){
+
+    public VMMessage() {
+    }
+
+    public VMMessage(ReconfigureReply reply) {
         super();
         this.reply = reply;
     }
-    
-     public VMMessage(int from, ReconfigureReply reply){
-         super(from);
-         this.reply = reply;
+
+    public VMMessage(int from, ReconfigureReply reply) {
+        super(from);
+        this.reply = reply;
     }
-     
-     
-      // Implemented method of the Externalizable interface
+
+    // Implemented method of the Externalizable interface
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
         super.writeExternal(out);

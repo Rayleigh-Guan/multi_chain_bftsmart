@@ -30,13 +30,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class FileRecoverer {
-    
-        private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	private byte[] ckpHash;
 	private int ckpLastConsensusId;
 	private int logLastConsensusId;
-	
+
 	private int replicaId;
 	private String defaultDir;
 
@@ -46,17 +46,18 @@ public class FileRecoverer {
 		ckpLastConsensusId = 0;
 		logLastConsensusId = 0;
 	}
-	
+
 	/**
 	 * Reads all log messages from the last log file created
+	 * 
 	 * @return an array with batches of messages executed for each consensus
 	 */
-//	public CommandsInfo[] getLogState() {
-//		String lastLogFilename = getLatestFile(".log");
-//		if(lastLogFilename != null)
-//			return getLogState(0, lastLogFilename);
-//		return null;
-//	}
+	// public CommandsInfo[] getLogState() {
+	// String lastLogFilename = getLatestFile(".log");
+	// if(lastLogFilename != null)
+	// return getLogState(0, lastLogFilename);
+	// return null;
+	// }
 
 	public CommandsInfo[] getLogState(int index, String logPath) {
 		RandomAccessFile log = null;
@@ -69,7 +70,7 @@ public class FileRecoverer {
 			try {
 				log.close();
 			} catch (IOException e) {
-				logger.error("Failed to get state log",e);
+				logger.error("Failed to get state log", e);
 			}
 
 			return logState;
@@ -80,11 +81,12 @@ public class FileRecoverer {
 
 	/**
 	 * Recover portions of the log for collaborative state transfer.
-	 * @param start the index for which the commands start to be collected
+	 * 
+	 * @param start  the index for which the commands start to be collected
 	 * @param number the number of commands retrieved
 	 * @return The commands for the period selected
 	 */
-	public CommandsInfo[] getLogState(long pointer, int startOffset,  int number, String logPath) {
+	public CommandsInfo[] getLogState(long pointer, int startOffset, int number, String logPath) {
 		RandomAccessFile log = null;
 
 		logger.info("GETTING LOG FROM " + logPath);
@@ -95,7 +97,7 @@ public class FileRecoverer {
 			try {
 				log.close();
 			} catch (IOException e) {
-				logger.error("Failed to get state log",e);
+				logger.error("Failed to get state log", e);
 			}
 
 			return logState;
@@ -115,7 +117,7 @@ public class FileRecoverer {
 			try {
 				ckp.close();
 			} catch (IOException e) {
-				logger.error("Failed to get checkpoint",e);
+				logger.error("Failed to get checkpoint", e);
 			}
 
 			return ckpState;
@@ -154,16 +156,16 @@ public class FileRecoverer {
 					if (ckp.getFilePointer() < ckpLength) {
 						int size = ckp.readInt();
 						if (size > 0) {
-							ckpState = new byte[size];//ckp state
+							ckpState = new byte[size];// ckp state
 							int read = ckp.read(ckpState);
 							if (read == size) {
 								int hashSize = ckp.readInt();
 								if (hashSize > 0) {
-									ckpHash = new byte[hashSize];//ckp hash
+									ckpHash = new byte[hashSize];// ckp hash
 									read = ckp.read(ckpHash);
 									if (read == hashSize) {
 										mayRead = false;
-									}else{
+									} else {
 										ckpHash = null;
 										ckpState = null;
 									}
@@ -179,7 +181,7 @@ public class FileRecoverer {
 						mayRead = false;
 					}
 				} catch (Exception e) {
-					logger.error("Failed to recover from checkpoint",e);
+					logger.error("Failed to recover from checkpoint", e);
 					ckp = null;
 					mayRead = false;
 				}
@@ -210,15 +212,15 @@ public class FileRecoverer {
 			logger.info("Called transferLog." + totalBytes + " " + (sChannel == null));
 			FileChannel fileChannel = logFile.getChannel();
 			long bytesTransfered = 0;
-			while(bytesTransfered < totalBytes) {
+			while (bytesTransfered < totalBytes) {
 				long bufferSize = 65536;
-				if(totalBytes  - bytesTransfered < bufferSize) {
-					bufferSize = (int)(totalBytes - bytesTransfered);
-					if(bufferSize <= 0)
-						bufferSize = (int)totalBytes;
+				if (totalBytes - bytesTransfered < bufferSize) {
+					bufferSize = (int) (totalBytes - bytesTransfered);
+					if (bufferSize <= 0)
+						bufferSize = (int) totalBytes;
 				}
 				long bytesSent = fileChannel.transferTo(bytesTransfered, bufferSize, sChannel);
-				if(bytesSent > 0) {
+				if (bytesSent > 0) {
 					bytesTransfered += bytesSent;
 				}
 			}
@@ -238,7 +240,7 @@ public class FileRecoverer {
 			try {
 				ckp.close();
 			} catch (IOException e) {
-				logger.error("Failed to get checkpoint",e);
+				logger.error("Failed to get checkpoint", e);
 			}
 		}
 	}
@@ -250,19 +252,20 @@ public class FileRecoverer {
 			FileChannel fileChannel = ckp.getChannel();
 			long totalBytes = ckp.length();
 			long bytesTransfered = 0;
-			while(bytesTransfered < totalBytes) {
+			while (bytesTransfered < totalBytes) {
 				long bufferSize = 65536;
-				if(totalBytes  - bytesTransfered < bufferSize) {
-					bufferSize = (int)(totalBytes - bytesTransfered);
-					if(bufferSize <= 0)
-						bufferSize = (int)totalBytes;
+				if (totalBytes - bytesTransfered < bufferSize) {
+					bufferSize = (int) (totalBytes - bytesTransfered);
+					if (bufferSize <= 0)
+						bufferSize = (int) totalBytes;
 				}
 				long bytesRead = fileChannel.transferTo(bytesTransfered, bufferSize, sChannel);
-				if(bytesRead > 0) {
+				if (bytesRead > 0) {
 					bytesTransfered += bytesRead;
 				}
 			}
-			logger.debug("Took " + (System.currentTimeMillis() - milliInit) + " milliseconds to transfer the checkpoint");
+			logger.debug(
+					"Took " + (System.currentTimeMillis() - milliInit) + " milliseconds to transfer the checkpoint");
 			fileChannel.close();
 		} catch (Exception e) {
 			logger.error("State recover was aborted due to an unexpected exception", e);
@@ -285,7 +288,7 @@ public class FileRecoverer {
 		try {
 			return new RandomAccessFile(file, "r");
 		} catch (Exception e) {
-			logger.error("Failed to open log file",e);
+			logger.error("Failed to open log file", e);
 		}
 		return null;
 	}
@@ -296,7 +299,8 @@ public class FileRecoverer {
 			ArrayList<CommandsInfo> state = new ArrayList<CommandsInfo>();
 			int recoveredBatches = 0;
 			boolean mayRead = true;
-			logger.debug("filepointer: " + log.getFilePointer() + " loglength " + logLength + " endoffset " + endOffset);
+			logger.debug(
+					"filepointer: " + log.getFilePointer() + " loglength " + logLength + " endoffset " + endOffset);
 			while (mayRead) {
 				try {
 					if (log.getFilePointer() < logLength) {
@@ -326,7 +330,7 @@ public class FileRecoverer {
 						mayRead = false;
 					}
 				} catch (Exception e) {
-					logger.error("Failed to recover log state",e);
+					logger.error("Failed to recover log state", e);
 					state.clear();
 					mayRead = false;
 				}
@@ -340,8 +344,9 @@ public class FileRecoverer {
 
 	/**
 	 * Searches the log file and retrieves the portion selected.
-	 * @param log The log file
-	 * @param start The offset to start retrieving commands
+	 * 
+	 * @param log    The log file
+	 * @param start  The offset to start retrieving commands
 	 * @param number The number of commands retrieved
 	 * @return The commands for the period selected
 	 */
@@ -355,7 +360,7 @@ public class FileRecoverer {
 			log.seek(pointer);
 
 			int index = 0;
-			while(index < startOffset) {
+			while (index < startOffset) {
 				int size = log.readInt();
 				byte[] bytes = new byte[size];
 				log.read(bytes);
@@ -393,13 +398,13 @@ public class FileRecoverer {
 						mayRead = false;
 					}
 				} catch (Exception e) {
-					logger.error("Failed to recolver log state",e);
+					logger.error("Failed to recolver log state", e);
 					state.clear();
 					mayRead = false;
 				}
 			}
 		} catch (Exception e) {
-			logger.error("State recover was aborted due to an unexpected exception",e);
+			logger.error("State recover was aborted due to an unexpected exception", e);
 		}
 
 		return null;
@@ -415,7 +420,7 @@ public class FileRecoverer {
 			for (File f : serverLogs) {
 				String[] nameItems = f.getName().split("\\.");
 				long filets = new Long(nameItems[1]).longValue();
-				if(filets > timestamp) {
+				if (filets > timestamp) {
 					timestamp = filets;
 					latestFile = f.getAbsolutePath();
 				}

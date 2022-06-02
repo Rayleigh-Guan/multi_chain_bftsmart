@@ -29,130 +29,134 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Batch format: TIMESTAMP(long) + N_NONCES(int) + SEED(long) +
- *               N_MESSAGES(int) + N_MESSAGES*[MSGSIZE(int),MSG(byte),SIG(byte)] +
+ * N_MESSAGES(int) + N_MESSAGES*[MSGSIZE(int),MSG(byte),SIG(byte)] +
  *
  *
- * The methods does not try to enforce any constraint, so be correct when using it.
+ * The methods does not try to enforce any constraint, so be correct when using
+ * it.
  *
  */
 public final class BatchBuilder {
-    
-        private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	private Random rnd;
 
-        public BatchBuilder(long seed){
-            rnd = new Random(seed);
-            
-        }
+	public BatchBuilder(long seed) {
+		rnd = new Random(seed);
 
-        /** build buffer */
-	private byte[] createBatch(long timestamp, int numberOfNonces, long seed, int numberOfMessages, int totalMessagesSize,
-			boolean useSignatures, byte[][] messages, byte[][] signatures,Long[] receptime) {
-            
-                int sigsSize = 0;
-                
-                if (useSignatures) {
-                    
-                    sigsSize = Integer.BYTES * numberOfMessages;
-                            
-                    for (byte[] sig : signatures) {
+	}
 
-                        sigsSize += sig.length;
-                    }
-                }
-                
-		int size = 20 + //timestamp 8, nonces 4, nummessages 4
-				(numberOfNonces > 0 ? 8 : 0) + //seed if needed
+	/** build buffer */
+	private byte[] createBatch(long timestamp, int numberOfNonces, long seed, int numberOfMessages,
+			int totalMessagesSize,
+			boolean useSignatures, byte[][] messages, byte[][] signatures, Long[] receptime) {
+
+		int sigsSize = 0;
+
+		if (useSignatures) {
+
+			sigsSize = Integer.BYTES * numberOfMessages;
+
+			for (byte[] sig : signatures) {
+
+				sigsSize += sig.length;
+			}
+		}
+
+		int size = 20 + // timestamp 8, nonces 4, nummessages 4
+				(numberOfNonces > 0 ? 8 : 0) + // seed if needed
 				(Integer.BYTES * numberOfMessages) + // messages length
-				(Long.BYTES*numberOfMessages)+
-                                sigsSize + // signatures size
-				totalMessagesSize; //size of all msges
+				(Long.BYTES * numberOfMessages) +
+				sigsSize + // signatures size
+				totalMessagesSize; // size of all msges
 
-		ByteBuffer  proposalBuffer = ByteBuffer.allocate(size);
+		ByteBuffer proposalBuffer = ByteBuffer.allocate(size);
 
 		proposalBuffer.putLong(timestamp);
 
 		proposalBuffer.putInt(numberOfNonces);
 
-		if(numberOfNonces>0){
+		if (numberOfNonces > 0) {
 			proposalBuffer.putLong(seed);
 		}
 
 		proposalBuffer.putInt(numberOfMessages);
 
 		for (int i = 0; i < numberOfMessages; i++) {
-			putMessage(proposalBuffer,messages[i], useSignatures, signatures[i],receptime[i]);
+			putMessage(proposalBuffer, messages[i], useSignatures, signatures[i], receptime[i]);
 		}
 
 		return proposalBuffer.array();
 	}
-          
-	private void putMessage(ByteBuffer proposalBuffer, byte[] message, boolean addSig, byte[] signature,Long recep) {
+
+	private void putMessage(ByteBuffer proposalBuffer, byte[] message, boolean addSig, byte[] signature, Long recep) {
 		proposalBuffer.putInt(message.length);
 		proposalBuffer.put(message);
 
-                if (addSig) {
-                    if(signature != null) {
-                            proposalBuffer.putInt(signature.length);
-                            proposalBuffer.put(signature);
-                    } else {
-                        proposalBuffer.putInt(0);
-                    }
-                }
+		if (addSig) {
+			if (signature != null) {
+				proposalBuffer.putInt(signature.length);
+				proposalBuffer.put(signature);
+			} else {
+				proposalBuffer.putInt(0);
+			}
+		}
 		proposalBuffer.putLong(recep);
 	}
 
 	public byte[] makeBatch(List<TOMMessage> msgs, int numNounces, long timestamp, boolean useSignatures) {
 
 		int numMsgs = msgs.size();
-		int totalMessageSize = 0; //total size of the messages being batched
+		int totalMessageSize = 0; // total size of the messages being batched
 
-		byte[][] messages = new byte[numMsgs][]; //bytes of the message (or its hash)
-		byte[][] signatures = new byte[numMsgs][]; //bytes of the message (or its hash)
-		Long[] receptime=new Long[numMsgs];
+		byte[][] messages = new byte[numMsgs][]; // bytes of the message (or its hash)
+		byte[][] signatures = new byte[numMsgs][]; // bytes of the message (or its hash)
+		Long[] receptime = new Long[numMsgs];
 		// Fill the array of bytes for the messages/signatures being batched
 		int i = 0;
-                
+
 		for (TOMMessage msg : msgs) {
-			//TOMMessage msg = msgs.next();
-			logger.debug("Adding request from client " + msg.getSender() + " with sequence number " + msg.getSequence() + " for session " + msg.getSession() + " to PROPOSE");
+			// TOMMessage msg = msgs.next();
+			logger.debug("Adding request from client " + msg.getSender() + " with sequence number " + msg.getSequence()
+					+ " for session " + msg.getSession() + " to PROPOSE");
 			messages[i] = msg.serializedMessage;
 			signatures[i] = msg.serializedMessageSignature;
-			receptime[i]=msg.receptionTime;
+			receptime[i] = msg.receptionTime;
 			totalMessageSize += messages[i].length;
 			i++;
 		}
 
 		// return the batch
-		return createBatch(timestamp, numNounces,rnd.nextLong(), numMsgs, totalMessageSize,
-				useSignatures, messages, signatures,receptime);
+		return createBatch(timestamp, numNounces, rnd.nextLong(), numMsgs, totalMessageSize,
+				useSignatures, messages, signatures, receptime);
 
 	}
+
 	public byte[] makeBatch(List<TOMMessage> msgs, int numNounces, long seed, long timestamp, boolean useSignatures) {
 
 		int numMsgs = msgs.size();
-		int totalMessageSize = 0; //total size of the messages being batched
+		int totalMessageSize = 0; // total size of the messages being batched
 
-		byte[][] messages = new byte[numMsgs][]; //bytes of the message (or its hash)
-		byte[][] signatures = new byte[numMsgs][]; //bytes of the message (or its hash)
-		Long[] receptime=new Long[numMsgs];
+		byte[][] messages = new byte[numMsgs][]; // bytes of the message (or its hash)
+		byte[][] signatures = new byte[numMsgs][]; // bytes of the message (or its hash)
+		Long[] receptime = new Long[numMsgs];
 		// Fill the array of bytes for the messages/signatures being batched
 		int i = 0;
-                
+
 		for (TOMMessage msg : msgs) {
-			//TOMMessage msg = msgs.next();
-			//Logger.println("(TOMLayer.run) adding req " + msg + " to PROPOSE");
+			// TOMMessage msg = msgs.next();
+			// Logger.println("(TOMLayer.run) adding req " + msg + " to PROPOSE");
 			messages[i] = msg.serializedMessage;
 			signatures[i] = msg.serializedMessageSignature;
-			receptime[i]=msg.receptionTime;
+			receptime[i] = msg.receptionTime;
 			totalMessageSize += messages[i].length;
 			i++;
 		}
 
 		// return the batch
-		return createBatch(timestamp, numNounces,seed, numMsgs, totalMessageSize,
-				useSignatures, messages, signatures,receptime);
+		return createBatch(timestamp, numNounces, seed, numMsgs, totalMessageSize,
+				useSignatures, messages, signatures, receptime);
 
 	}
 }

@@ -21,35 +21,39 @@ import java.io.ObjectOutput;
 
 import bftsmart.communication.SystemMessage;
 
-
-
 /**
  * This class represents a message used in a epoch of a consensus instance.
  */
 public class ConsensusMessage extends SystemMessage {
 
-    private int number; //consensus ID for this message
+    private int number; // consensus ID for this message
     private int epoch; // Epoch to which this message belongs to
     private int paxosType; // Message type
     private byte[] value = null; // Value used when message type is PROPOSE
     private Object proof; // Proof used when message type is COLLECT
-                              // Can be either a MAC vector or a signature
+                          // Can be either a MAC vector or a signature
 
     /**
      * Creates a consensus message. Not used. TODO: How about making it private?
      */
-    public ConsensusMessage(){}
+    public ConsensusMessage() {
+    }
 
     /**
-     * Creates a consensus message. Used by the message factory to create a COLLECT or PROPOSE message
-     * TODO: How about removing the modifier, to make it visible just within the package?
-     * @param paxosType This should be MessageFactory.COLLECT or MessageFactory.PROPOSE
-     * @param id Consensus's ID
-     * @param epoch Epoch timestamp
-     * @param from This should be this process ID
-     * @param value This should be null if its a COLLECT message, or the proposed value if it is a PROPOSE message
+     * Creates a consensus message. Used by the message factory to create a COLLECT
+     * or PROPOSE message
+     * TODO: How about removing the modifier, to make it visible just within the
+     * package?
+     * 
+     * @param paxosType This should be MessageFactory.COLLECT or
+     *                  MessageFactory.PROPOSE
+     * @param id        Consensus's ID
+     * @param epoch     Epoch timestamp
+     * @param from      This should be this process ID
+     * @param value     This should be null if its a COLLECT message, or the
+     *                  proposed value if it is a PROPOSE message
      */
-    public ConsensusMessage(int paxosType, int id,int epoch,int from, byte[] value){
+    public ConsensusMessage(int paxosType, int id, int epoch, int from, byte[] value) {
 
         super(from);
 
@@ -58,20 +62,22 @@ public class ConsensusMessage extends SystemMessage {
         this.epoch = epoch;
         this.value = value;
 
-        //this.macVector = proof;
+        // this.macVector = proof;
 
     }
 
-
     /**
-     * Creates a consensus message. Used by the message factory to create a FREEZE message
-     * TODO: How about removing the modifier, to make it visible just within the package?
-     * @param type This should be MessageFactory.FREEZE
-     * @param id Consensus's consensus ID
+     * Creates a consensus message. Used by the message factory to create a FREEZE
+     * message
+     * TODO: How about removing the modifier, to make it visible just within the
+     * package?
+     * 
+     * @param type  This should be MessageFactory.FREEZE
+     * @param id    Consensus's consensus ID
      * @param epoch Epoch timestamp
-     * @param from This should be this process ID
+     * @param from  This should be this process ID
      */
-    public ConsensusMessage(int type, int id,int epoch, int from) {
+    public ConsensusMessage(int type, int id, int epoch, int from) {
 
         this(type, id, epoch, from, null);
 
@@ -87,7 +93,7 @@ public class ConsensusMessage extends SystemMessage {
         out.writeInt(epoch);
         out.writeInt(paxosType);
 
-        if(value == null) {
+        if (value == null) {
 
             out.writeInt(-1);
 
@@ -98,13 +104,13 @@ public class ConsensusMessage extends SystemMessage {
 
         }
 
-        if(this.proof != null) {
+        if (this.proof != null) {
 
             out.writeBoolean(true);
             out.writeObject(proof);
 
         }
-        
+
         else {
             out.writeBoolean(false);
         }
@@ -123,28 +129,29 @@ public class ConsensusMessage extends SystemMessage {
 
         int toRead = in.readInt();
 
-        if(toRead != -1) {
+        if (toRead != -1) {
 
             value = new byte[toRead];
 
-            do{
+            do {
 
-                toRead -= in.read(value, value.length-toRead, toRead);
+                toRead -= in.read(value, value.length - toRead, toRead);
 
-            } while(toRead > 0);
+            } while (toRead > 0);
 
         }
 
         boolean asProof = in.readBoolean();
         if (asProof) {
-            
+
             proof = in.readObject();
         }
-        
+
     }
 
     /**
      * Retrieves the epoch number to which this message belongs
+     * 
      * @return Epoch to which this message belongs
      */
     public int getEpoch() {
@@ -152,9 +159,10 @@ public class ConsensusMessage extends SystemMessage {
         return epoch;
 
     }
-    
+
     /**
      * Retrieves the value contained in the message.
+     * 
      * @return The value
      */
     public byte[] getValue() {
@@ -164,12 +172,13 @@ public class ConsensusMessage extends SystemMessage {
     }
 
     public void setProof(Object proof) {
-        
+
         this.proof = proof;
     }
-    
+
     /**
      * Returns the proof associated with a PROPOSE or COLLECT message
+     * 
      * @return The proof
      */
     public Object getProof() {
@@ -180,6 +189,7 @@ public class ConsensusMessage extends SystemMessage {
 
     /**
      * Returns the consensus ID of this message
+     * 
      * @return Consensus ID of this message
      */
     public int getNumber() {
@@ -190,6 +200,7 @@ public class ConsensusMessage extends SystemMessage {
 
     /**
      * Returns this message type
+     * 
      * @return This message type
      */
     public int getType() {
@@ -200,18 +211,19 @@ public class ConsensusMessage extends SystemMessage {
 
     /**
      * Returns this message type as a verbose string
+     * 
      * @return Message type
      */
     public String getPaxosVerboseType() {
-        if (paxosType==MessageFactory.PROPOSE)
+        if (paxosType == MessageFactory.PROPOSE)
             return "PROPOSE";
-        else if (paxosType==MessageFactory.ACCEPT)
+        else if (paxosType == MessageFactory.ACCEPT)
             return "ACCEPT";
-        else if (paxosType==MessageFactory.WRITE)
+        else if (paxosType == MessageFactory.WRITE)
             return "WRITE";
-        else if (paxosType==MessageFactory.MZPROPOSE)
+        else if (paxosType == MessageFactory.MZPROPOSE)
             return "MZPROPOSE";
-        else if (paxosType==MessageFactory.MZBATCH)
+        else if (paxosType == MessageFactory.MZBATCH)
             return "MZBATCH";
         else
             return "";
@@ -219,9 +231,8 @@ public class ConsensusMessage extends SystemMessage {
 
     @Override
     public String toString() {
-        return "type="+getPaxosVerboseType()+", number="+getNumber()+", epoch="+
-                getEpoch()+", from="+getSender();
+        return "type=" + getPaxosVerboseType() + ", number=" + getNumber() + ", epoch=" +
+                getEpoch() + ", from=" + getSender();
     }
 
 }
-

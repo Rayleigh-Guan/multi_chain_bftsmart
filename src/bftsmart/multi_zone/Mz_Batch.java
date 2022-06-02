@@ -7,14 +7,12 @@ public class Mz_Batch {
     Integer NodeId;
     Integer BatchId;
     RequestList Req;
-    Map<Integer,Integer> chainPooltip;// It is an array like {NodeId, Tip, NodeId, Tip...}
+    Map<Integer, Integer> chainPooltip;// It is an array like {NodeId, Tip, NodeId, Tip...}
 
-    public Mz_Batch(Integer nodeid,Integer batchid,RequestList req, Map<Integer, Integer> tipMap)
-    {
-        this.NodeId=nodeid;
-        this.BatchId=batchid;
-        this.Req=req;
+    public Mz_Batch(Integer nodeid, Integer batchid, RequestList req, Map<Integer, Integer> tipMap) {
+        this.NodeId = nodeid;
+        this.BatchId = batchid;
+        this.Req = req;
         chainPooltip = tipMap;
     }
 }
-

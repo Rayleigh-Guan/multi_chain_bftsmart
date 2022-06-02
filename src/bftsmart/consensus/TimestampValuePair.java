@@ -34,12 +34,12 @@ public class TimestampValuePair implements Externalizable {
     private int timestamp; // timestamp
     private byte[] value; // value
     private byte[] hashedValue; // hash of the value
-    
 
     /**
      * Constructor
+     * 
      * @param timestamp Timestamp
-     * @param value Value
+     * @param value     Value
      */
     public TimestampValuePair(int timestamp, byte[] value) {
         this.timestamp = timestamp;
@@ -57,8 +57,10 @@ public class TimestampValuePair implements Externalizable {
 
         this.hashedValue = new byte[0];
     }
+
     /**
      * Set the value's hash
+     * 
      * @param hashedValue Sintese do valor
      */
     public void setHashedValue(byte[] hashedValue) {
@@ -67,6 +69,7 @@ public class TimestampValuePair implements Externalizable {
 
     /**
      * Get the value's hash
+     * 
      * @return hash of the value
      */
     public byte[] getHashedValue() {
@@ -75,6 +78,7 @@ public class TimestampValuePair implements Externalizable {
 
     /**
      * Get timestamp
+     * 
      * @return The timestamp
      */
     public int getTimestamp() {
@@ -83,6 +87,7 @@ public class TimestampValuePair implements Externalizable {
 
     /**
      * Get value
+     * 
      * @return Value
      */
     public byte[] getValue() {
@@ -93,7 +98,7 @@ public class TimestampValuePair implements Externalizable {
     public boolean equals(Object o) {
         if (o instanceof TimestampValuePair) {
             return ((TimestampValuePair) o).timestamp == timestamp &&
-                    Arrays.equals(((TimestampValuePair) o).value,value);
+                    Arrays.equals(((TimestampValuePair) o).value, value);
         }
         return false;
     }
@@ -107,27 +112,30 @@ public class TimestampValuePair implements Externalizable {
     }
 
     public String toString() {
-                
-        if (this.value == null || this.value.length == 0) return timestamp + " :: []";
-        else return timestamp + " :: " + (this.hashedValue != null && this.hashedValue.length > 0 ? str(this.hashedValue) : str(value));
+
+        if (this.value == null || this.value.length == 0)
+            return timestamp + " :: []";
+        else
+            return timestamp + " :: "
+                    + (this.hashedValue != null && this.hashedValue.length > 0 ? str(this.hashedValue) : str(value));
     }
-    
+
     @Override
-    public void writeExternal(ObjectOutput out) throws IOException{
+    public void writeExternal(ObjectOutput out) throws IOException {
 
         out.writeInt(timestamp);
         out.writeObject(value);
     }
 
     @Override
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException{
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
 
         timestamp = in.readInt();
         value = (byte[]) in.readObject();
     }
-    
+
     private String str(byte[] obj) {
-        if(obj == null) {
+        if (obj == null) {
             return "null";
         } else {
             return Base64.encodeBase64String(obj);

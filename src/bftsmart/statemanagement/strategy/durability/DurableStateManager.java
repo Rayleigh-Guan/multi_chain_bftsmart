@@ -43,9 +43,9 @@ import org.slf4j.LoggerFactory;
 
 public class DurableStateManager extends BaseStateManager {
 
-        private Logger logger = LoggerFactory.getLogger(this.getClass());
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-	//private LCManager lcManager;
+	// private LCManager lcManager;
 	private ExecutionManager execManager;
 
 	private ReentrantLock lockTimer = new ReentrantLock();
@@ -65,7 +65,7 @@ public class DurableStateManager extends BaseStateManager {
 
 		this.tomLayer = tomLayer;
 		this.dt = dt;
-		//this.lcManager = tomLayer.getSyncher().getLCManager();
+		// this.lcManager = tomLayer.getSyncher().getLCManager();
 		this.execManager = tomLayer.execManager;
 
 		state = null;
@@ -116,7 +116,8 @@ public class DurableStateManager extends BaseStateManager {
 	@Override
 	public void stateTimeout() {
 		lockTimer.lock();
-		logger.debug("(StateManager.stateTimeout) Timeout for the replica that was supposed to send the complete state. Changing desired replica.");
+		logger.debug(
+				"(StateManager.stateTimeout) Timeout for the replica that was supposed to send the complete state. Changing desired replica.");
 		if (stateTimer != null)
 			stateTimer.cancel();
 		reset();
@@ -182,13 +183,14 @@ public class DurableStateManager extends BaseStateManager {
 				int currentRegency = -1;
 				int currentLeader = -1;
 				View currentView = null;
-				//                                CertifiedDecision currentProof = null;
+				// CertifiedDecision currentProof = null;
 
 				if (!appStateOnly) {
 					senderRegencies.put(reply.getSender(), reply.getRegency());
 					senderLeaders.put(reply.getSender(), reply.getLeader());
 					senderViews.put(reply.getSender(), reply.getView());
-					//                                        senderProofs.put(msg.getSender(), msg.getState().getCertifiedDecision(SVController));
+					// senderProofs.put(msg.getSender(),
+					// msg.getState().getCertifiedDecision(SVController));
 					if (enoughRegencies(reply.getRegency()))
 						currentRegency = reply.getRegency();
 					if (enoughLeaders(reply.getLeader()))
@@ -199,8 +201,9 @@ public class DurableStateManager extends BaseStateManager {
 								.getProcessId())) {
 							logger.warn("Not a member!");
 						}
-					}                                        
-					//                                        if (enoughProofs(waitingCID, this.tomLayer.getSynchronizer().getLCManager())) currentProof = msg.getState().getCertifiedDecision(SVController);
+					}
+					// if (enoughProofs(waitingCID, this.tomLayer.getSynchronizer().getLCManager()))
+					// currentProof = msg.getState().getCertifiedDecision(SVController);
 
 				} else {
 					currentLeader = tomLayer.execManager.getCurrentLeader();
@@ -221,13 +224,13 @@ public class DurableStateManager extends BaseStateManager {
 					stateReceived = (ApplicationState) in.readObject();
 				} catch (UnknownHostException e) {
 					// TODO Auto-generated catch block
-					logger.error("Failed to connect to address",e);
+					logger.error("Failed to connect to address", e);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
-					logger.error("Failed to connect to address",e);
+					logger.error("Failed to connect to address", e);
 				} catch (ClassNotFoundException e) {
 					// TODO Auto-generated catch block
-					logger.error("Failed to deserialize application state object",e);
+					logger.error("Failed to deserialize application state object", e);
 				}
 
 				if (stateReceived instanceof CSTState) {
@@ -276,7 +279,8 @@ public class DurableStateManager extends BaseStateManager {
 					CSTState statePlusLower = new CSTState(stateCkp.getSerializedState(),
 							TOMUtil.getBytes(stateCkp.getSerializedState()),
 							stateLower.getLogLower(), stateCkp.getHashLogLower(), null, null,
-							stateCkp.getCheckpointCID(), stateUpper.getCheckpointCID(), SVController.getStaticConf().getProcessId());
+							stateCkp.getCheckpointCID(), stateUpper.getCheckpointCID(),
+							SVController.getStaticConf().getProcessId());
 
 					if (haveState) { // validate checkpoint
 						logger.info("validating checkpoint!!!");
@@ -292,12 +296,13 @@ public class DurableStateManager extends BaseStateManager {
 					logger.info("Current leader: " + currentLeader);
 					logger.info("Current view: " + currentView);
 					if (currentRegency > -1 && currentLeader > -1
-							&& currentView != null && haveState && (!isBFT || /*currentProof != null ||*/ appStateOnly)) {
+							&& currentView != null && haveState
+							&& (!isBFT || /* currentProof != null || */ appStateOnly)) {
 						logger.info("---- RECEIVED VALID STATE ----");
 
 						logger.debug("The state of those replies is good!");
 						logger.debug("CID State requested: " + reply.getCID());
-						logger.debug("CID State received: "	+ stateUpper.getLastCID());
+						logger.debug("CID State received: " + stateUpper.getLastCID());
 
 						tomLayer.getSynchronizer().getLCManager().setLastReg(currentRegency);
 						tomLayer.getSynchronizer().getLCManager().setNextReg(currentRegency);
@@ -305,55 +310,59 @@ public class DurableStateManager extends BaseStateManager {
 
 						tomLayer.execManager.setNewLeader(currentLeader);
 
-//						if (currentProof != null && !appStateOnly) {
-//
-//							System.out.println("Installing proof for consensus " + waitingCID);
-//
-//							Consensus cons = execManager.getConsensus(waitingCID);
-//							Epoch e = null;
-//
-//							for (ConsensusMessage cm : currentProof.getConsMessages()) {
-//
-//								e = cons.getEpoch(cm.getEpoch(), true, SVController);
-//								if (e.getTimestamp() != cm.getEpoch()) {
-//
-//									System.out.println("Strange... proof contains messages from more than just one epoch");
-//									e = cons.getEpoch(cm.getEpoch(), true, SVController);
-//								}
-//								e.addToProof(cm);
-//
-//								if (cm.getType() == MessageFactory.ACCEPT) {
-//									e.setAccept(cm.getSender(), cm.getValue());
-//								}
-//
-//								else if (cm.getType() == MessageFactory.WRITE) {
-//									e.setWrite(cm.getSender(), cm.getValue());
-//								}
-//
-//							}
-//
-//
-//							if (e != null) {
-//
-//								byte[] hash = tomLayer.computeHash(currentProof.getDecision());
-//								e.propValueHash = hash;
-//								e.propValue = currentProof.getDecision();
-//								e.deserializedPropValue = tomLayer.checkProposedValue(currentProof.getDecision(), false);
-//								cons.decided(e, false);
-//
-//								System.out.println("Successfully installed proof for consensus " + waitingCID);
-//
-//							} else {
-//								System.out.println("Failed to install proof for consensus " + waitingCID);
-//
-//							}
-//
-//						}
-
+						// if (currentProof != null && !appStateOnly) {
+						//
+						// System.out.println("Installing proof for consensus " + waitingCID);
+						//
+						// Consensus cons = execManager.getConsensus(waitingCID);
+						// Epoch e = null;
+						//
+						// for (ConsensusMessage cm : currentProof.getConsMessages()) {
+						//
+						// e = cons.getEpoch(cm.getEpoch(), true, SVController);
+						// if (e.getTimestamp() != cm.getEpoch()) {
+						//
+						// System.out.println("Strange... proof contains messages from more than just
+						// one epoch");
+						// e = cons.getEpoch(cm.getEpoch(), true, SVController);
+						// }
+						// e.addToProof(cm);
+						//
+						// if (cm.getType() == MessageFactory.ACCEPT) {
+						// e.setAccept(cm.getSender(), cm.getValue());
+						// }
+						//
+						// else if (cm.getType() == MessageFactory.WRITE) {
+						// e.setWrite(cm.getSender(), cm.getValue());
+						// }
+						//
+						// }
+						//
+						//
+						// if (e != null) {
+						//
+						// byte[] hash = tomLayer.computeHash(currentProof.getDecision());
+						// e.propValueHash = hash;
+						// e.propValue = currentProof.getDecision();
+						// e.deserializedPropValue =
+						// tomLayer.checkProposedValue(currentProof.getDecision(), false);
+						// cons.decided(e, false);
+						//
+						// System.out.println("Successfully installed proof for consensus " +
+						// waitingCID);
+						//
+						// } else {
+						// System.out.println("Failed to install proof for consensus " + waitingCID);
+						//
+						// }
+						//
+						// }
 
 						// I might have timed out before invoking the state transfer, so
-						// stop my re-transmission of STOP messages for all regencies up to the current one
-						if (currentRegency > 0) tomLayer.getSynchronizer().removeSTOPretransmissions(currentRegency - 1);
+						// stop my re-transmission of STOP messages for all regencies up to the current
+						// one
+						if (currentRegency > 0)
+							tomLayer.getSynchronizer().removeSTOPretransmissions(currentRegency - 1);
 
 						logger.debug("trying to acquire deliverlock");
 						dt.deliverLock();
@@ -421,7 +430,8 @@ public class DurableStateManager extends BaseStateManager {
 					} else if (!haveState) {
 						logger.warn("---- RECEIVED INVALID STATE  ----");
 
-						logger.debug("The replica from which I expected the state, sent one which doesn't match the hash of the others, or it never sent it at all");
+						logger.debug(
+								"The replica from which I expected the state, sent one which doesn't match the hash of the others, or it never sent it at all");
 
 						reset();
 						requestState();

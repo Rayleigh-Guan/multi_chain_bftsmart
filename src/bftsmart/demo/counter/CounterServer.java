@@ -36,17 +36,17 @@ import java.io.ObjectOutputStream;
  * @author alysson
  */
 
-public final class CounterServer extends DefaultSingleRecoverable  {
-    
+public final class CounterServer extends DefaultSingleRecoverable {
+
     private int counter = 0;
     private int iterations = 0;
-    
+
     public CounterServer(int id) {
-    	new ServiceReplica(id, this, this);
+        new ServiceReplica(id, this, this);
     }
-            
+
     @Override
-    public byte[] appExecuteUnordered(byte[] command, MessageContext msgCtx) {         
+    public byte[] appExecuteUnordered(byte[] command, MessageContext msgCtx) {
         iterations++;
         System.out.println("(" + iterations + ") Counter current value: " + counter);
         try {
@@ -58,16 +58,16 @@ public final class CounterServer extends DefaultSingleRecoverable  {
             return new byte[0];
         }
     }
-  
+
     @Override
     public byte[] appExecuteOrdered(byte[] command, MessageContext msgCtx) {
         iterations++;
         try {
             int increment = new DataInputStream(new ByteArrayInputStream(command)).readInt();
             counter += increment;
-            
+
             System.out.println("(" + iterations + ") Counter was incremented. Current value = " + counter);
-            
+
             ByteArrayOutputStream out = new ByteArrayOutputStream(4);
             new DataOutputStream(out).writeInt(counter);
             return out.toByteArray();
@@ -77,15 +77,14 @@ public final class CounterServer extends DefaultSingleRecoverable  {
         }
     }
 
-    public static void main(String[] args){
-        if(args.length < 1) {
+    public static void main(String[] args) {
+        if (args.length < 1) {
             System.out.println("Use: java CounterServer <processId>");
             System.exit(-1);
-        }      
+        }
         new CounterServer(Integer.parseInt(args[0]));
     }
 
-    
     @SuppressWarnings("unchecked")
     @Override
     public void installSnapshot(byte[] state) {

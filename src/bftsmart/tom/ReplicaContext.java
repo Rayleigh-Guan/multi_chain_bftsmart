@@ -25,7 +25,7 @@ import bftsmart.reconfiguration.views.View;
  * 
  */
 public class ReplicaContext {
-    
+
     private ServerCommunicationSystem cs; // Server side comunication system
     private ServerViewController SVController;
 
@@ -33,25 +33,26 @@ public class ReplicaContext {
      * Constructor
      * 
      * @param cs
-     * @param SVController 
+     * @param SVController
      */
-    public ReplicaContext(ServerCommunicationSystem cs, 
-                                 ServerViewController SVController) {
+    public ReplicaContext(ServerCommunicationSystem cs,
+            ServerViewController SVController) {
         this.cs = cs;
         this.SVController = SVController;
     }
 
     /**
      * Returns the controller of the replica's view
+     * 
      * @return The controller of the replica's view
      */
     public ServerViewController getSVController() {
         return SVController;
     }
-    
-    //TODO: implement a method that allow the replica to send a message with
-    //total order to all other replicas
-       
+
+    // TODO: implement a method that allow the replica to send a message with
+    // total order to all other replicas
+
     /**
      * Returns the static configuration of this replica.
      * 
@@ -60,7 +61,7 @@ public class ReplicaContext {
     public TOMConfiguration getStaticConfiguration() {
         return SVController.getStaticConf();
     }
-    
+
     /**
      * Returns the current view of the replica group.
      * 
@@ -72,9 +73,10 @@ public class ReplicaContext {
 
     /**
      * Returns the replica's communication system
+     * 
      * @return The replica's communication system
      */
     public ServerCommunicationSystem getServerCommunicationSystem() {
-            return cs;
+        return cs;
     }
 }

@@ -41,7 +41,7 @@ public class ShutdownHookThread extends Thread {
 
     @Override
     public void run() {
-        
+
         StringBuffer buffer = new StringBuffer();
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS");
         int lastCons = tomLayer.getLastExec();
@@ -55,47 +55,47 @@ public class ShutdownHookThread extends Thread {
         buffer.append("\nCurrent regency: " + tomLayer.getSynchronizer().getLCManager().getLastReg());
 
         buffer.append("\n\nLast finished consensus: " + (lastCons == -1 ? "None" : lastCons));
-        if(lastCons > -1) {
-            
+        if (lastCons > -1) {
+
             c = tomLayer.execManager.getConsensus(lastCons);
-            
+
             for (TimestampValuePair rv : c.getWriteSet()) {
-                if  (rv.getValue() != null && rv.getValue().length > 0)
+                if (rv.getValue() != null && rv.getValue().length > 0)
                     rv.setHashedValue(md.digest(rv.getValue()));
             }
-            
-            buffer.append("\n\n\t -- Consensus state: \n\n\t\tETS=" + c.getEts() + " \n\t\tWriteSet=["+ c.getWriteSet()
-            + "] \n\t\t(VAL,TS)=["+c.getQuorumWrites() + "]");
-            
+
+            buffer.append("\n\n\t -- Consensus state: \n\n\t\tETS=" + c.getEts() + " \n\t\tWriteSet=[" + c.getWriteSet()
+                    + "] \n\t\t(VAL,TS)=[" + c.getQuorumWrites() + "]");
+
             e = c.getLastEpoch();
-            if(e != null){
-                buffer.append("\n\n\t -- Epoch state: \n"+e.toString());
+            if (e != null) {
+                buffer.append("\n\n\t -- Epoch state: \n" + e.toString());
             }
         }
         buffer.append("\n\nConsensus in execution: " + (currentCons == -1 ? "None" : currentCons));
-        
+
         c = null;
         e = null;
-        if(currentCons > -1) {
-            
+        if (currentCons > -1) {
+
             c = tomLayer.execManager.getConsensus(currentCons);
-            
+
             for (TimestampValuePair rv : c.getWriteSet()) {
-                if  (rv.getValue() != null && rv.getValue().length > 0)
+                if (rv.getValue() != null && rv.getValue().length > 0)
                     rv.setHashedValue(md.digest(rv.getValue()));
             }
-            
-            buffer.append("\n\n\t -- Consensus state: \n\n\t\tETS=" + c.getEts() + " \n\t\tWriteSet=["+ c.getWriteSet()
-            + "] \n\t\t(VAL,TS)=["+c.getQuorumWrites() + "]");
-            
+
+            buffer.append("\n\n\t -- Consensus state: \n\n\t\tETS=" + c.getEts() + " \n\t\tWriteSet=[" + c.getWriteSet()
+                    + "] \n\t\t(VAL,TS)=[" + c.getQuorumWrites() + "]");
+
             e = c.getLastEpoch();
-            if(e != null) {
-                buffer.append("\n\n\t -- Epoch state: \n"+e.toString());
+            if (e != null) {
+                buffer.append("\n\n\t -- Epoch state: \n" + e.toString());
             }
         }
 
         buffer.append("\n\n---------- ---------- ----------\n");
-        
+
         LoggerFactory.getLogger(this.getClass()).info(buffer.toString());
     }
 }

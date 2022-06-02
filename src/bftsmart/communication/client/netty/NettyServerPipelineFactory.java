@@ -24,29 +24,31 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import bftsmart.reconfiguration.ServerViewController;
 
-public class NettyServerPipelineFactory{
+public class NettyServerPipelineFactory {
 
     NettyClientServerCommunicationSystemServerSide ncs;
     HashMap sessionTable;
     ServerViewController controller;
     ReentrantReadWriteLock rl;
 
-    public NettyServerPipelineFactory(NettyClientServerCommunicationSystemServerSide ncs, HashMap sessionTable, ServerViewController controller, ReentrantReadWriteLock rl) {
+    public NettyServerPipelineFactory(NettyClientServerCommunicationSystemServerSide ncs, HashMap sessionTable,
+            ServerViewController controller, ReentrantReadWriteLock rl) {
         this.ncs = ncs;
         this.sessionTable = sessionTable;
         this.controller = controller;
         this.rl = rl;
     }
 
-    public ByteToMessageDecoder getDecoder(){
-    	return new NettyTOMMessageDecoder(false, sessionTable,controller,rl,controller.getStaticConf().getUseMACs()==1);	
+    public ByteToMessageDecoder getDecoder() {
+        return new NettyTOMMessageDecoder(false, sessionTable, controller, rl,
+                controller.getStaticConf().getUseMACs() == 1);
     }
-    
-    public MessageToByteEncoder getEncoder(){
-    	return new NettyTOMMessageEncoder(false, sessionTable,rl, controller.getStaticConf().getUseMACs()==1);	
+
+    public MessageToByteEncoder getEncoder() {
+        return new NettyTOMMessageEncoder(false, sessionTable, rl, controller.getStaticConf().getUseMACs() == 1);
     }
-    
-    public SimpleChannelInboundHandler getHandler(){
-    	return ncs;	
+
+    public SimpleChannelInboundHandler getHandler() {
+        return ncs;
     }
 }

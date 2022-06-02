@@ -30,8 +30,10 @@ import java.util.Set;
  * Stores the data used to transfer the state to a recovering replica.
  * This class serves the three different seeders defined in the CST optimized
  * version for f=1.
- * In that version, the newest replica to take the checkpoint is expected to send
- * the hash of the checkpoint plus the upper portion of the log. The replica which
+ * In that version, the newest replica to take the checkpoint is expected to
+ * send
+ * the hash of the checkpoint plus the upper portion of the log. The replica
+ * which
  * took the checkpoint before that, i.e., the middle replica is expected to send
  * the checkpoint it has plus hashes of the lower and upper portions of the log.
  * The oldest replica to take the checkpoint must send the lower portion of the
@@ -60,9 +62,9 @@ public class CSTState implements ApplicationState {
     private byte[] state;
 
     private final int pid;
-    
+
     public CSTState(byte[] state, byte[] hashCheckpoint, CommandsInfo[] logLower, byte[] hashLogLower,
-                    CommandsInfo[] logUpper, byte[] hashLogUpper, int checkpointCID, int lastCID, int pid) {
+            CommandsInfo[] logUpper, byte[] hashLogUpper, int checkpointCID, int lastCID, int pid) {
         setSerializedState(state);
         this.hashLogUpper = hashLogUpper;
         this.hashLogLower = hashLogLower;
@@ -100,7 +102,9 @@ public class CSTState implements ApplicationState {
     }
 
     /**
-     * Retrieves the certified decision for the last consensus present in this object
+     * Retrieves the certified decision for the last consensus present in this
+     * object
+     * 
      * @param controller
      * @return The certified decision for the last consensus present in this object
      */
@@ -108,26 +112,27 @@ public class CSTState implements ApplicationState {
     public CertifiedDecision getCertifiedDecision(ServerViewController controller) {
         CommandsInfo ci = getMessageBatch(getLastCID());
         if (ci != null && ci.msgCtx[0].getProof() != null) { // do I have a proof for the consensus?
-            
+
             Set<ConsensusMessage> proof = ci.msgCtx[0].getProof();
             LinkedList<TOMMessage> requests = new LinkedList<>();
-            
-            //Recreate all TOMMessages ordered in the consensus
+
+            // Recreate all TOMMessages ordered in the consensus
             for (int i = 0; i < ci.commands.length; i++) {
-                
+
                 requests.add(ci.msgCtx[i].recreateTOMMessage(ci.commands[i]));
-                
+
             }
-            
-            //Serialize the TOMMessages to re-create the proposed value
+
+            // Serialize the TOMMessages to re-create the proposed value
             BatchBuilder bb = new BatchBuilder(0);
             byte[] value = bb.makeBatch(requests, ci.msgCtx[0].getNumOfNonces(),
-                    ci.msgCtx[0].getSeed(), ci.msgCtx[0].getTimestamp(), controller.getStaticConf().getUseSignatures() == 1);
-            
-            //Assemble and return the certified decision
+                    ci.msgCtx[0].getSeed(), ci.msgCtx[0].getTimestamp(),
+                    controller.getStaticConf().getUseSignatures() == 1);
+
+            // Assemble and return the certified decision
             return new CertifiedDecision(pid, getLastCID(), value, proof);
-        }
-        else return null; // there was no proof for the consensus
+        } else
+            return null; // there was no proof for the consensus
     }
 
     public int getCheckpointCID() {
@@ -136,14 +141,16 @@ public class CSTState implements ApplicationState {
 
     /**
      * Retrieves the specified batch of messages
+     * 
      * @param cid Consensus ID associated with the batch to be fetched
-     * @return The batch of messages associated with the batch correspondent consensus ID
+     * @return The batch of messages associated with the batch correspondent
+     *         consensus ID
      */
     public CommandsInfo getMessageBatch(int cid) {
         if (cid >= checkpointCID && cid <= lastCID) {
-            if(logLower != null) {
+            if (logLower != null) {
                 return logLower[cid - checkpointCID - 1];
-            } else if(logUpper != null) {
+            } else if (logUpper != null) {
                 return logUpper[cid - checkpointCID - 1];
             } else {
                 return null;

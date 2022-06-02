@@ -22,7 +22,7 @@ import bftsmart.tom.core.messages.TOMMessage;
  */
 public interface RequestReceiver {
 
-    /**     
+    /**
      * This is the method invoked by the CommunicationSystemServerSide, to
      * deliver a client request. The code to handle requests should be
      * put here.

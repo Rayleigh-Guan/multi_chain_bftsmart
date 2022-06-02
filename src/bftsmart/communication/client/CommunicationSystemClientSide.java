@@ -18,18 +18,22 @@ package bftsmart.communication.client;
 import bftsmart.tom.core.messages.TOMMessage;
 
 /**
- * Methods that should be implemented by the client side of the client-server communication system
+ * Methods that should be implemented by the client side of the client-server
+ * communication system
  *
  * @author Paulo
  */
 public interface CommunicationSystemClientSide {
    public void send(boolean sign, int[] targets, TOMMessage sm);
+
    public void setReplyReceiver(ReplyReceiver trr);
+
    public void sign(TOMMessage sm);
+
    public void close();
 
-   //******* EDUARDO BEGIN **************//
+   // ******* EDUARDO BEGIN **************//
    public void updateConnections();
-   //******* EDUARDO END **************//
+   // ******* EDUARDO END **************//
 
 }

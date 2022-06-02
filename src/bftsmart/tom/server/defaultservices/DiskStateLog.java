@@ -46,7 +46,7 @@ public class DiskStateLog extends StateLog {
 	private boolean isToLog;
 	private ReentrantLock checkpointLock = new ReentrantLock();
 	private Map<Integer, Long> logPointers;
-	
+
 	public DiskStateLog(int id, byte[] initialState, byte[] initialHash,
 			boolean isToLog, boolean syncLog, boolean syncCkp) {
 		super(id, initialState, initialHash);
@@ -67,7 +67,7 @@ public class DiskStateLog extends StateLog {
 			 * log.setLength(TEN_MB); log.seek(0);
 			 */
 		} catch (FileNotFoundException e) {
-			logger.error("Failed to create log file",e);
+			logger.error("Failed to create log file", e);
 		}
 	}
 
@@ -77,14 +77,14 @@ public class DiskStateLog extends StateLog {
 	 * the 'k' batches received after the last checkpoint are supposed to be
 	 * kept
 	 * 
-	 * @param commands The batch of messages to be kept.
-         * @param consensusId
+	 * @param commands    The batch of messages to be kept.
+	 * @param consensusId
 	 */
-        @Override
+	@Override
 	public void addMessageBatch(byte[][] commands, MessageContext[] msgCtx, int consensusId) {
 		CommandsInfo command = new CommandsInfo(commands, msgCtx);
 		if (isToLog) {
-			if(log == null)
+			if (log == null)
 				createLogFile();
 			writeCommandToDisk(command, consensusId);
 		}
@@ -106,17 +106,17 @@ public class DiskStateLog extends StateLog {
 			bf.put(batchBytes);
 			bf.putInt(EOF);
 			bf.putInt(consensusId);
-			
+
 			log.write(bf.array());
 			log.seek(log.length() - 2 * INT_BYTE_SIZE);// Next write will overwrite
-													// the EOF mark
+														// the EOF mark
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			logger.error("Failed to write command to disk",e);
-	    }
+			logger.error("Failed to write command to disk", e);
+		}
 	}
 
-        @Override
+	@Override
 	public void newCheckpoint(byte[] state, byte[] stateHash, int consensusId) {
 		String ckpPath = DEFAULT_DIR + String.valueOf(id) + "."
 				+ System.currentTimeMillis() + ".tmp";
@@ -135,7 +135,7 @@ public class DiskStateLog extends StateLog {
 			bf.putInt(consensusId);
 
 			byte[] ckpState = bf.array();
-			
+
 			ckp.write(ckpState);
 			ckp.close();
 
@@ -145,13 +145,13 @@ public class DiskStateLog extends StateLog {
 			renameCkp(ckpPath);
 			if (isToLog)
 				createLogFile();
-			
+
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
-			logger.error("Failed to open checkpoint file",e);
+			logger.error("Failed to open checkpoint file", e);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			logger.error("Failed to write checkpoint to disk",e);
+			logger.error("Failed to write checkpoint to disk", e);
 		} finally {
 			checkpointLock.unlock();
 		}
@@ -170,24 +170,24 @@ public class DiskStateLog extends StateLog {
 
 	private void deleteLogFile() {
 		try {
-			if(log != null)
+			if (log != null)
 				log.close();
 			new File(logPath).delete();
 		} catch (IOException e) {
-			logger.error("Failed to delete log file",e);
+			logger.error("Failed to delete log file", e);
 		}
 	}
 
 	/**
 	 * Constructs a TransferableState using this log information
 	 * 
-	 * @param cid Consensus ID correspondent to desired state
-         * @param sendState
+	 * @param cid       Consensus ID correspondent to desired state
+	 * @param sendState
 	 * @return TransferableState Object containing this log information
 	 */
-        @Override
+	@Override
 	public DefaultApplicationState getApplicationState(int cid, boolean sendState) {
-//		readingState = true;
+		// readingState = true;
 		CommandsInfo[] batches = null;
 
 		int lastCheckpointCID = getLastCheckpointCID();
@@ -201,7 +201,7 @@ public class DiskStateLog extends StateLog {
 
 			FileRecoverer fr = new FileRecoverer(id, DEFAULT_DIR);
 
-//			if (size > 0 && sendState) {
+			// if (size > 0 && sendState) {
 			if (size > 0) {
 				CommandsInfo[] recoveredBatches = fr.getLogState(size, logPath);
 
@@ -210,44 +210,46 @@ public class DiskStateLog extends StateLog {
 				for (int i = 0; i < size; i++)
 					batches[i] = recoveredBatches[i];
 			}
-			
+
 			checkpointLock.lock();
 			byte[] ckpState = fr.getCkpState(lastCkpPath);
 			byte[] ckpStateHash = fr.getCkpStateHash();
 			checkpointLock.unlock();
 
 			logger.info("FINISHED READING STATE");
-//			readingState = false;
+			// readingState = false;
 
-//			return new DefaultApplicationState((sendState ? batches : null), lastCheckpointCID,
+			// return new DefaultApplicationState((sendState ? batches : null),
+			// lastCheckpointCID,
 			return new DefaultApplicationState(batches, lastCheckpointCID,
 					cid, (sendState ? ckpState : null), ckpStateHash, this.id);
 
 		}
 		return null;
 	}
-	
+
 	public void transferApplicationState(SocketChannel sChannel, int cid) {
 		FileRecoverer fr = new FileRecoverer(id, DEFAULT_DIR);
 		fr.transferCkpState(sChannel, lastCkpPath);
-//		int lastCheckpointCID = getLastCheckpointCID();
-//		int lastCID = getLastCID();
-//		if (cid >= lastCheckpointCID && cid <= lastCID) {
-//			int size = cid - lastCheckpointCID;
-//			fr.transferLog(sChannel, size);
-//		}
+		// int lastCheckpointCID = getLastCheckpointCID();
+		// int lastCID = getLastCID();
+		// if (cid >= lastCheckpointCID && cid <= lastCID) {
+		// int size = cid - lastCheckpointCID;
+		// fr.transferLog(sChannel, size);
+		// }
 	}
 
 	public void setLastCID(int cid, int checkpointPeriod, int checkpointPortion) {
 		super.setLastCID(cid);
 		// save the file pointer to retrieve log information later
-		if((cid % checkpointPeriod) % checkpointPortion == checkpointPortion -1) {
-			int ckpReplicaIndex = (((cid % checkpointPeriod) + 1) / checkpointPortion) -1;
+		if ((cid % checkpointPeriod) % checkpointPortion == checkpointPortion - 1) {
+			int ckpReplicaIndex = (((cid % checkpointPeriod) + 1) / checkpointPortion) - 1;
 			try {
-				logger.info("Replica " + ckpReplicaIndex + " took checkpoint. My current log pointer is " + log.getFilePointer());
+				logger.info("Replica " + ckpReplicaIndex + " took checkpoint. My current log pointer is "
+						+ log.getFilePointer());
 				logPointers.put(ckpReplicaIndex, log.getFilePointer());
 			} catch (IOException e) {
-				logger.error("Failed to get file pointer",e);
+				logger.error("Failed to get file pointer", e);
 			}
 		}
 	}
@@ -257,36 +259,37 @@ public class DiskStateLog extends StateLog {
 	 * TransferableState object
 	 * 
 	 * @param transState
-	 *            TransferableState object containing the information which is
-	 *            used to updated this log
+	 *                   TransferableState object containing the information which
+	 *                   is
+	 *                   used to updated this log
 	 */
-        @Override
+	@Override
 	public void update(DefaultApplicationState transState) {
 		newCheckpoint(transState.getState(), transState.getStateHash(), transState.getLastCheckpointCID());
 		setLastCheckpointCID(transState.getLastCheckpointCID());
 	}
-	
+
 	protected ApplicationState loadDurableState() {
 		FileRecoverer fr = new FileRecoverer(id, DEFAULT_DIR);
 		lastCkpPath = fr.getLatestFile(".ckp");
 		logPath = fr.getLatestFile(".log");
 		byte[] checkpoint = null;
-		if(lastCkpPath != null)
+		if (lastCkpPath != null)
 			checkpoint = fr.getCkpState(lastCkpPath);
 		CommandsInfo[] log = null;
-		if(logPath !=null)
+		if (logPath != null)
 			log = fr.getLogState(0, logPath);
 		int ckpLastConsensusId = fr.getCkpLastConsensusId();
 		int logLastConsensusId = fr.getLogLastConsensusId();
 		logger.info("log last consensus id: " + logLastConsensusId);
 		ApplicationState state = new DefaultApplicationState(log, ckpLastConsensusId,
 				logLastConsensusId, checkpoint, fr.getCkpStateHash(), this.id);
-		if(logLastConsensusId > ckpLastConsensusId) {
+		if (logLastConsensusId > ckpLastConsensusId) {
 			super.setLastCID(logLastConsensusId);
 		} else
 			super.setLastCID(ckpLastConsensusId);
 		super.setLastCheckpointCID(ckpLastConsensusId);
-		
+
 		return state;
 	}
 }

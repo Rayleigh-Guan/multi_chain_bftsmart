@@ -27,24 +27,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class StateSenderServer implements Runnable {
-    
-     private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	private ServerSocket server;
 	private ApplicationState state;
 	private Recoverable recoverable;
 	private DurabilityCoordinator coordinator;
 	private CSTRequest request;
-	
+
 	public void setState(ApplicationState state) {
 		this.state = state;
 	}
-	
+
 	public void setRecoverable(Recoverable recoverable) {
 		this.recoverable = recoverable;
-		coordinator = (DurabilityCoordinator)(recoverable);
+		coordinator = (DurabilityCoordinator) (recoverable);
 	}
-	
+
 	public void setRequest(CSTRequest request) {
 		this.request = request;
 	}
@@ -54,7 +54,7 @@ public class StateSenderServer implements Runnable {
 			server = new ServerSocket(port);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			logger.error("Could not open server socket",e);
+			logger.error("Could not open server socket", e);
 		}
 	}
 
@@ -67,7 +67,7 @@ public class StateSenderServer implements Runnable {
 			sender.setState(state);
 			new Thread(sender).start();
 		} catch (IOException e) {
-			logger.error("Problem executing StateSenderServer thread",e);
+			logger.error("Problem executing StateSenderServer thread", e);
 		}
 	}
 

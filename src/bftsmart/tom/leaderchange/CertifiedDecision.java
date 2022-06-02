@@ -32,8 +32,8 @@ public class CertifiedDecision implements Externalizable {
     private int pid; // process id
     private int cid; // execution id
     private byte[] decision; // decision value
-    private Set<ConsensusMessage>  consMsgs; // proof of the decision
-    
+    private Set<ConsensusMessage> consMsgs; // proof of the decision
+
     /**
      * Empty constructor
      */
@@ -47,10 +47,11 @@ public class CertifiedDecision implements Externalizable {
     /**
      * Constructor
      * 
-     * @param pid process id
-     * @param cid execution id
+     * @param pid      process id
+     * @param cid      execution id
      * @param decision decision value
-     * @param consMsgs proof of the decision in the form of authenticated Consensus Messages
+     * @param consMsgs proof of the decision in the form of authenticated Consensus
+     *                 Messages
      */
     public CertifiedDecision(int pid, int cid, byte[] decision, Set<ConsensusMessage> consMsgs) {
 
@@ -62,6 +63,7 @@ public class CertifiedDecision implements Externalizable {
 
     /**
      * Get consensus ID
+     * 
      * @return consensus ID
      */
     public int getCID() {
@@ -70,6 +72,7 @@ public class CertifiedDecision implements Externalizable {
 
     /**
      * Get decision value
+     * 
      * @return decision value
      */
     public byte[] getDecision() {
@@ -78,26 +81,30 @@ public class CertifiedDecision implements Externalizable {
 
     /**
      * Get proof of the decision in the form of authenticated Consensus Messages
+     * 
      * @return proof of the decision in the form of authenticated Consensus Messages
      */
-    public Set<ConsensusMessage>  getConsMessages() {
+    public Set<ConsensusMessage> getConsMessages() {
         return consMsgs;
     }
 
     /**
      * Get process id
+     * 
      * @return process id
      */
     public int getPID() {
         return pid;
     }
+
     public boolean equals(Object obj) {
 
         if (obj instanceof CertifiedDecision) {
 
             CertifiedDecision cDec = (CertifiedDecision) obj;
 
-            if (cDec.pid == pid) return true;
+            if (cDec.pid == pid)
+                return true;
         }
 
         return false;
@@ -106,7 +113,7 @@ public class CertifiedDecision implements Externalizable {
     public int hashCode() {
         return pid;
     }
-    
+
     public void writeExternal(ObjectOutput out) throws IOException {
 
         out.writeInt(pid);

@@ -30,60 +30,58 @@ public class Reconfiguration {
     private ReconfigureRequest request;
     private ServiceProxy proxy;
     private int id;
-    
+
     private KeyLoader keyLoader;
     private String configDir;
-    
+
     public Reconfiguration(int id, String configDir, KeyLoader loader) {
         this.id = id;
-        
+
         this.keyLoader = loader;
         this.configDir = configDir;
-         //proxy = new ServiceProxy(id);
-        //request = new ReconfigureRequest(id);
+        // proxy = new ServiceProxy(id);
+        // request = new ReconfigureRequest(id);
     }
-    
-    public void connect(){
-        if(proxy == null){
+
+    public void connect() {
+        if (proxy == null) {
             proxy = new ServiceProxy(id, configDir, null, null, keyLoader);
         }
     }
-    
-    public void addServer(int id, String ip, int port){
+
+    public void addServer(int id, String ip, int port) {
         this.setReconfiguration(ServerViewController.ADD_SERVER, id + ":" + ip + ":" + port);
     }
-    
-    public void removeServer(int id){
+
+    public void removeServer(int id) {
         this.setReconfiguration(ServerViewController.REMOVE_SERVER, String.valueOf(id));
     }
-    
 
-    public void setF(int f){
-      this.setReconfiguration(ServerViewController.CHANGE_F,String.valueOf(f));  
+    public void setF(int f) {
+        this.setReconfiguration(ServerViewController.CHANGE_F, String.valueOf(f));
     }
-    
-    
-    public void setReconfiguration(int prop, String value){
-        if(request == null){
-            //request = new ReconfigureRequest(proxy.getViewManager().getStaticConf().getProcessId());
+
+    public void setReconfiguration(int prop, String value) {
+        if (request == null) {
+            // request = new
+            // ReconfigureRequest(proxy.getViewManager().getStaticConf().getProcessId());
             request = new ReconfigureRequest(id);
         }
         request.setProperty(prop, value);
     }
-    
-    public ReconfigureReply execute(){
+
+    public ReconfigureReply execute() {
         byte[] signature = TOMUtil.signMessage(proxy.getViewManager().getStaticConf().getPrivateKey(),
-                                                                            request.toString().getBytes());
+                request.toString().getBytes());
         request.setSignature(signature);
         byte[] reply = proxy.invoke(TOMUtil.getBytes(request), TOMMessageType.RECONFIG);
         request = null;
-        return (ReconfigureReply)TOMUtil.getObject(reply);
+        return (ReconfigureReply) TOMUtil.getObject(reply);
     }
-    
-    
-    public void close(){
+
+    public void close() {
         proxy.close();
         proxy = null;
     }
-    
+
 }

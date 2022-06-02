@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Batch format: N_MESSAGES(int) + N_MESSAGES*[MSGSIZE(int),MSG(byte)] +
- *               TIMESTAMP(long) + N_NONCES(int) + NONCES(byte[])
+ * TIMESTAMP(long) + N_NONCES(int) + NONCES(byte[])
  *
  */
 public final class BatchReader {
@@ -42,36 +42,36 @@ public final class BatchReader {
 
     public TOMMessage[] deserialiseRequests(ServerViewController controller) {
 
-        //obtain the timestamps to be delivered to the application
+        // obtain the timestamps to be delivered to the application
         long timestamp = proposalBuffer.getLong();
-        System.out.println("Stage: deserialiseRequests --timestamp:"+timestamp);
+        System.out.println("Stage: deserialiseRequests --timestamp:" + timestamp);
         int numberOfNonces = proposalBuffer.getInt();
-        
+
         long seed = 0;
 
         Random rnd = null;
-        if(numberOfNonces > 0){
+        if (numberOfNonces > 0) {
             seed = proposalBuffer.getLong();
             rnd = new Random(seed);
-        }
-        else numberOfNonces = 0; // make sure the value is correct
-        
+        } else
+            numberOfNonces = 0; // make sure the value is correct
+
         int numberOfMessages = proposalBuffer.getInt();
-        System.out.println("Stage: deserialiseRequests --numberOfMessages:"+numberOfMessages);
+        System.out.println("Stage: deserialiseRequests --numberOfMessages:" + numberOfMessages);
 
         TOMMessage[] requests = new TOMMessage[numberOfMessages];
 
         for (int i = 0; i < numberOfMessages; i++) {
-            //read the message and its signature from the batch
+            // read the message and its signature from the batch
             int messageSize = proposalBuffer.getInt();
 
             byte[] message = new byte[messageSize];
             proposalBuffer.get(message);
 
             byte[] signature = null;
-            
+
             if (useSignatures) {
-                
+
                 int sigSize = proposalBuffer.getInt();
 
                 if (sigSize > 0) {
@@ -79,8 +79,8 @@ public final class BatchReader {
                     proposalBuffer.get(signature);
                 }
             }
-            Long recep=proposalBuffer.getLong();
-            //obtain the nonces to be delivered to the application
+            Long recep = proposalBuffer.getLong();
+            // obtain the nonces to be delivered to the application
             byte[] nonces = new byte[numberOfNonces];
             if (nonces.length > 0) {
                 rnd.nextBytes(nonces);
@@ -91,17 +91,17 @@ public final class BatchReader {
                 TOMMessage tm = new TOMMessage();
                 tm.rExternal(ois);
                 ois.close();
-                
+
                 tm.serializedMessage = message;
                 tm.serializedMessageSignature = signature;
                 tm.numOfNonces = numberOfNonces;
                 tm.seed = seed;
                 tm.timestamp = timestamp;
-                tm.receptionTime=recep;
+                tm.receptionTime = recep;
                 requests[i] = tm;
-                
+
             } catch (Exception e) {
-                LoggerFactory.getLogger(this.getClass()).error("Failed to deserialize batch",e);
+                LoggerFactory.getLogger(this.getClass()).error("Failed to deserialize batch", e);
             }
         }
         return requests;

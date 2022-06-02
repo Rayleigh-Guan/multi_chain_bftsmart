@@ -30,9 +30,9 @@ import java.io.ObjectOutputStream;
 public class DefaultViewStorage implements ViewStorage {
 
     private String path = "";
-    
+
     public DefaultViewStorage(String configPath) {
-        
+
         path = configPath;
         File f = new File(path);
         if (!f.exists()) {
@@ -68,7 +68,7 @@ public class DefaultViewStorage implements ViewStorage {
             ObjectInputStream ois = new ObjectInputStream(new FileInputStream(f));
             View ret = (View) ois.readObject();
             ois.close();
-            
+
             return ret;
         } catch (Exception e) {
             return null;

@@ -39,12 +39,10 @@ public class ViewController {
         this.staticConf = new TOMConfiguration(procId, loader);
     }
 
-    
     public ViewController(int procId, String configHome, KeyLoader loader) {
         this.staticConf = new TOMConfiguration(procId, configHome, loader);
     }
 
-    
     public final ViewStorage getViewStore() {
         if (this.viewStore == null) {
             String className = staticConf.getViewStoreClass();
@@ -58,21 +56,21 @@ public class ViewController {
         return this.viewStore;
     }
 
-    public View getCurrentView(){
-        if(this.currentView == null){
-             this.currentView = getViewStore().readView();
+    public View getCurrentView() {
+        if (this.currentView == null) {
+            this.currentView = getViewStore().readView();
         }
         return this.currentView;
     }
-    
-    public View getLastView(){
+
+    public View getLastView() {
         return this.lastView;
     }
-    
+
     public SocketAddress getRemoteAddress(int id) {
         return getCurrentView().getAddress(id);
     }
-    
+
     public void reconfigureTo(View newView) {
         this.lastView = this.currentView;
         this.currentView = newView;

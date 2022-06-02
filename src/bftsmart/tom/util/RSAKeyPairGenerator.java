@@ -30,7 +30,7 @@ import org.apache.commons.codec.binary.Base64;
  *
  */
 public class RSAKeyPairGenerator {
-    
+
     /** Creates a new instance of KeyPairGenerator */
     public RSAKeyPairGenerator() {
     }
@@ -48,35 +48,34 @@ public class RSAKeyPairGenerator {
         KeyPair kp = keyGen.generateKeyPair();
         PublicKey puk = kp.getPublic();
         PrivateKey prk = kp.getPrivate();
-        saveToFile(id,puk,prk);
+        saveToFile(id, puk, prk);
     }
-    
+
     private void saveToFile(int id, PublicKey puk, PrivateKey prk) throws Exception {
-        String path = "config"+System.getProperty("file.separator")+"keys"+
+        String path = "config" + System.getProperty("file.separator") + "keys" +
                 System.getProperty("file.separator");
-        
-        BufferedWriter w = new BufferedWriter(new FileWriter(path+"publickey"+id,false));
+
+        BufferedWriter w = new BufferedWriter(new FileWriter(path + "publickey" + id, false));
         w.write(getKeyAsString(puk));
         w.flush();
         w.close();
-        
-        w = new BufferedWriter(new FileWriter(path+"privatekey"+id,false));
+
+        w = new BufferedWriter(new FileWriter(path + "privatekey" + id, false));
         w.write(getKeyAsString(prk));
         w.flush();
         w.close();
     }
-    
-    
+
     private String getKeyAsString(Key key) {
         byte[] keyBytes = key.getEncoded();
 
         return Base64.encodeBase64String(keyBytes);
     }
 
-    public static void main(String[] args){
-        try{
+    public static void main(String[] args) {
+        try {
             new RSAKeyPairGenerator().run(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
-        }catch(Exception e){
+        } catch (Exception e) {
             System.err.println("Use: RSAKeyPairGenerator <id> <key size>");
         }
     }

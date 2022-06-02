@@ -41,7 +41,7 @@ public class ServerCommunicationSystem extends Thread {
 
     private boolean doWork = true;
     public final long MESSAGE_WAIT_TIME = 100;
-    private LinkedBlockingQueue<SystemMessage> inQueue = null;//new LinkedBlockingQueue<SystemMessage>(IN_QUEUE_SIZE);
+    private LinkedBlockingQueue<SystemMessage> inQueue = null;// new LinkedBlockingQueue<SystemMessage>(IN_QUEUE_SIZE);
     protected MessageHandler messageHandler;
     private ServersCommunicationLayer serversConn;
     private CommunicationSystemServerSide clientsConn;
@@ -54,28 +54,28 @@ public class ServerCommunicationSystem extends Thread {
         super("Server CS");
 
         this.controller = controller;
-        
+
         messageHandler = new MessageHandler();
 
         inQueue = new LinkedBlockingQueue<SystemMessage>(controller.getStaticConf().getInQueueSize());
 
-        //create a new conf, with updated port number for servers
-        //TOMConfiguration serversConf = new TOMConfiguration(conf.getProcessId(),
-        //      Configuration.getHomeDir(), "hosts.config");
+        // create a new conf, with updated port number for servers
+        // TOMConfiguration serversConf = new TOMConfiguration(conf.getProcessId(),
+        // Configuration.getHomeDir(), "hosts.config");
 
-        //serversConf.increasePortNumber();
+        // serversConf.increasePortNumber();
 
         serversConn = new ServersCommunicationLayer(controller, inQueue, replica);
 
-        //******* EDUARDO BEGIN **************//
-       // if (manager.isInCurrentView() || manager.isInInitView()) {
-            clientsConn = CommunicationSystemServerSideFactory.getCommunicationSystemServerSide(controller);
-       // }
-        //******* EDUARDO END **************//
-        //start();
+        // ******* EDUARDO BEGIN **************//
+        // if (manager.isInCurrentView() || manager.isInInitView()) {
+        clientsConn = CommunicationSystemServerSideFactory.getCommunicationSystemServerSide(controller);
+        // }
+        // ******* EDUARDO END **************//
+        // start();
     }
 
-    //******* EDUARDO BEGIN **************//
+    // ******* EDUARDO BEGIN **************//
     public void joinViewReceived() {
         serversConn.joinViewReceived();
     }
@@ -88,7 +88,7 @@ public class ServerCommunicationSystem extends Thread {
 
     }
 
-    //******* EDUARDO END **************//
+    // ******* EDUARDO END **************//
     public void setAcceptor(Acceptor acceptor) {
         messageHandler.setAcceptor(acceptor);
     }
@@ -109,7 +109,7 @@ public class ServerCommunicationSystem extends Thread {
      */
     @Override
     public void run() {
-        
+
         long count = 0;
         while (doWork) {
             try {
@@ -123,12 +123,12 @@ public class ServerCommunicationSystem extends Thread {
                     logger.debug("<-------receiving---------- " + sm);
                     messageHandler.processData(sm);
                     count++;
-                } else {                
-                    messageHandler.verifyPending();               
+                } else {
+                    messageHandler.verifyPending();
                 }
             } catch (InterruptedException e) {
-                
-                logger.error("Error processing message",e);
+
+                logger.error("Error processing message", e);
             }
         }
         logger.info("ServerCommunicationSystem stopped.");
@@ -136,12 +136,12 @@ public class ServerCommunicationSystem extends Thread {
     }
 
     /**
-     * Send a message to target processes. If the message is an instance of 
+     * Send a message to target processes. If the message is an instance of
      * TOMMessage, it is sent to the clients, otherwise it is set to the
      * servers.
      *
      * @param targets the target receivers of the message
-     * @param sm the message to be sent
+     * @param sm      the message to be sent
      */
     public void send(int[] targets, SystemMessage sm) {
         if (sm instanceof TOMMessage) {
@@ -155,21 +155,21 @@ public class ServerCommunicationSystem extends Thread {
     public ServersCommunicationLayer getServersConn() {
         return serversConn;
     }
-    
+
     public CommunicationSystemServerSide getClientsConn() {
         return clientsConn;
     }
-    
+
     @Override
     public String toString() {
         return serversConn.toString();
     }
-    
+
     public void shutdown() {
-        
+
         logger.info("Shutting down communication layer");
-        
-        this.doWork = false;        
+
+        this.doWork = false;
         clientsConn.shutdown();
         serversConn.shutdown();
     }

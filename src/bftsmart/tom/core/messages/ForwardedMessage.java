@@ -21,8 +21,6 @@ import java.io.ObjectOutput;
 
 import bftsmart.communication.SystemMessage;
 
-
-
 /**
  * Message used to forward a client request to the current leader when the first
  * timeout for this request is triggered (see RequestTimer).

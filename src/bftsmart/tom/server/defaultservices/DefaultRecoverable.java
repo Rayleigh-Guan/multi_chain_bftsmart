@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * @author Joao Sousa
  */
 public abstract class DefaultRecoverable implements Recoverable, BatchExecutable {
-    
+
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private int checkpointPeriod;
@@ -77,7 +77,7 @@ public abstract class DefaultRecoverable implements Recoverable, BatchExecutable
 
     private byte[][] executeBatch(byte[][] commands, MessageContext[] msgCtxs, boolean noop) {
 
-        int cid = msgCtxs[msgCtxs.length-1].getConsensusId();
+        int cid = msgCtxs[msgCtxs.length - 1].getConsensusId();
 
         // As the delivery thread may deliver several consensus at once it is necessary
         // to find if a checkpoint might be taken in the middle of the batch execution
@@ -98,11 +98,15 @@ public abstract class DefaultRecoverable implements Recoverable, BatchExecutable
 
             saveCommands(commands, msgCtxs);
         } else {
-            // there is a replica supposed to take the checkpoint. In this case, the commands
-            // must be executed in two steps. First the batch of commands containing commands
+            // there is a replica supposed to take the checkpoint. In this case, the
+            // commands
+            // must be executed in two steps. First the batch of commands containing
+            // commands
             // until the checkpoint period is executed and the log saved or checkpoint taken
-            // if this replica is the one supposed to take the checkpoint. After the checkpoint
-            // or log, the pointer in the log is updated and then the remaining portion of the
+            // if this replica is the one supposed to take the checkpoint. After the
+            // checkpoint
+            // or log, the pointer in the log is updated and then the remaining portion of
+            // the
             // commands is executed
             byte[][] firstHalf = new byte[checkpointIndex + 1][];
             MessageContext[] firstHalfMsgCtx = new MessageContext[firstHalf.length];
@@ -112,7 +116,8 @@ public abstract class DefaultRecoverable implements Recoverable, BatchExecutable
             System.arraycopy(msgCtxs, 0, firstHalfMsgCtx, 0, checkpointIndex + 1);
             if (secondHalf.length > 0) {
                 System.arraycopy(commands, checkpointIndex + 1, secondHalf, 0, commands.length - (checkpointIndex + 1));
-                System.arraycopy(msgCtxs, checkpointIndex + 1, secondHalfMsgCtx, 0, commands.length - (checkpointIndex + 1));
+                System.arraycopy(msgCtxs, checkpointIndex + 1, secondHalfMsgCtx, 0,
+                        commands.length - (checkpointIndex + 1));
             } else {
                 firstHalfMsgCtx = msgCtxs;
             }
@@ -139,7 +144,7 @@ public abstract class DefaultRecoverable implements Recoverable, BatchExecutable
 
             // execute the second half if it exists
             if (secondHalf.length > 0) {
-//	        	System.out.println("----THERE IS A SECOND HALF----");
+                // System.out.println("----THERE IS A SECOND HALF----");
                 cid = msgCtxs[msgCtxs.length - 1].getConsensusId();
 
                 if (!noop) {
@@ -199,8 +204,8 @@ public abstract class DefaultRecoverable implements Recoverable, BatchExecutable
      * @param msgCtx
      */
     private void saveCommands(byte[][] commands, MessageContext[] msgCtx) {
-        //if(!config.isToLog())
-        //	return;        
+        // if(!config.isToLog())
+        // return;
         if (commands.length != msgCtx.length) {
             logger.debug("SIZE OF COMMANDS AND MESSAGE CONTEXTS IS DIFFERENT----");
             logger.debug("COMMANDS: " + commands.length + ", CONTEXTS: " + msgCtx.length + " ----");
@@ -210,12 +215,14 @@ public abstract class DefaultRecoverable implements Recoverable, BatchExecutable
         int cid = msgCtx[0].getConsensusId();
         int batchStart = 0;
         for (int i = 0; i <= msgCtx.length; i++) {
-            if (i == msgCtx.length) { // the batch command contains only one command or it is the last position of the array
+            if (i == msgCtx.length) { // the batch command contains only one command or it is the last position of the
+                                      // array
                 byte[][] batch = Arrays.copyOfRange(commands, batchStart, i);
                 MessageContext[] batchMsgCtx = Arrays.copyOfRange(msgCtx, batchStart, i);
                 log.addMessageBatch(batch, batchMsgCtx, cid);
             } else {
-                if (msgCtx[i].getConsensusId() > cid) { // saves commands when the cid changes or when it is the last batch
+                if (msgCtx[i].getConsensusId() > cid) { // saves commands when the cid changes or when it is the last
+                                                        // batch
                     byte[][] batch = Arrays.copyOfRange(commands, batchStart, i);
                     MessageContext[] batchMsgCtx = Arrays.copyOfRange(msgCtx, batchStart, i);
                     log.addMessageBatch(batch, batchMsgCtx, cid);
@@ -230,13 +237,17 @@ public abstract class DefaultRecoverable implements Recoverable, BatchExecutable
     @Override
     public ApplicationState getState(int cid, boolean sendState) {
         logLock.lock();
-        ApplicationState ret = (cid > -1 ? getLog().getApplicationState(cid, sendState) : new DefaultApplicationState());
-        
-        // Only will send a state if I have a proof for the last logged decision/consensus
-        //TODO: I should always make sure to have a log with proofs, since this is a result
-        // of not storing anything after a checkpoint and before logging more requests        
-        if (ret == null || (config.isBFT() && ret.getCertifiedDecision(this.controller) == null)) ret = new DefaultApplicationState();
-        
+        ApplicationState ret = (cid > -1 ? getLog().getApplicationState(cid, sendState)
+                : new DefaultApplicationState());
+
+        // Only will send a state if I have a proof for the last logged
+        // decision/consensus
+        // TODO: I should always make sure to have a log with proofs, since this is a
+        // result
+        // of not storing anything after a checkpoint and before logging more requests
+        if (ret == null || (config.isBFT() && ret.getCertifiedDecision(this.controller) == null))
+            ret = new DefaultApplicationState();
+
         logLock.unlock();
         return ret;
     }
@@ -254,7 +265,7 @@ public abstract class DefaultRecoverable implements Recoverable, BatchExecutable
 
             logger.info("I'm going to update myself from CID "
                     + lastCheckpointCID + " to CID " + lastCID);
-           
+
             stateLock.lock();
             if (state.getSerializedState() != null) {
                 logger.info("The state is not null. Will install it");
@@ -271,30 +282,31 @@ public abstract class DefaultRecoverable implements Recoverable, BatchExecutable
                         logger.warn("Consensus " + cid + " is null!");
                     }
 
-                    CommandsInfo cmdInfo = state.getMessageBatch(cid); 
+                    CommandsInfo cmdInfo = state.getMessageBatch(cid);
                     byte[][] commands = cmdInfo.commands; // take a batch
                     MessageContext[] msgCtx = cmdInfo.msgCtx;
-                    
+
                     if (commands == null || msgCtx == null || msgCtx[0].isNoOp()) {
                         continue;
-                    }                        
+                    }
                     appExecuteBatch(commands, msgCtx, false);
-                    
+
                 } catch (Exception e) {
-                    logger.error("Failed to process and verify batched requests",e);
+                    logger.error("Failed to process and verify batched requests", e);
                     if (e instanceof ArrayIndexOutOfBoundsException) {
                         logger.info("Last checkpoint, last consensus ID (CID): " + state.getLastCheckpointCID());
                         logger.info("Last CID: " + state.getLastCID());
-                        logger.info("number of messages expected to be in the batch: " + (state.getLastCID() - state.getLastCheckpointCID() + 1));
+                        logger.info("number of messages expected to be in the batch: "
+                                + (state.getLastCID() - state.getLastCheckpointCID() + 1));
                         logger.info("number of messages in the batch: " + state.getMessageBatches().length);
-                     }
+                    }
                 }
 
             }
             stateLock.unlock();
 
         }
-        
+
         return lastCID;
     }
 
@@ -324,11 +336,13 @@ public abstract class DefaultRecoverable implements Recoverable, BatchExecutable
      * indexes.
      *
      * @param msgCtxs the contexts of the consensus where the messages where
-     * executed. There is one msgCtx message for each command to be executed
+     *                executed. There is one msgCtx message for each command to be
+     *                executed
      *
      * @return the index in which a replica is supposed to take a checkpoint. If
-     * there is no replica taking a checkpoint during the period comprised by
-     * this command batch, it is returned -1
+     *         there is no replica taking a checkpoint during the period comprised
+     *         by
+     *         this command batch, it is returned -1
      */
     private int findCheckpointPosition(int[] cids) {
         if (checkpointPeriod < 1) {
@@ -356,8 +370,8 @@ public abstract class DefaultRecoverable implements Recoverable, BatchExecutable
      * file.
      *
      * @param msgCtx the message context of the commands executed by the
-     * replica. There is one message context for each command
-     * @param cid the CID of the consensus where a replica took a checkpoint
+     *               replica. There is one message context for each command
+     * @param cid    the CID of the consensus where a replica took a checkpoint
      * @return the higher position where the CID appears
      */
     private int cidPosition(int[] cids, int cid) {
@@ -374,7 +388,7 @@ public abstract class DefaultRecoverable implements Recoverable, BatchExecutable
         logger.info("Checkpoint is in position " + index);
         return index;
     }
-   
+
     private void initLog() {
         if (log == null) {
             checkpointPeriod = config.getCheckpointPeriod();
@@ -396,7 +410,7 @@ public abstract class DefaultRecoverable implements Recoverable, BatchExecutable
             }
         }
     }
-    
+
     @Override
     public void setReplicaContext(ReplicaContext replicaContext) {
         this.config = replicaContext.getStaticConfiguration();
@@ -417,47 +431,50 @@ public abstract class DefaultRecoverable implements Recoverable, BatchExecutable
     public byte[] executeUnordered(byte[] command, MessageContext msgCtx) {
         return appExecuteUnordered(command, msgCtx);
     }
-    
+
     @Override
     public void Op(int CID, byte[] requests, MessageContext msgCtx) {
-        //Requests are logged within 'executeBatch(...)' instead of in this method.
+        // Requests are logged within 'executeBatch(...)' instead of in this method.
     }
-    
+
     @Override
     public void noOp(int CID, byte[][] operations, MessageContext[] msgCtxs) {
-        
+
         executeBatch(operations, msgCtxs, true);
 
     }
-    
+
     /**
      * Given a snapshot received from the state transfer protocol, install it
+     * 
      * @param state The serialized snapshot
      */
     public abstract void installSnapshot(byte[] state);
-    
+
     /**
      * Returns a serialized snapshot of the application state
+     * 
      * @return A serialized snapshot of the application state
      */
     public abstract byte[] getSnapshot();
-    
+
     /**
      * Execute a batch of ordered requests
      * 
-     * @param commands The batch of requests
-     * @param msgCtxs The context associated to each request
-     * @param fromConsensus true if the request arrived from a consensus execution, false if it arrives from the state transfer protocol
+     * @param commands      The batch of requests
+     * @param msgCtxs       The context associated to each request
+     * @param fromConsensus true if the request arrived from a consensus execution,
+     *                      false if it arrives from the state transfer protocol
      * 
      * @return the respective replies for each request
      */
     public abstract byte[][] appExecuteBatch(byte[][] commands, MessageContext[] msgCtxs, boolean fromConsensus);
-    
+
     /**
      * Execute an unordered request
      * 
      * @param command The unordered request
-     * @param msgCtx The context associated to the request
+     * @param msgCtx  The context associated to the request
      * 
      * @return the reply for the request issued by the client
      */

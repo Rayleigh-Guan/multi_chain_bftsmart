@@ -39,10 +39,11 @@ import java.util.concurrent.Future;
 public class AsyncLatencyClient {
 
     static int initId;
-    
+
     public static void main(String[] args) throws IOException {
         if (args.length < 7) {
-            System.out.println("Usage: java ...AsyncLatencyClient <initial client id> <number of clients> <number of operations> <request size> <interval (ms)> <read only?> <verbose?>");
+            System.out.println(
+                    "Usage: java ...AsyncLatencyClient <initial client id> <number of clients> <number of operations> <request size> <interval (ms)> <read only?> <verbose?>");
             System.exit(-1);
         }
 
@@ -53,7 +54,7 @@ public class AsyncLatencyClient {
         int interval = Integer.parseInt(args[4]);
         boolean readOnly = Boolean.parseBoolean(args[5]);
         boolean verbose = Boolean.parseBoolean(args[6]);
-        
+
         Client[] clients = new Client[numThreads];
 
         for (int i = 0; i < numThreads; i++) {
@@ -64,16 +65,17 @@ public class AsyncLatencyClient {
             }
 
             System.out.println("Launching client " + (initId + i));
-            clients[i] = new AsyncLatencyClient.Client(initId + i, numberOfOps, requestSize, interval, readOnly, verbose);
+            clients[i] = new AsyncLatencyClient.Client(initId + i, numberOfOps, requestSize, interval, readOnly,
+                    verbose);
         }
-        
+
         ExecutorService exec = Executors.newFixedThreadPool(clients.length);
         Collection<Future<?>> tasks = new LinkedList<>();
-        
+
         for (Client c : clients) {
             tasks.add(exec.submit(c));
         }
-        
+
         // wait for tasks completion
         for (Future<?> currTask : tasks) {
             try {
@@ -83,9 +85,9 @@ public class AsyncLatencyClient {
             }
 
         }
-    
+
         exec.shutdown();
-        
+
         System.out.println("All clients done.");
 
     }
@@ -117,31 +119,34 @@ public class AsyncLatencyClient {
 
             try {
 
-                if (this.verbose) System.out.println("Executing experiment for " + this.numberOfOps + " ops");
+                if (this.verbose)
+                    System.out.println("Executing experiment for " + this.numberOfOps + " ops");
                 AsyncReplyListener listener = new AsyncReplyListener(id, this.serviceProxy, this.verbose);
                 long startTime = System.currentTimeMillis();
                 for (int i = 0; i < this.numberOfOps; i++) {
-                    
+
                     long last_send_instant = System.currentTimeMillis();
-                    
+
                     listener.storeRequest(i);
                     this.serviceProxy.invokeAsynchRequest(this.request, listener, this.reqType);
                     listener.sotreCompletetime(i);
-                    
+
                     long send_finish = System.currentTimeMillis();
-                    if (i%250 == 0)
-                        System.out.printf("%d send request %d use %d ms\n", this.id, i, (send_finish-last_send_instant));
+                    if (i % 250 == 0)
+                        System.out.printf("%d send request %d use %d ms\n", this.id, i,
+                                (send_finish - last_send_instant));
                     // if (i%500==0){
-                    //     Thread.sleep(2000);
+                    // Thread.sleep(2000);
                     // }
                     if (this.interval > 0) {
                         Thread.sleep(this.interval);
                     }
-                    
-                    if (this.verbose) System.out.println("Sending " + (i + 1) + "th op");
+
+                    if (this.verbose)
+                        System.out.println("Sending " + (i + 1) + "th op");
                 }
                 long endTime = System.currentTimeMillis();
-                System.out.printf("%d generate %d requests in %d ms\n", this.id, numberOfOps, endTime-startTime);
+                System.out.printf("%d generate %d requests in %d ms\n", this.id, numberOfOps, endTime - startTime);
                 // wait 2 minutes and print results.
                 Thread.sleep(120000);
                 listener.printStaticsInfo();

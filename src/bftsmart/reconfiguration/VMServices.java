@@ -18,23 +18,25 @@ package bftsmart.reconfiguration;
 import bftsmart.tom.util.KeyLoader;
 
 /**
- * This class is used by the trusted client to add and remove replicas from the group
+ * This class is used by the trusted client to add and remove replicas from the
+ * group
  */
 
 public class VMServices {
-    
+
     private KeyLoader keyLoader;
     private String configDir;
-    
+
     /**
-     * Constructor. It adopts the default RSA key loader and default configuration path.
+     * Constructor. It adopts the default RSA key loader and default configuration
+     * path.
      */
     public VMServices() { // for the default keyloader and provider
-        
+
         keyLoader = null;
         configDir = "";
     }
-    
+
     /**
      * Constructor.
      * 
@@ -42,47 +44,50 @@ public class VMServices {
      * @param configDir Configuration path
      */
     public VMServices(KeyLoader keyLoader, String configDir) {
-        
+
         this.keyLoader = keyLoader;
         this.configDir = configDir;
     }
-    
+
     /**
      * Adds a new server to the group
      * 
-     * @param id ID of the server to be added (needs to match the value in config/hosts.config)
-     * @param ipAddress IP address of the server to be added (needs to match the value in config/hosts.config)
-     * @param port Port of the server to be added (needs to match the value in config/hosts.config)
+     * @param id        ID of the server to be added (needs to match the value in
+     *                  config/hosts.config)
+     * @param ipAddress IP address of the server to be added (needs to match the
+     *                  value in config/hosts.config)
+     * @param port      Port of the server to be added (needs to match the value in
+     *                  config/hosts.config)
      */
     public void addServer(int id, String ipAddress, int port) {
-        
+
         ViewManager viewManager = new ViewManager(configDir, keyLoader);
-        
-        viewManager.addServer(id, ipAddress,port);
-        
+
+        viewManager.addServer(id, ipAddress, port);
+
         execute(viewManager);
 
     }
-    
+
     /**
      * Removes a server from the group
      * 
-     * @param id ID of the server to be removed 
+     * @param id ID of the server to be removed
      */
-    public void removeServer (int id) {
-        
+    public void removeServer(int id) {
+
         ViewManager viewManager = new ViewManager(keyLoader);
-        
+
         viewManager.removeServer(id);
-        
+
         execute(viewManager);
 
     }
-    
+
     private void execute(ViewManager viewManager) {
-        
+
         viewManager.executeUpdates();
-        
+
         viewManager.close();
     }
 }

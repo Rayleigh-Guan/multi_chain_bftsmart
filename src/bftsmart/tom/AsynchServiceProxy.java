@@ -20,14 +20,14 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class AsynchServiceProxy extends ServiceProxy {
-    
+
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private HashMap<Integer, RequestContext> requestsContext;
     private HashMap<Integer, TOMMessage[]> requestsReplies;
     private HashMap<Integer, Integer> requestsAlias;
 
-/**
+    /**
      * Constructor
      *
      * @see bellow
@@ -37,7 +37,7 @@ public class AsynchServiceProxy extends ServiceProxy {
         init();
     }
 
-/**
+    /**
      * Constructor
      *
      * @see bellow
@@ -46,7 +46,7 @@ public class AsynchServiceProxy extends ServiceProxy {
         super(processId, configHome);
         init();
     }
-    
+
     /**
      * Constructor
      *
@@ -56,21 +56,22 @@ public class AsynchServiceProxy extends ServiceProxy {
         super(processId, configHome, loader);
         init();
     }
-    
+
     /**
      * Constructor
      *
-     * @param processId Process id for this client (should be different from replicas)
-     * @param configHome Configuration directory for BFT-SMART
+     * @param processId       Process id for this client (should be different from
+     *                        replicas)
+     * @param configHome      Configuration directory for BFT-SMART
      * @param replyComparator Used for comparing replies from different servers
      *                        to extract one returned by f+1
-     * @param replyExtractor Used for extracting the response from the matching
-     *                       quorum of replies
-     * @param loader Used to load signature keys from disk
+     * @param replyExtractor  Used for extracting the response from the matching
+     *                        quorum of replies
+     * @param loader          Used to load signature keys from disk
      */
     public AsynchServiceProxy(int processId, String configHome,
             Comparator<byte[]> replyComparator, Extractor replyExtractor, KeyLoader loader) {
-        
+
         super(processId, configHome, replyComparator, replyExtractor, loader);
         init();
     }
@@ -80,30 +81,31 @@ public class AsynchServiceProxy extends ServiceProxy {
         requestsReplies = new HashMap<>();
         requestsAlias = new HashMap<>();
     }
-    
+
     private View newView(byte[] bytes) {
-        
+
         Object o = TOMUtil.getObject(bytes);
         return (o != null && o instanceof View ? (View) o : null);
     }
+
     /**
      * @see bellow
      */
     public int invokeAsynchRequest(byte[] request, ReplyListener replyListener, TOMMessageType reqType) {
         // send to one replica only by hzx
-        //int[] replicaArray = (super.getViewManager().getCurrentViewProcesses());
-		//int[] targets = {replicaArray[getProcessId() % replicaArray.length]};
-        //return invokeAsynchRequest(request, targets, replyListener, reqType);
+        // int[] replicaArray = (super.getViewManager().getCurrentViewProcesses());
+        // int[] targets = {replicaArray[getProcessId() % replicaArray.length]};
+        // return invokeAsynchRequest(request, targets, replyListener, reqType);
         return invokeAsynchRequest(request, super.getViewManager().getCurrentViewProcesses(), replyListener, reqType);
     }
 
     /**
      * This method asynchronously sends a request to the replicas.
      * 
-     * @param request Request to be sent
-     * @param targets The IDs for the replicas to which to send the request
+     * @param request       Request to be sent
+     * @param targets       The IDs for the replicas to which to send the request
      * @param replyListener Callback object that handles reception of replies
-     * @param reqType Request type
+     * @param reqType       Request type
      * 
      * @return A unique identification for the request
      */
@@ -113,7 +115,8 @@ public class AsynchServiceProxy extends ServiceProxy {
 
     /**
      * Purges all information associated to the request.
-     * This should always be invoked once enough replies are received and processed by the ReplyListener callback.
+     * This should always be invoked once enough replies are received and processed
+     * by the ReplyListener callback.
      * 
      * @param requestId A unique identification for a previously sent request
      */
@@ -139,7 +142,8 @@ public class AsynchServiceProxy extends ServiceProxy {
      */
     @Override
     public void replyReceived(TOMMessage reply) {
-        logger.debug("Asynchronously received reply from " + reply.getSender() + " with sequence number " + reply.getSequence() + " and operation ID " + reply.getOperationId());
+        logger.debug("Asynchronously received reply from " + reply.getSender() + " with sequence number "
+                + reply.getSequence() + " and operation ID " + reply.getOperationId());
 
         try {
             canReceiveLock.lock();
@@ -153,20 +157,24 @@ public class AsynchServiceProxy extends ServiceProxy {
 
             if (contains(requestContext.getTargets(), reply.getSender())
                     && (reply.getSequence() == requestContext.getReqId())
-                    //&& (reply.getOperationId() == requestContext.getOperationId())
+                    // && (reply.getOperationId() == requestContext.getOperationId())
                     && (reply.getReqType().compareTo(requestContext.getRequestType())) == 0) {
 
-                logger.debug("Deliverying message from " + reply.getSender() + " with sequence number " + reply.getSequence() + " and operation ID " + reply.getOperationId() + " to the listener");
+                logger.debug("Deliverying message from " + reply.getSender() + " with sequence number "
+                        + reply.getSequence() + " and operation ID " + reply.getOperationId() + " to the listener");
 
                 ReplyListener replyListener = requestContext.getReplyListener();
-                
+
                 View v = null;
 
                 if (replyListener != null) {
 
-                    //if (reply.getViewID() > getViewManager().getCurrentViewId()) { // Deal with a system reconfiguration
-                    if ((v = newView(reply.getContent())) != null && !requestsAlias.containsKey(reply.getOperationId())) { // Deal with a system reconfiguration
-    
+                    // if (reply.getViewID() > getViewManager().getCurrentViewId()) { // Deal with a
+                    // system reconfiguration
+                    if ((v = newView(reply.getContent())) != null
+                            && !requestsAlias.containsKey(reply.getOperationId())) { // Deal with a system
+                                                                                     // reconfiguration
+
                         TOMMessage[] replies = requestsReplies.get(reply.getOperationId());
 
                         int sameContent = 1;
@@ -179,11 +187,12 @@ public class AsynchServiceProxy extends ServiceProxy {
                         for (int i = 0; i < replies.length; i++) {
 
                             if ((replies[i] != null) && (i != pos || getViewManager().getCurrentViewN() == 1)
-                                    && (reply.getReqType() != TOMMessageType.ORDERED_REQUEST || Arrays.equals(replies[i].getContent(), reply.getContent()))) {
+                                    && (reply.getReqType() != TOMMessageType.ORDERED_REQUEST
+                                            || Arrays.equals(replies[i].getContent(), reply.getContent()))) {
                                 sameContent++;
                             }
                         }
-                        
+
                         if (sameContent >= replyQuorum) {
 
                             if (v.getId() > getViewManager().getCurrentViewId()) {
@@ -198,7 +207,8 @@ public class AsynchServiceProxy extends ServiceProxy {
                                 @Override
                                 public void run() {
 
-                                    int id = invokeAsynch(requestContext.getRequest(), requestContext.getTargets(), requestContext.getReplyListener(), TOMMessageType.ORDERED_REQUEST);
+                                    int id = invokeAsynch(requestContext.getRequest(), requestContext.getTargets(),
+                                            requestContext.getReplyListener(), TOMMessageType.ORDERED_REQUEST);
 
                                     requestsAlias.put(reply.getOperationId(), id);
                                 }
@@ -208,16 +218,15 @@ public class AsynchServiceProxy extends ServiceProxy {
                             t.start();
 
                         }
-                        
-                        
+
                     } else if (!requestsAlias.containsKey(reply.getOperationId())) {
-                            
-                            requestContext.getReplyListener().replyReceived(requestContext, reply);
+
+                        requestContext.getReplyListener().replyReceived(requestContext, reply);
                     }
                 }
             }
         } catch (Exception ex) {
-            logger.error("Error processing received request",ex);
+            logger.error("Error processing received request", ex);
         } finally {
             canReceiveLock.unlock();
         }
@@ -230,14 +239,15 @@ public class AsynchServiceProxy extends ServiceProxy {
         RequestContext requestContext = null;
 
         canSendLock.lock();
-        
+
         requestContext = new RequestContext(generateRequestId(reqType), generateOperationId(),
                 reqType, targets, System.currentTimeMillis(), replyListener, request);
 
         try {
             logger.debug("Storing request context for " + requestContext.getOperationId());
             requestsContext.put(requestContext.getOperationId(), requestContext);
-            requestsReplies.put(requestContext.getOperationId(), new TOMMessage[super.getViewManager().getCurrentViewN()]);
+            requestsReplies.put(requestContext.getOperationId(),
+                    new TOMMessage[super.getViewManager().getCurrentViewN()]);
 
             sendMessageToTargets(request, requestContext.getReqId(), requestContext.getOperationId(), targets, reqType);
 

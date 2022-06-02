@@ -32,9 +32,9 @@ public class Proposer {
      * Creates a new instance of Proposer
      * 
      * @param communication Replicas communication system
-     * @param factory Factory for PaW messages
-     * @param verifier Proof verifier
-     * @param conf TOM configuration
+     * @param factory       Factory for PaW messages
+     * @param verifier      Proof verifier
+     * @param conf          TOM configuration
      */
     public Proposer(ServerCommunicationSystem communication, MessageFactory factory,
             ServerViewController controller) {
@@ -47,16 +47,16 @@ public class Proposer {
      * This method is called by the TOMLayer (or any other)
      * to start the consensus instance.
      *
-     * @param cid ID for the consensus instance to be started
+     * @param cid   ID for the consensus instance to be started
      * @param value Value to be proposed
      */
     public void startConsensus(int cid, byte[] value) {
-        //******* EDUARDO BEGIN **************//
-//        communication.send(this.controller.getCurrentViewAcceptors(),
-//                factory.createPropose(cid, 0, value));
+        // ******* EDUARDO BEGIN **************//
+        // communication.send(this.controller.getCurrentViewAcceptors(),
+        // factory.createPropose(cid, 0, value));
         communication.send(this.controller.getCurrentViewAcceptors(),
                 factory.createMzPropose(cid, 0, value));
-        //******* EDUARDO END **************//
+        // ******* EDUARDO END **************//
     }
 
 }

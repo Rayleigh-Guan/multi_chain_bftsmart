@@ -18,7 +18,7 @@ import bftsmart.tom.core.messages.TOMMessage;
  * 
  */
 public interface RequestVerifier {
-    
+
     /**
      * Given a request, validated it
      * 
@@ -26,5 +26,5 @@ public interface RequestVerifier {
      * @return true if the request is valid, false otherwise
      */
     public boolean isValidRequest(TOMMessage request);
-    
+
 }

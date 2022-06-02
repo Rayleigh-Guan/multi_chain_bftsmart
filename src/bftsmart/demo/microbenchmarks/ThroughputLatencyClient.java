@@ -33,11 +33,12 @@ import java.util.concurrent.Future;
 public class ThroughputLatencyClient {
 
     public static int initId = 0;
-    
+
     @SuppressWarnings("static-access")
     public static void main(String[] args) throws IOException {
         if (args.length < 7) {
-            System.out.println("Usage: ... ThroughputLatencyClient <initial client id> <number of clients> <number of operations> <request size> <interval (ms)> <read only?> <verbose?>");
+            System.out.println(
+                    "Usage: ... ThroughputLatencyClient <initial client id> <number of clients> <number of operations> <request size> <interval (ms)> <read only?> <verbose?>");
             System.exit(-1);
         }
 
@@ -51,37 +52,38 @@ public class ThroughputLatencyClient {
         boolean verbose = Boolean.parseBoolean(args[6]);
 
         Client[] clients = new Client[numThreads];
-        
-        for(int i=0; i<numThreads; i++) {
+
+        for (int i = 0; i < numThreads; i++) {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException ex) {
-                
+
                 ex.printStackTrace();
             }
-            
-            System.out.println("Launching client " + (initId+i));
-            clients[i] = new ThroughputLatencyClient.Client(initId+i,numberOfOps,requestSize,interval,readOnly, verbose);
+
+            System.out.println("Launching client " + (initId + i));
+            clients[i] = new ThroughputLatencyClient.Client(initId + i, numberOfOps, requestSize, interval, readOnly,
+                    verbose);
         }
 
         ExecutorService exec = Executors.newFixedThreadPool(clients.length);
         Collection<Future<?>> tasks = new LinkedList<>();
-        
+
         for (Client c : clients) {
             tasks.add(exec.submit(c));
         }
-        
+
         // wait for tasks completion
         for (Future<?> currTask : tasks) {
             try {
                 currTask.get();
             } catch (InterruptedException | ExecutionException ex) {
-                
+
                 ex.printStackTrace();
             }
 
         }
-    
+
         exec.shutdown();
 
         System.out.println("All clients done.");
@@ -97,10 +99,10 @@ public class ThroughputLatencyClient {
         boolean verbose;
         ServiceProxy proxy;
         byte[] request;
-        
+
         public Client(int id, int numberOfOps, int requestSize, int interval, boolean readOnly, boolean verbose) {
-            super("Client "+id);
-        
+            super("Client " + id);
+
             this.id = id;
             this.numberOfOps = numberOfOps;
             this.requestSize = requestSize;
@@ -116,22 +118,25 @@ public class ThroughputLatencyClient {
             System.out.println("Warm up...");
 
             int req = 0;
-            
+
             for (int i = 0; i < numberOfOps / 2; i++, req++) {
-                if (verbose) System.out.print("Sending req " + req + "...");
+                if (verbose)
+                    System.out.print("Sending req " + req + "...");
 
-                if(readOnly)
-                        proxy.invokeUnordered(request);
+                if (readOnly)
+                    proxy.invokeUnordered(request);
                 else
-                        proxy.invokeOrdered(request);
-                        
-                if (verbose) System.out.println(" sent!");
+                    proxy.invokeOrdered(request);
 
-                if (verbose && (req % 1000 == 0)) System.out.println(this.id + " // " + req + " operations sent!");
+                if (verbose)
+                    System.out.println(" sent!");
 
-		if (interval > 0) {
+                if (verbose && (req % 1000 == 0))
+                    System.out.println(this.id + " // " + req + " operations sent!");
+
+                if (interval > 0) {
                     try {
-                        //sleeps interval ms before sending next request
+                        // sleeps interval ms before sending next request
                         Thread.sleep(interval);
                     } catch (InterruptedException ex) {
                     }
@@ -144,35 +149,43 @@ public class ThroughputLatencyClient {
 
             for (int i = 0; i < numberOfOps / 2; i++, req++) {
                 long last_send_instant = System.nanoTime();
-                if (verbose) System.out.print(this.id + " // Sending req " + req + "...");
+                if (verbose)
+                    System.out.print(this.id + " // Sending req " + req + "...");
 
-                if(readOnly)
-                        proxy.invokeUnordered(request);
+                if (readOnly)
+                    proxy.invokeUnordered(request);
                 else
-                        proxy.invokeOrdered(request);
-                        
-                if (verbose) System.out.println(this.id + " // sent!");
+                    proxy.invokeOrdered(request);
+
+                if (verbose)
+                    System.out.println(this.id + " // sent!");
                 st.store(System.nanoTime() - last_send_instant);
 
                 if (interval > 0) {
                     try {
-                        //sleeps interval ms before sending next request
+                        // sleeps interval ms before sending next request
                         Thread.sleep(interval);
                     } catch (InterruptedException ex) {
                     }
                 }
-                                
-                if (verbose && (req % 1000 == 0)) System.out.println(this.id + " // " + req + " operations sent!");
+
+                if (verbose && (req % 1000 == 0))
+                    System.out.println(this.id + " // " + req + " operations sent!");
             }
 
-            if(id == initId) {
-                System.out.println(this.id + " // Average time for " + numberOfOps / 2 + " executions (-10%) = " + st.getAverage(true) / 1000 + " us ");
-                System.out.println(this.id + " // Standard desviation for " + numberOfOps / 2 + " executions (-10%) = " + st.getDP(true) / 1000 + " us ");
-                System.out.println(this.id + " // Average time for " + numberOfOps / 2 + " executions (all samples) = " + st.getAverage(false) / 1000 + " us ");
-                System.out.println(this.id + " // Standard desviation for " + numberOfOps / 2 + " executions (all samples) = " + st.getDP(false) / 1000 + " us ");
-                System.out.println(this.id + " // Maximum time for " + numberOfOps / 2 + " executions (all samples) = " + st.getMax(false) / 1000 + " us ");
+            if (id == initId) {
+                System.out.println(this.id + " // Average time for " + numberOfOps / 2 + " executions (-10%) = "
+                        + st.getAverage(true) / 1000 + " us ");
+                System.out.println(this.id + " // Standard desviation for " + numberOfOps / 2 + " executions (-10%) = "
+                        + st.getDP(true) / 1000 + " us ");
+                System.out.println(this.id + " // Average time for " + numberOfOps / 2 + " executions (all samples) = "
+                        + st.getAverage(false) / 1000 + " us ");
+                System.out.println(this.id + " // Standard desviation for " + numberOfOps / 2
+                        + " executions (all samples) = " + st.getDP(false) / 1000 + " us ");
+                System.out.println(this.id + " // Maximum time for " + numberOfOps / 2 + " executions (all samples) = "
+                        + st.getMax(false) / 1000 + " us ");
             }
-            
+
             proxy.close();
         }
     }

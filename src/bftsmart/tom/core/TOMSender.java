@@ -56,7 +56,7 @@ public abstract class TOMSender implements ReplyReceiver, Closeable, AutoCloseab
 	public TOMSender() {
 	}
 
-	public void close(){
+	public void close() {
 		cs.close();
 	}
 
@@ -64,9 +64,8 @@ public abstract class TOMSender implements ReplyReceiver, Closeable, AutoCloseab
 		return this.cs;
 	}
 
-
-	//******* EDUARDO BEGIN **************//
-	public ClientViewController getViewManager(){
+	// ******* EDUARDO BEGIN **************//
+	public ClientViewController getViewManager() {
 		return this.viewController;
 	}
 
@@ -82,7 +81,7 @@ public abstract class TOMSender implements ReplyReceiver, Closeable, AutoCloseab
 	}
 
 	public void init(int processId, String configHome, KeyLoader loader) {
-		this.viewController = new ClientViewController(processId,configHome, loader);
+		this.viewController = new ClientViewController(processId, configHome, loader);
 		startsCS(processId);
 	}
 
@@ -93,8 +92,7 @@ public abstract class TOMSender implements ReplyReceiver, Closeable, AutoCloseab
 		this.useSignatures = this.viewController.getStaticConf().getUseSignatures() == 1;
 		this.session = new Random().nextInt();
 	}
-	//******* EDUARDO END **************//
-
+	// ******* EDUARDO END **************//
 
 	public int getProcessId() {
 		return me;
@@ -103,10 +101,10 @@ public abstract class TOMSender implements ReplyReceiver, Closeable, AutoCloseab
 	public int generateRequestId(TOMMessageType type) {
 		lock.lock();
 		int id;
-		if(type == TOMMessageType.ORDERED_REQUEST)
+		if (type == TOMMessageType.ORDERED_REQUEST)
 			id = sequence++;
 		else
-			id = unorderedMessageSequence++; 
+			id = unorderedMessageSequence++;
 		lock.unlock();
 
 		return id;
@@ -118,35 +116,34 @@ public abstract class TOMSender implements ReplyReceiver, Closeable, AutoCloseab
 
 	public void TOMulticast(TOMMessage sm) {
 		int[] replicaArray = (this.viewController.getCurrentViewProcesses());
-		int[] target = {(me % replicaArray.length)};
-		System.out.println("client id: "+me+" --target: "+ Arrays.toString(target));
+		int[] target = { (me % replicaArray.length) };
+		System.out.println("client id: " + me + " --target: " + Arrays.toString(target));
 		// cs.send(useSignatures, this.viewController.getCurrentViewProcesses(), sm);
 		cs.send(useSignatures, target, sm);
 	}
 
-
 	public void TOMulticast(byte[] m, int reqId, int operationId, TOMMessageType reqType) {
 		int[] replicaArray = (this.viewController.getCurrentViewProcesses());
-		int[] target = {(me % replicaArray.length)};
+		int[] target = { (me % replicaArray.length) };
 		// cs.send(useSignatures, viewController.getCurrentViewProcesses(),
-		// 		new TOMMessage(me, session, reqId, operationId, m, viewController.getCurrentViewId(),
-		// 				reqType));
-		System.out.println("client id: "+me+" --target: "+ Arrays.toString(target)+" --sequence: "+reqId);
+		// new TOMMessage(me, session, reqId, operationId, m,
+		// viewController.getCurrentViewId(),
+		// reqType));
+		System.out.println("client id: " + me + " --target: " + Arrays.toString(target) + " --sequence: " + reqId);
 		cs.send(useSignatures, target,
 				new TOMMessage(me, session, reqId, operationId, m, viewController.getCurrentViewId(),
 						reqType));
 	}
 
-
 	public void sendMessageToTargets(byte[] m, int reqId, int operationId, int[] targets, TOMMessageType type) {
-		if(this.getViewManager().getStaticConf().isTheTTP()) {
+		if (this.getViewManager().getStaticConf().isTheTTP()) {
 			type = TOMMessageType.ASK_STATUS;
 		}
 		cs.send(useSignatures, targets,
 				new TOMMessage(me, session, reqId, operationId, m, viewController.getCurrentViewId(), type));
 	}
 
-	public int getSession(){
+	public int getSession() {
 		return session;
 	}
 }

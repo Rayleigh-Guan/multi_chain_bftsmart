@@ -24,7 +24,8 @@ import java.util.HashSet;
 import bftsmart.consensus.TimestampValuePair;
 
 /**
- * This class represents a COLLECT object with the information about the running consensus
+ * This class represents a COLLECT object with the information about the running
+ * consensus
  *
  * @author Joao Sousa
  */
@@ -35,7 +36,7 @@ public class CollectData implements Externalizable {
     private int ets; // consensus ETS
     private TimestampValuePair quorumWrites; // last value recevied from a Byzantine quorum of WRITEs
     private HashSet<TimestampValuePair> writeSet; // values written by the replica
-    
+
     /**
      * Empty constructor
      */
@@ -50,14 +51,15 @@ public class CollectData implements Externalizable {
     /**
      * Constructor
      *
-     * @param pid process id
-     * @param cid Consensus id
-     * @param ets Consensus ETS
+     * @param pid          process id
+     * @param cid          Consensus id
+     * @param ets          Consensus ETS
      * @param quorumWrites last value received from a Byzantine quorum of WRITEs
-     * @param writeSet values written by the replica
+     * @param writeSet     values written by the replica
      */
-    public CollectData(int pid, int cid, int ets, TimestampValuePair quorumWrites, HashSet<TimestampValuePair> writeSet) {
-        
+    public CollectData(int pid, int cid, int ets, TimestampValuePair quorumWrites,
+            HashSet<TimestampValuePair> writeSet) {
+
         this.pid = pid;
         this.cid = cid;
         this.ets = ets;
@@ -67,6 +69,7 @@ public class CollectData implements Externalizable {
 
     /**
      * Get consensus id
+     * 
      * @return consensus id
      */
     public int getCid() {
@@ -75,14 +78,16 @@ public class CollectData implements Externalizable {
 
     /**
      * Get consensus ETS
+     * 
      * @return consensus ETS
      */
     public int getEts() {
         return ets;
     }
-    
+
     /**
      * Get process id
+     * 
      * @return process id
      */
     public int getPid() {
@@ -91,6 +96,7 @@ public class CollectData implements Externalizable {
 
     /**
      * Get value received from a Byzantine quorum of WRITEs
+     * 
      * @return value received from a Byzantine quorum of WRITEs
      */
     public TimestampValuePair getQuorumWrites() {
@@ -99,6 +105,7 @@ public class CollectData implements Externalizable {
 
     /**
      * Get set of values written by the replica
+     * 
      * @return set of values written by the replica
      */
     public HashSet<TimestampValuePair> getWriteSet() {
@@ -111,7 +118,8 @@ public class CollectData implements Externalizable {
 
             CollectData c = (CollectData) obj;
 
-            if (c.pid == pid) return true;
+            if (c.pid == pid)
+                return true;
         }
 
         return false;
@@ -121,7 +129,7 @@ public class CollectData implements Externalizable {
         return pid;
     }
 
-    public void writeExternal(ObjectOutput out) throws IOException{
+    public void writeExternal(ObjectOutput out) throws IOException {
 
         out.writeInt(pid);
         out.writeInt(cid);
@@ -130,7 +138,7 @@ public class CollectData implements Externalizable {
         out.writeObject(writeSet);
     }
 
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException{
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
 
         pid = in.readInt();
         cid = in.readInt();

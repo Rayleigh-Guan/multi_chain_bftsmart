@@ -47,11 +47,11 @@ public class MapServer<K, V> extends DefaultSingleRecoverable {
 				ObjectInput objIn = new ObjectInputStream(byteIn);
 				ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
 				ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
-			MapRequestType reqType = (MapRequestType)objIn.readObject();
+			MapRequestType reqType = (MapRequestType) objIn.readObject();
 			switch (reqType) {
 				case PUT:
-					key = (K)objIn.readObject();
-					value = (V)objIn.readObject();
+					key = (K) objIn.readObject();
+					value = (V) objIn.readObject();
 
 					V oldValue = replicaMap.put(key, value);
 					if (oldValue != null) {
@@ -60,7 +60,7 @@ public class MapServer<K, V> extends DefaultSingleRecoverable {
 					}
 					break;
 				case GET:
-					key = (K)objIn.readObject();
+					key = (K) objIn.readObject();
 					value = replicaMap.get(key);
 					if (value != null) {
 						objOut.writeObject(value);
@@ -68,7 +68,7 @@ public class MapServer<K, V> extends DefaultSingleRecoverable {
 					}
 					break;
 				case REMOVE:
-					key = (K)objIn.readObject();
+					key = (K) objIn.readObject();
 					value = replicaMap.remove(key);
 					if (value != null) {
 						objOut.writeObject(value);
@@ -111,10 +111,10 @@ public class MapServer<K, V> extends DefaultSingleRecoverable {
 				ObjectInput objIn = new ObjectInputStream(byteIn);
 				ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
 				ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
-			MapRequestType reqType = (MapRequestType)objIn.readObject();
+			MapRequestType reqType = (MapRequestType) objIn.readObject();
 			switch (reqType) {
 				case GET:
-					key = (K)objIn.readObject();
+					key = (K) objIn.readObject();
 					value = replicaMap.get(key);
 					if (value != null) {
 						objOut.writeObject(value);
@@ -172,7 +172,7 @@ public class MapServer<K, V> extends DefaultSingleRecoverable {
 	public void installSnapshot(byte[] state) {
 		try (ByteArrayInputStream byteIn = new ByteArrayInputStream(state);
 				ObjectInput objIn = new ObjectInputStream(byteIn)) {
-			replicaMap = (Map<K, V>)objIn.readObject();
+			replicaMap = (Map<K, V>) objIn.readObject();
 		} catch (IOException | ClassNotFoundException e) {
 			logger.log(Level.SEVERE, "Error while installing snapshot", e);
 		}

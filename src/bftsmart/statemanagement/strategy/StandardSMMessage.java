@@ -30,19 +30,21 @@ import bftsmart.statemanagement.SMMessage;
  */
 public class StandardSMMessage extends SMMessage {
 
-	private int replica;
+    private int replica;
 
-    public StandardSMMessage(int sender, int cid, int type, int replica, ApplicationState state, View view, int regency, int leader) {
-    	super(sender, cid, type, state, view, regency, leader);
-    	this.replica = replica;
+    public StandardSMMessage(int sender, int cid, int type, int replica, ApplicationState state, View view, int regency,
+            int leader) {
+        super(sender, cid, type, state, view, regency, leader);
+        this.replica = replica;
     }
-	
+
     public StandardSMMessage() {
-    	super();
+        super();
     }
-    
+
     /**
      * Retrieves the replica that should send the state
+     * 
      * @return The replica that should send the state
      */
     public int getReplica() {
@@ -50,13 +52,13 @@ public class StandardSMMessage extends SMMessage {
     }
 
     @Override
-    public void writeExternal(ObjectOutput out) throws IOException{
+    public void writeExternal(ObjectOutput out) throws IOException {
         super.writeExternal(out);
         out.writeInt(replica);
     }
 
     @Override
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException{
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         super.readExternal(in);
         replica = in.readInt();
     }

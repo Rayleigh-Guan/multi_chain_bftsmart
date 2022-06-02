@@ -40,13 +40,14 @@ import org.slf4j.LoggerFactory;
 public class ViewManager {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
-    
+
     private int id;
     private Reconfiguration rec = null;
-    //private Hashtable<Integer, ServerConnection> connections = new Hashtable<Integer, ServerConnection>();
+    // private Hashtable<Integer, ServerConnection> connections = new
+    // Hashtable<Integer, ServerConnection>();
     private ServerViewController controller;
-    //Need only inform those that are entering the systems, as those already
-    //in the system will execute the reconfiguration request
+    // Need only inform those that are entering the systems, as those already
+    // in the system will execute the reconfiguration request
     private List<Integer> addIds = new LinkedList<Integer>();
 
     public ViewManager(KeyLoader loader) {
@@ -59,10 +60,10 @@ public class ViewManager {
         this.rec = new Reconfiguration(id, configHome, loader);
     }
 
-    public void connect(){
+    public void connect() {
         this.rec.connect();
     }
-    
+
     private int loadID(String configHome) {
         try {
             String path = "";
@@ -117,16 +118,15 @@ public class ViewManager {
 
         VMMessage msg = new VMMessage(id, r);
 
-        if (addIds.size() > 0) { 
+        if (addIds.size() > 0) {
             sendResponse(addIds.toArray(new Integer[1]), msg);
             addIds.clear();
         }
 
-
     }
 
     private ServerConnection getConnection(int remoteId) {
-         return new ServerConnection(controller, null, remoteId, null, null);
+        return new ServerConnection(controller, null, remoteId, null, null);
     }
 
     public void sendResponse(Integer[] targets, VMMessage sm) {
@@ -141,17 +141,19 @@ public class ViewManager {
         byte[] data = bOut.toByteArray();
 
         for (Integer i : targets) {
-            //br.ufsc.das.tom.util.Logger.println("(ServersCommunicationLayer.send) Sending msg to replica "+i);
+            // br.ufsc.das.tom.util.Logger.println("(ServersCommunicationLayer.send) Sending
+            // msg to replica "+i);
             try {
                 if (i.intValue() != id) {
                     getConnection(i.intValue()).send(data, true);
                 }
             } catch (InterruptedException ex) {
-               // ex.printStackTrace();
+                // ex.printStackTrace();
                 logger.error("Failed to send data to target", ex);
             }
         }
-        //br.ufsc.das.tom.util.Logger.println("(ServersCommunicationLayer.send) Finished sending messages to replicas");
+        // br.ufsc.das.tom.util.Logger.println("(ServersCommunicationLayer.send)
+        // Finished sending messages to replicas");
     }
 
     public void close() {

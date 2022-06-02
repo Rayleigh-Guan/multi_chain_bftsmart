@@ -46,14 +46,15 @@ import org.slf4j.LoggerFactory;
 /**
  *
  * This class implements the synchronization phase described in
- * Joao Sousa's 'From Byzantine Consensus to BFT state machine replication: a latency-optimal transformation' (May 2012)
+ * Joao Sousa's 'From Byzantine Consensus to BFT state machine replication: a
+ * latency-optimal transformation' (May 2012)
  * 
  * This class implements all optimizations described at the end of the paper
  * 
  * @author joao
  */
 public class Synchronizer {
-    
+
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     // out of context messages related to the leader change are stored here
@@ -61,10 +62,10 @@ public class Synchronizer {
 
     // Manager of the leader change
     private final LCManager lcManager;
-    
-    //Total order layer
+
+    // Total order layer
     private final TOMLayer tom;
-    
+
     // Stuff from TOMLayer that this object needs
     private final RequestsTimer requestsTimer;
     private final ExecutionManager execManager;
@@ -74,7 +75,7 @@ public class Synchronizer {
     private final StateManager stateManager;
     private final Acceptor acceptor;
     private final MessageDigest md;
-            
+
     // Attributes to temporarely store synchronization info
     // if state transfer is required for synchronization
     private int tempRegency = -1;
@@ -84,11 +85,10 @@ public class Synchronizer {
     private int tempBatchSize = -1;
     private boolean tempIAmLeader = false;
 
-    
     public Synchronizer(TOMLayer tom) {
-        
+
         this.tom = tom;
-        
+
         this.requestsTimer = this.tom.requestsTimer;
         this.execManager = this.tom.execManager;
         this.controller = this.tom.controller;
@@ -97,21 +97,21 @@ public class Synchronizer {
         this.stateManager = this.tom.stateManager;
         this.acceptor = this.tom.acceptor;
         this.md = this.tom.md;
-        
+
         this.outOfContextLC = new HashSet<>();
-	this.lcManager = new LCManager(this.tom,this.controller, this.md);
+        this.lcManager = new LCManager(this.tom, this.controller, this.md);
     }
 
     public LCManager getLCManager() {
         return lcManager;
     }
-    
+
     /**
      * This method is called when there is a timeout and the request has already
      * been forwarded to the leader
      *
      * @param requestList List of requests that the replica wanted to order but
-     * didn't manage to
+     *                    didn't manage to
      */
     public void triggerTimeout(List<TOMMessage> requestList) {
 
@@ -119,16 +119,16 @@ public class Synchronizer {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
         int regency = lcManager.getNextReg();
-        
+
         requestsTimer.stopTimer();
         requestsTimer.Enabled(false);
 
-	// still not in the leader change phase?
+        // still not in the leader change phase?
         if (lcManager.getNextReg() == lcManager.getLastReg()) {
 
             lcManager.setNextReg(lcManager.getLastReg() + 1); // define next timestamp
 
-            regency = lcManager.getNextReg(); // update variable 
+            regency = lcManager.getNextReg(); // update variable
 
             // store messages to be ordered
             lcManager.setCurrentRequestTimedOut(requestList);
@@ -136,10 +136,10 @@ public class Synchronizer {
             // store information about messages that I'm going to send
             lcManager.addStop(regency, this.controller.getStaticConf().getProcessId());
 
-            //execManager.stop(); // stop consensus execution
+            // execManager.stop(); // stop consensus execution
 
-            //Get requests that timed out and the requests received in STOP messages
-            //and add those STOPed requests to the client manager
+            // Get requests that timed out and the requests received in STOP messages
+            // and add those STOPed requests to the client manager
             addSTOPedRequestsToClientManager();
             List<TOMMessage> messages = getRequestsToRelay();
 
@@ -148,9 +148,10 @@ public class Synchronizer {
 
                 if (messages != null && messages.size() > 0) {
 
-					//TODO: If this is null, then there was no timeout nor STOP messages.
-                    //What to do?
-                    byte[] serialized = bb.makeBatch(messages, 0, 0, controller.getStaticConf().getUseSignatures() == 1);
+                    // TODO: If this is null, then there was no timeout nor STOP messages.
+                    // What to do?
+                    byte[] serialized = bb.makeBatch(messages, 0, 0,
+                            controller.getStaticConf().getUseSignatures() == 1);
                     out.writeBoolean(true);
                     out.writeObject(serialized);
                 } else {
@@ -166,11 +167,14 @@ public class Synchronizer {
                 out.close();
                 bos.close();
 
-                // send STOP-message                
-                logger.info("Sending STOP message to install regency " + regency + " with " + (messages != null ? messages.size() : 0) + " request(s) to relay");
-                
-                LCMessage stop = new LCMessage(this.controller.getStaticConf().getProcessId(), TOMUtil.STOP, regency, payload);
-                requestsTimer.setSTOP(regency, stop); // make replica re-transmit the stop message until a new regency is installed
+                // send STOP-message
+                logger.info("Sending STOP message to install regency " + regency + " with "
+                        + (messages != null ? messages.size() : 0) + " request(s) to relay");
+
+                LCMessage stop = new LCMessage(this.controller.getStaticConf().getProcessId(), TOMUtil.STOP, regency,
+                        payload);
+                requestsTimer.setSTOP(regency, stop); // make replica re-transmit the stop message until a new regency
+                                                      // is installed
                 communication.send(this.controller.getCurrentViewOtherAcceptors(), stop);
 
             } catch (IOException ex) {
@@ -189,12 +193,13 @@ public class Synchronizer {
         processOutOfContextSTOPs(regency); // the replica might have received STOPs
                                            // that were out of context at the time they
                                            // were received, but now can be processed
-        
+
         startSynchronization(regency); // evaluate STOP messages
-                
+
     }
 
-    // Processes STOP messages that were not process upon reception, because they were
+    // Processes STOP messages that were not process upon reception, because they
+    // were
     // ahead of the replica's expected regency
     private void processOutOfContextSTOPs(int regency) {
 
@@ -219,11 +224,13 @@ public class Synchronizer {
         }
     }
 
-    // Processes STOPDATA messages that were not process upon reception, because they were
+    // Processes STOPDATA messages that were not process upon reception, because
+    // they were
     // ahead of the replica's expected regency
     private void processSTOPDATA(LCMessage msg, int regency) {
 
-        //TODO: It is necessary to verify the proof of the last decided consensus and the signature of the state of the current consensus!
+        // TODO: It is necessary to verify the proof of the last decided consensus and
+        // the signature of the state of the current consensus!
         CertifiedDecision lastData = null;
         SignedObject signedCollect = null;
 
@@ -246,7 +253,7 @@ public class Synchronizer {
                 lastValue = (byte[]) ois.readObject();
                 proof = (Set<ConsensusMessage>) ois.readObject();
 
-                //TODO: Proof is missing!
+                // TODO: Proof is missing!
             }
 
             lastData = new CertifiedDecision(msg.getSender(), last, lastValue, proof);
@@ -265,25 +272,28 @@ public class Synchronizer {
 
             // Did I already got messages from a Byzantine/Crash quorum,
             // related to the last cid as well as for the current?
-            boolean conditionBFT = (controller.getStaticConf().isBFT() && lcManager.getLastCIDsSize(regency) > bizantineQuorum
+            boolean conditionBFT = (controller.getStaticConf().isBFT()
+                    && lcManager.getLastCIDsSize(regency) > bizantineQuorum
                     && lcManager.getCollectsSize(regency) > bizantineQuorum);
 
-            boolean conditionCFT = (lcManager.getLastCIDsSize(regency) > cftQuorum && lcManager.getCollectsSize(regency) > cftQuorum);
+            boolean conditionCFT = (lcManager.getLastCIDsSize(regency) > cftQuorum
+                    && lcManager.getCollectsSize(regency) > cftQuorum);
 
             if (conditionBFT || conditionCFT) {
                 catch_up(regency);
             }
 
         } catch (IOException | ClassNotFoundException ex) {
-            logger.error("Could not deserialize STOPDATA message",ex);
+            logger.error("Could not deserialize STOPDATA message", ex);
         }
 
     }
 
-    // Processes SYNC messages that were not process upon reception, because they were
+    // Processes SYNC messages that were not process upon reception, because they
+    // were
     // ahead of the replica's expected regency
     private void processSYNC(byte[] payload, int regency) {
-        
+
         CertifiedDecision lastHighestCID = null;
         int currentCID = -1;
         HashSet<SignedObject> signedCollects = null;
@@ -304,11 +314,12 @@ public class Synchronizer {
             batchSize = ois.readInt();
 
             lcManager.setCollects(regency, signedCollects);
-            
+
             currentCID = lastHighestCID.getCID() + 1;
 
             // Is the predicate "sound" true? Is the certificate for LastCID valid?
-            if (lcManager.sound(lcManager.selectCollects(regency, currentCID)) && (!controller.getStaticConf().isBFT() || lcManager.hasValidProof(lastHighestCID))) {
+            if (lcManager.sound(lcManager.selectCollects(regency, currentCID))
+                    && (!controller.getStaticConf().isBFT() || lcManager.hasValidProof(lastHighestCID))) {
 
                 finalise(regency, lastHighestCID, signedCollects, propose, batchSize, false);
             }
@@ -358,13 +369,13 @@ public class Synchronizer {
             if (hasReqs) {
 
                 // Store requests that the other replica did not manage to order
-                //TODO: The requests have to be verified!
+                // TODO: The requests have to be verified!
                 byte[] temp = (byte[]) ois.readObject();
                 BatchReader batchReader = new BatchReader(temp,
                         controller.getStaticConf().getUseSignatures() == 1);
                 requests = batchReader.deserialiseRequests(controller);
             } else {
-                
+
                 requests = new TOMMessage[0];
             }
 
@@ -407,7 +418,7 @@ public class Synchronizer {
         return messages;
     }
 
-    //adds requests received via STOP messages to the client manager
+    // adds requests received via STOP messages to the client manager
     private void addSTOPedRequestsToClientManager() {
 
         List<TOMMessage> messagesFromSTOP = lcManager.getRequestsFromSTOP();
@@ -426,6 +437,7 @@ public class Synchronizer {
     /**
      * Remove all STOP messages being retransmitted up until
      * the specified regency
+     * 
      * @param regency The regency up to which STOP retransmission should be canceled
      */
     public void removeSTOPretransmissions(int regency) {
@@ -433,26 +445,30 @@ public class Synchronizer {
         Set<Integer> timers = requestsTimer.getTimers();
 
         for (int t : timers) {
-            if (t <= regency) requestsTimer.stopSTOP(t);
+            if (t <= regency)
+                requestsTimer.stopSTOP(t);
         }
 
     }
-    // this method is called when a timeout occurs or when a STOP message is recevied
+
+    // this method is called when a timeout occurs or when a STOP message is
+    // recevied
     private void startSynchronization(int nextReg) {
 
         boolean condition;
         ObjectOutputStream out = null;
         ByteArrayOutputStream bos = null;
-        
+
         if (this.controller.getStaticConf().isBFT()) {
             condition = lcManager.getStopsSize(nextReg) > this.controller.getCurrentViewF();
         } else {
             condition = lcManager.getStopsSize(nextReg) > 0;
         }
-        
-        // Ask to start the synchronizations phase if enough messages have been received already
+
+        // Ask to start the synchronizations phase if enough messages have been received
+        // already
         if (condition && lcManager.getNextReg() == lcManager.getLastReg()) {
-            
+
             logger.debug("Initialize synch phase");
             requestsTimer.Enabled(false);
             requestsTimer.stopTimer();
@@ -464,10 +480,10 @@ public class Synchronizer {
             // store information about message I am going to send
             lcManager.addStop(regency, this.controller.getStaticConf().getProcessId());
 
-            //execManager.stop(); // stop execution of consensus
+            // execManager.stop(); // stop execution of consensus
 
-            //Get requests that timed out and the requests received in STOP messages
-            //and add those STOPed requests to the client manager
+            // Get requests that timed out and the requests received in STOP messages
+            // and add those STOPed requests to the client manager
             addSTOPedRequestsToClientManager();
             List<TOMMessage> messages = getRequestsToRelay();
 
@@ -478,10 +494,11 @@ public class Synchronizer {
                 // Do I have messages to send in the STOP message?
                 if (messages != null && messages.size() > 0) {
 
-                    //TODO: If this is null, there was no timeout nor STOP messages.
-                    //What shall be done then?
+                    // TODO: If this is null, there was no timeout nor STOP messages.
+                    // What shall be done then?
                     out.writeBoolean(true);
-                    byte[] serialized = bb.makeBatch(messages, 0, 0, controller.getStaticConf().getUseSignatures() == 1);
+                    byte[] serialized = bb.makeBatch(messages, 0, 0,
+                            controller.getStaticConf().getUseSignatures() == 1);
                     out.writeObject(serialized);
                 } else {
                     out.writeBoolean(false);
@@ -496,28 +513,33 @@ public class Synchronizer {
                 bos.close();
 
                 // send message STOP
-                logger.info("Sending STOP message to install regency " + regency + " with " + (messages != null ? messages.size() : 0) + " request(s) to relay");
+                logger.info("Sending STOP message to install regency " + regency + " with "
+                        + (messages != null ? messages.size() : 0) + " request(s) to relay");
 
-                LCMessage stop = new LCMessage(this.controller.getStaticConf().getProcessId(), TOMUtil.STOP, regency, payload);
-                requestsTimer.setSTOP(regency, stop); // make replica re-transmit the stop message until a new regency is installed
+                LCMessage stop = new LCMessage(this.controller.getStaticConf().getProcessId(), TOMUtil.STOP, regency,
+                        payload);
+                requestsTimer.setSTOP(regency, stop); // make replica re-transmit the stop message until a new regency
+                                                      // is installed
                 communication.send(this.controller.getCurrentViewOtherAcceptors(), stop);
 
             } catch (IOException ex) {
                 logger.error("Could not deserialize STOP message", ex);
             }
         }
-        
+
         if (this.controller.getStaticConf().isBFT()) {
             condition = lcManager.getStopsSize(nextReg) > (2 * this.controller.getCurrentViewF());
         } else {
             condition = lcManager.getStopsSize(nextReg) > this.controller.getCurrentViewF();
         }
-        
+
         // Did the synchronization phase really started?
-        //if (lcManager.getStopsSize(nextReg) > this.reconfManager.getQuorum2F() && lcManager.getNextReg() > lcManager.getLastReg()) {
+        // if (lcManager.getStopsSize(nextReg) > this.reconfManager.getQuorum2F() &&
+        // lcManager.getNextReg() > lcManager.getLastReg()) {
         if (condition && lcManager.getNextReg() > lcManager.getLastReg()) {
-            
-            if (!execManager.stopped()) execManager.stop(); // stop consensus execution if more than f replicas sent a STOP message
+
+            if (!execManager.stopped())
+                execManager.stop(); // stop consensus execution if more than f replicas sent a STOP message
 
             logger.debug("Installing regency " + lcManager.getNextReg());
             lcManager.setLastReg(lcManager.getNextReg()); // define last timestamp
@@ -533,77 +555,81 @@ public class Synchronizer {
             requestsTimer.setShortTimeout(-1);
             requestsTimer.startTimer();
 
-            //int leader = regency % this.reconfManager.getCurrentViewN(); // new leader
+            // int leader = regency % this.reconfManager.getCurrentViewN(); // new leader
             int leader = lcManager.getNewLeader();
             int in = tom.getInExec(); // cid to execute
             int last = tom.getLastExec(); // last cid decided
 
             execManager.setNewLeader(leader);
 
-            // If I am not the leader, I have to send a STOPDATA message to the elected leader
+            // If I am not the leader, I have to send a STOPDATA message to the elected
+            // leader
             if (leader != this.controller.getStaticConf().getProcessId()) {
 
                 try { // serialize content of the STOPDATA message
 
                     bos = new ByteArrayOutputStream();
                     out = new ObjectOutputStream(bos);
-                    
+
                     Consensus cons = null;
-                    
+
                     // content of the last decided CID
-                    if (last > -1) cons = execManager.getConsensus(last);
+                    if (last > -1)
+                        cons = execManager.getConsensus(last);
 
-                    //Do I have info on my last executed consensus?
+                    // Do I have info on my last executed consensus?
                     if (cons != null && cons.getDecisionEpoch() != null && cons.getDecisionEpoch().propValue != null) {
-                        
-                    out.writeBoolean(true);
-                    out.writeInt(last);
-                    //byte[] decision = exec.getLearner().getDecision();
 
-                    byte[] decision = cons.getDecisionEpoch().propValue;
-                    Set<ConsensusMessage> proof = cons.getDecisionEpoch().getProof();
+                        out.writeBoolean(true);
+                        out.writeInt(last);
+                        // byte[] decision = exec.getLearner().getDecision();
 
-                    out.writeObject(decision);
-                    out.writeObject(proof);
-                    // TODO: WILL BE NECESSARY TO ADD A PROOF!!!
+                        byte[] decision = cons.getDecisionEpoch().propValue;
+                        Set<ConsensusMessage> proof = cons.getDecisionEpoch().getProof();
 
-                } else {
-                    out.writeBoolean(false);
-                    
-                    ////// THIS IS TO CATCH A BUG!!!!!
-                    if (last > -1) {
-                        logger.debug("[DEBUG INFO FOR LAST CID #1]");
+                        out.writeObject(decision);
+                        out.writeObject(proof);
+                        // TODO: WILL BE NECESSARY TO ADD A PROOF!!!
 
-                        if (cons == null) {
-                            if (last > -1) logger.debug("No consensus instance for cid " + last);
+                    } else {
+                        out.writeBoolean(false);
 
-                        }
-                        else if (cons.getDecisionEpoch() == null) {
-                            logger.debug("No decision epoch for cid " + last);
-                        } else {
-                            logger.debug("epoch for cid: " + last + ": " + cons.getDecisionEpoch().toString());
+                        ////// THIS IS TO CATCH A BUG!!!!!
+                        if (last > -1) {
+                            logger.debug("[DEBUG INFO FOR LAST CID #1]");
 
-                            if (cons.getDecisionEpoch().propValue == null) {
-                                logger.debug("No propose for cid " + last);
+                            if (cons == null) {
+                                if (last > -1)
+                                    logger.debug("No consensus instance for cid " + last);
+
+                            } else if (cons.getDecisionEpoch() == null) {
+                                logger.debug("No decision epoch for cid " + last);
                             } else {
-                                logger.debug("Propose hash for cid " + last + ": " + Base64.encodeBase64String(tom.computeHash(cons.getDecisionEpoch().propValue)));
+                                logger.debug("epoch for cid: " + last + ": " + cons.getDecisionEpoch().toString());
+
+                                if (cons.getDecisionEpoch().propValue == null) {
+                                    logger.debug("No propose for cid " + last);
+                                } else {
+                                    logger.debug("Propose hash for cid " + last + ": " + Base64
+                                            .encodeBase64String(tom.computeHash(cons.getDecisionEpoch().propValue)));
+                                }
                             }
                         }
-                    }
 
-                }
+                    }
 
                     if (in > -1) { // content of cid in execution
 
                         cons = execManager.getConsensus(in);
 
-                        //cons.incEts(); // make the consensus advance to the next epoch
+                        // cons.incEts(); // make the consensus advance to the next epoch
                         cons.setETS(regency); // make the consensus advance to the next epoch
 
-                        //int ets = cons.getEts();
-                        //cons.createEpoch(ets, controller);
+                        // int ets = cons.getEts();
+                        // cons.createEpoch(ets, controller);
                         cons.createEpoch(regency, controller);
-                        //Logger.println("(Synchronizer.startSynchronization) incrementing ets of consensus " + cons.getId() + " to " + ets);
+                        // Logger.println("(Synchronizer.startSynchronization) incrementing ets of
+                        // consensus " + cons.getId() + " to " + ets);
                         logger.debug("Incrementing ets of consensus " + cons.getId() + " to " + regency);
 
                         TimestampValuePair quorumWrites;
@@ -618,8 +644,11 @@ public class Synchronizer {
 
                         HashSet<TimestampValuePair> writeSet = cons.getWriteSet();
 
-                        //CollectData collect = new CollectData(this.controller.getStaticConf().getProcessId(), in, ets, quorumWrites, writeSet);
-                        CollectData collect = new CollectData(this.controller.getStaticConf().getProcessId(), in, regency, quorumWrites, writeSet);
+                        // CollectData collect = new
+                        // CollectData(this.controller.getStaticConf().getProcessId(), in, ets,
+                        // quorumWrites, writeSet);
+                        CollectData collect = new CollectData(this.controller.getStaticConf().getProcessId(), in,
+                                regency, quorumWrites, writeSet);
 
                         SignedObject signedCollect = tom.sign(collect);
 
@@ -629,18 +658,22 @@ public class Synchronizer {
 
                         cons = execManager.getConsensus(last + 1);
 
-                        //cons.incEts(); // make the consensus advance to the next epoch
+                        // cons.incEts(); // make the consensus advance to the next epoch
                         cons.setETS(regency); // make the consensus advance to the next epoch
-                        
-                        //int ets = cons.getEts();
-                        //cons.createEpoch(ets, controller);
+
+                        // int ets = cons.getEts();
+                        // cons.createEpoch(ets, controller);
                         cons.createEpoch(regency, controller);
-                        //Logger.println("(Synchronizer.startSynchronization) incrementing ets of consensus " + cons.getId() + " to " + ets);
+                        // Logger.println("(Synchronizer.startSynchronization) incrementing ets of
+                        // consensus " + cons.getId() + " to " + ets);
                         logger.debug("Incrementing ets of consensus " + cons.getId() + " to " + regency);
 
-                        //CollectData collect = new CollectData(this.controller.getStaticConf().getProcessId(), last + 1, ets, new TimestampValuePair(0, new byte[0]), new HashSet<TimestampValuePair>());
-                        CollectData collect = new CollectData(this.controller.getStaticConf().getProcessId(), last + 1, regency, new TimestampValuePair(0, new byte[0]), new HashSet<TimestampValuePair>());
-                        
+                        // CollectData collect = new
+                        // CollectData(this.controller.getStaticConf().getProcessId(), last + 1, ets,
+                        // new TimestampValuePair(0, new byte[0]), new HashSet<TimestampValuePair>());
+                        CollectData collect = new CollectData(this.controller.getStaticConf().getProcessId(), last + 1,
+                                regency, new TimestampValuePair(0, new byte[0]), new HashSet<TimestampValuePair>());
+
                         SignedObject signedCollect = tom.sign(collect);
 
                         out.writeObject(signedCollect);
@@ -660,14 +693,16 @@ public class Synchronizer {
                     logger.info("Sending STOPDATA of regency " + regency);
                     // send message SYNC to the new leader
                     communication.send(b,
-                            new LCMessage(this.controller.getStaticConf().getProcessId(), TOMUtil.STOPDATA, regency, payload));
+                            new LCMessage(this.controller.getStaticConf().getProcessId(), TOMUtil.STOPDATA, regency,
+                                    payload));
 
-		//TODO: Turn on timeout again?
+                    // TODO: Turn on timeout again?
                 } catch (IOException ex) {
                     logger.error("Could not deserialize STOPDATA message", ex);
                 }
 
-                // the replica might have received a SYNC that was out of context at the time it was received, but now can be processed
+                // the replica might have received a SYNC that was out of context at the time it
+                // was received, but now can be processed
                 Set<LCMessage> sync = getOutOfContextLC(TOMUtil.SYNC, regency);
 
                 logger.debug("Checking if there are out of context SYNC for regency " + regency);
@@ -692,22 +727,23 @@ public class Synchronizer {
                 CollectData collect = null;
 
                 Consensus cons = null;
-                
-                //Content of the last decided CID
-                if (last > -1) cons = execManager.getConsensus(last);
-                        
-                //Do I have info on my last executed consensus?
-                if (cons != null && cons.getDecisionEpoch() != null && cons.getDecisionEpoch().propValue != null) { 
-                    //byte[] decision = exec.getLearner().getDecision();
 
+                // Content of the last decided CID
+                if (last > -1)
+                    cons = execManager.getConsensus(last);
+
+                // Do I have info on my last executed consensus?
+                if (cons != null && cons.getDecisionEpoch() != null && cons.getDecisionEpoch().propValue != null) {
+                    // byte[] decision = exec.getLearner().getDecision();
 
                     byte[] decision = cons.getDecisionEpoch().propValue;
                     Set<ConsensusMessage> proof = cons.getDecisionEpoch().getProof();
 
-                    lastDec = new CertifiedDecision(this.controller.getStaticConf().getProcessId(), last, decision, proof);
+                    lastDec = new CertifiedDecision(this.controller.getStaticConf().getProcessId(), last, decision,
+                            proof);
                     // TODO: WILL BE NECESSARY TO ADD A PROOF!!!??
 
-                } else {                    
+                } else {
                     lastDec = new CertifiedDecision(this.controller.getStaticConf().getProcessId(), last, null, null);
 
                     ////// THIS IS TO CATCH A BUG!!!!!
@@ -715,10 +751,10 @@ public class Synchronizer {
                         logger.debug("[DEBUG INFO FOR LAST CID #2]");
 
                         if (cons == null) {
-                            if (last > -1) logger.debug("No consensus instance for cid " + last);
+                            if (last > -1)
+                                logger.debug("No consensus instance for cid " + last);
 
-                        }
-                        else if (cons.getDecisionEpoch() == null) {
+                        } else if (cons.getDecisionEpoch() == null) {
                             logger.debug("No decision epoch for cid " + last);
                         } else {
                             logger.debug("epoch for cid: " + last + ": " + cons.getDecisionEpoch().toString());
@@ -726,23 +762,25 @@ public class Synchronizer {
                         if (cons.getDecisionEpoch().propValue == null) {
                             logger.debug("No propose for cid " + last);
                         } else {
-                            logger.debug("Propose hash for cid " + last + ": " + Base64.encodeBase64String(tom.computeHash(cons.getDecisionEpoch().propValue)));
+                            logger.debug("Propose hash for cid " + last + ": "
+                                    + Base64.encodeBase64String(tom.computeHash(cons.getDecisionEpoch().propValue)));
                         }
                     }
-                    
+
                 }
                 lcManager.addLastCID(regency, lastDec);
 
                 if (in > -1) { // content of cid being executed
                     cons = execManager.getConsensus(in);
 
-                    //cons.incEts(); // make the consensus advance to the next epoch
+                    // cons.incEts(); // make the consensus advance to the next epoch
                     cons.setETS(regency); // make the consensus advance to the next epoch
 
-                    //int ets = cons.getEts();
-                    //cons.createEpoch(ets, controller);
+                    // int ets = cons.getEts();
+                    // cons.createEpoch(ets, controller);
                     cons.createEpoch(regency, controller);
-                    //Logger.println("(Synchronizer.startSynchronization) incrementing ets of consensus " + cons.getId() + " to " + ets);
+                    // Logger.println("(Synchronizer.startSynchronization) incrementing ets of
+                    // consensus " + cons.getId() + " to " + ets);
                     logger.debug("Incrementing ets of consensus " + cons.getId() + " to " + regency);
 
                     TimestampValuePair quorumWrites;
@@ -756,31 +794,38 @@ public class Synchronizer {
 
                     HashSet<TimestampValuePair> writeSet = cons.getWriteSet();
 
-                    //collect = new CollectData(this.controller.getStaticConf().getProcessId(), in, ets, quorumWrites, writeSet);
-                    collect = new CollectData(this.controller.getStaticConf().getProcessId(), in, regency, quorumWrites, writeSet);
+                    // collect = new CollectData(this.controller.getStaticConf().getProcessId(), in,
+                    // ets, quorumWrites, writeSet);
+                    collect = new CollectData(this.controller.getStaticConf().getProcessId(), in, regency, quorumWrites,
+                            writeSet);
 
                 } else {
 
                     cons = execManager.getConsensus(last + 1);
 
-                    //cons.incEts(); // make the consensus advance to the next epoch
+                    // cons.incEts(); // make the consensus advance to the next epoch
                     cons.setETS(regency); // make the consensus advance to the next epoch
 
-                    //int ets = cons.getEts();
-                    //cons.createEpoch(ets, controller);
+                    // int ets = cons.getEts();
+                    // cons.createEpoch(ets, controller);
                     cons.createEpoch(regency, controller);
-                    //Logger.println("startSynchronization) incrementing ets of consensus " + cons.getId() + " to " + ets);
+                    // Logger.println("startSynchronization) incrementing ets of consensus " +
+                    // cons.getId() + " to " + ets);
                     logger.debug("Incrementing ets of consensus " + cons.getId() + " to " + regency);
 
-                    //collect = new CollectData(this.controller.getStaticConf().getProcessId(), last + 1, ets, new TimestampValuePair(0, new byte[0]), new HashSet<TimestampValuePair>());
-                    collect = new CollectData(this.controller.getStaticConf().getProcessId(), last + 1, regency, new TimestampValuePair(0, new byte[0]), new HashSet<TimestampValuePair>());
+                    // collect = new CollectData(this.controller.getStaticConf().getProcessId(),
+                    // last + 1, ets, new TimestampValuePair(0, new byte[0]), new
+                    // HashSet<TimestampValuePair>());
+                    collect = new CollectData(this.controller.getStaticConf().getProcessId(), last + 1, regency,
+                            new TimestampValuePair(0, new byte[0]), new HashSet<TimestampValuePair>());
                 }
 
                 SignedObject signedCollect = tom.sign(collect);
 
                 lcManager.addCollect(regency, signedCollect);
 
-                // the replica might have received STOPDATAs that were out of context at the time they were received, but now can be processed
+                // the replica might have received STOPDATAs that were out of context at the
+                // time they were received, but now can be processed
                 Set<LCMessage> stopdatas = getOutOfContextLC(TOMUtil.STOPDATA, regency);
 
                 logger.debug("Checking if there are out of context STOPDATAs for regency " + regency);
@@ -840,7 +885,7 @@ public class Synchronizer {
                     logger.debug("Discarding STOP message");
                 }
             }
-            break;
+                break;
             case TOMUtil.STOPDATA: { // STOPDATA messages
 
                 int regency = msg.getReg();
@@ -849,7 +894,14 @@ public class Synchronizer {
 
                 // Am I the new leader, and am I expecting this messages?
                 if (regency == lcManager.getLastReg()
-                        && this.controller.getStaticConf().getProcessId() == execManager.getCurrentLeader()/*(regency % this.reconfManager.getCurrentViewN())*/) {
+                        && this.controller.getStaticConf().getProcessId() == execManager.getCurrentLeader()/*
+                                                                                                            * (regency %
+                                                                                                            * this.
+                                                                                                            * reconfManager
+                                                                                                            * .
+                                                                                                            * getCurrentViewN
+                                                                                                            * ())
+                                                                                                            */) {
 
                     logger.debug("I'm the new leader and I received a STOPDATA");
                     processSTOPDATA(msg, regency);
@@ -863,7 +915,7 @@ public class Synchronizer {
                     logger.debug("Discarding STOPDATA message");
                 }
             }
-            break;
+                break;
             case TOMUtil.SYNC: { // message SYNC
 
                 int regency = msg.getReg();
@@ -873,21 +925,26 @@ public class Synchronizer {
                 // I am expecting this sync?
                 boolean isExpectedSync = (regency == lcManager.getLastReg() && regency == lcManager.getNextReg());
 
-                // Is this sync what I wanted to get in the previous iteration of the synchoronization phase?
+                // Is this sync what I wanted to get in the previous iteration of the
+                // synchoronization phase?
                 boolean islateSync = (regency == lcManager.getLastReg() && regency == (lcManager.getNextReg() - 1));
 
-                //Did I already sent a stopdata in this iteration?
-                boolean sentStopdata = (lcManager.getStopsSize(lcManager.getNextReg()) == 0); //if 0, I already purged the stops,
-                                                                                              //which I only do when I am about to
-                                                                                              //send the stopdata
+                // Did I already sent a stopdata in this iteration?
+                boolean sentStopdata = (lcManager.getStopsSize(lcManager.getNextReg()) == 0); // if 0, I already purged
+                                                                                              // the stops,
+                                                                                              // which I only do when I
+                                                                                              // am about to
+                                                                                              // send the stopdata
 
-                // I am (or was) waiting for this message, and did I received it from the new leader?
+                // I am (or was) waiting for this message, and did I received it from the new
+                // leader?
                 if ((isExpectedSync || // Expected case
                         (islateSync && !sentStopdata)) && // might happen if I timeout before receiving the SYNC
                         (msg.getSender() == execManager.getCurrentLeader())) {
 
-                //if (msg.getReg() == lcManager.getLastReg() &&
-                //		msg.getReg() == lcManager.getNextReg() && msg.getSender() == lm.getCurrentLeader()/*(regency % this.reconfManager.getCurrentViewN())*/) {
+                    // if (msg.getReg() == lcManager.getLastReg() &&
+                    // msg.getReg() == lcManager.getNextReg() && msg.getSender() ==
+                    // lm.getCurrentLeader()/*(regency % this.reconfManager.getCurrentViewN())*/) {
                     processSYNC(msg.getPayload(), regency);
 
                 } else if (msg.getReg() > lcManager.getLastReg()) { // send SYNC to out of context if
@@ -899,7 +956,7 @@ public class Synchronizer {
                     logger.debug("Discarding SYNC message");
                 }
             }
-            break;
+                break;
 
         }
 
@@ -928,18 +985,18 @@ public class Synchronizer {
             signedCollects = lcManager.getCollects(regency); // all original collects that the replica has received
 
             Decision dec = new Decision(-1); // the only purpose of this object is to obtain the batchsize,
-                                                // using code inside of createPropose()
+                                             // using code inside of createPropose()
 
             propose = tom.createPropose(dec);
             batchSize = dec.batchSize;
-            
+
             try { // serialization of the CATCH-UP message
                 bos = new ByteArrayOutputStream();
                 out = new ObjectOutputStream(bos);
 
                 out.writeObject(lastHighestCID);
 
-		//TODO: Missing: serialization of the proof?
+                // TODO: Missing: serialization of the proof?
                 out.writeObject(signedCollects);
                 out.writeObject(propose);
                 out.writeInt(batchSize);
@@ -965,7 +1022,7 @@ public class Synchronizer {
         }
     }
 
-    //This method is invoked by the state transfer protocol to notify the replica
+    // This method is invoked by the state transfer protocol to notify the replica
     // that it can end synchronization
     public void resumeLC() {
 
@@ -1018,59 +1075,67 @@ public class Synchronizer {
 
             return;
 
-        } /*else if (tom.getLastExec() + 1 == lastHighestCID.getCID()) { // Is this replica still executing the last decided consensus?
+        } /*
+           * else if (tom.getLastExec() + 1 == lastHighestCID.getCID()) { // Is this
+           * replica still executing the last decided consensus?
+           * 
+           * System.out.
+           * println("(Synchronizer.finalise) I'm still at the CID before the most recent one!!! ("
+           * + lastHighestCID.getCID() + ")");
+           * 
+           * cons = execManager.getConsensus(lastHighestCID.getCID());
+           * e = cons.getLastEpoch();
+           * 
+           * int ets = cons.getEts();
+           * 
+           * if (e == null || e.getTimestamp() != ets) {
+           * e = cons.createEpoch(ets, controller);
+           * } else {
+           * e.clear();
+           * }
+           * 
+           * byte[] hash = tom.computeHash(lastHighestCID.getCIDDecision());
+           * e.propValueHash = hash;
+           * e.propValue = lastHighestCID.getCIDDecision();
+           * 
+           * e.deserializedPropValue =
+           * tom.checkProposedValue(lastHighestCID.getCIDDecision(), false);
+           * cons.decided(e, true); // pass the decision to the delivery thread
+           * }
+           */
 
-            System.out.println("(Synchronizer.finalise) I'm still at the CID before the most recent one!!! (" + lastHighestCID.getCID() + ")");
-
-            cons = execManager.getConsensus(lastHighestCID.getCID());
-            e = cons.getLastEpoch();
-            
-            int ets = cons.getEts();
-            
-            if (e == null || e.getTimestamp() != ets) {
-                e = cons.createEpoch(ets, controller);
-            } else {
-                e.clear();
-            }
-            
-            byte[] hash = tom.computeHash(lastHighestCID.getCIDDecision());
-            e.propValueHash = hash;
-            e.propValue = lastHighestCID.getCIDDecision();
-
-            e.deserializedPropValue = tom.checkProposedValue(lastHighestCID.getCIDDecision(), false);
-            cons.decided(e, true); // pass the decision to the delivery thread
-        }*/
-        
         // install proof of the last decided consensus
         cons = execManager.getConsensus(lastHighestCID.getCID());
         e = null;
-                
+
         Set<ConsensusMessage> consMsgs = lastHighestCID.getConsMessages();
-        if (consMsgs == null) consMsgs = new HashSet();
-        
+        if (consMsgs == null)
+            consMsgs = new HashSet();
+
         for (ConsensusMessage cm : consMsgs) {
-            
-            if (e == null) e = cons.getEpoch(cm.getEpoch(), true, controller);
+
+            if (e == null)
+                e = cons.getEpoch(cm.getEpoch(), true, controller);
             if (e.getTimestamp() != cm.getEpoch()) {
-                logger.warn("Strange... proof of last decided consensus contains messages from more than just one epoch");
+                logger.warn(
+                        "Strange... proof of last decided consensus contains messages from more than just one epoch");
                 e = cons.getEpoch(cm.getEpoch(), true, controller);
             }
             e.addToProof(cm);
-            
+
             if (cm.getType() == MessageFactory.ACCEPT) {
                 e.setAccept(cm.getSender(), cm.getValue());
             }
-            
+
             else if (cm.getType() == MessageFactory.WRITE) {
                 e.setWrite(cm.getSender(), cm.getValue());
             }
-            
-            
+
         }
         if (e != null) {
 
             logger.info("Installed proof of last decided consensus " + lastHighestCID.getCID());
-            
+
             byte[] hash = tom.computeHash(lastHighestCID.getDecision());
             e.propValueHash = hash;
             e.propValue = lastHighestCID.getDecision();
@@ -1078,21 +1143,20 @@ public class Synchronizer {
 
             // Is this replica still executing the last decided consensus?
             if (tom.getLastExec() + 1 == lastHighestCID.getCID()) {
-                
+
                 logger.info("I'm still at the CID before the most recent one!!! (" + lastHighestCID.getCID() + ")");
                 cons.decided(e, true);
-            }
-            else {
+            } else {
                 cons.decided(e, false);
             }
 
         } else {
             logger.info("I did not install any proof of last decided consensus " + lastHighestCID.getCID());
         }
-        
+
         cons = null;
         e = null;
-        
+
         // get a value that satisfies the predicate "bind"
         byte[] tmpval = null;
         HashSet<CollectData> selectedColls = lcManager.selectCollects(signedCollects, currentCID, regency);
@@ -1115,52 +1179,57 @@ public class Synchronizer {
 
             // stop the re-transmission of the STOP message for all regencies up to this one
             removeSTOPretransmissions(regency);
-            
+
             cons = execManager.getConsensus(currentCID);
 
             e = cons.getLastEpoch();
 
             int ets = cons.getEts();
 
-            //Update current consensus with latest ETS. This may be necessary
-            //if I 'jumped' to a consensus instance ahead of the one I was executing
-                   
-            //int currentETS = lcManager.getETS(currentCID, selectedColls);
-            //if (currentETS > ets) {
-            if (regency > ets) {
-                
-                //System.out.println("(Synchronizer.finalise) Updating consensus' ETS after SYNC (from " + ets + " to " + currentETS +")");
-                logger.debug("Updating consensus' ETS after SYNC (from " + ets + " to " + regency +")");
+            // Update current consensus with latest ETS. This may be necessary
+            // if I 'jumped' to a consensus instance ahead of the one I was executing
 
-                /*do {
-                    cons.incEts();
-                } while (cons.getEts() != currentETS);*/
-                
+            // int currentETS = lcManager.getETS(currentCID, selectedColls);
+            // if (currentETS > ets) {
+            if (regency > ets) {
+
+                // System.out.println("(Synchronizer.finalise) Updating consensus' ETS after
+                // SYNC (from " + ets + " to " + currentETS +")");
+                logger.debug("Updating consensus' ETS after SYNC (from " + ets + " to " + regency + ")");
+
+                /*
+                 * do {
+                 * cons.incEts();
+                 * } while (cons.getEts() != currentETS);
+                 */
+
                 cons.setETS(regency);
-                
-                //cons.createEpoch(currentETS, controller);
+
+                // cons.createEpoch(currentETS, controller);
                 cons.createEpoch(regency, controller);
-                
+
                 e = cons.getLastEpoch();
             }
 
             // Make sure the epoch is created
-            /*if (e == null || e.getTimestamp() != ets) {
-                e = cons.createEpoch(ets, controller);
-            } else {
-                e.clear();
-            }*/
+            /*
+             * if (e == null || e.getTimestamp() != ets) {
+             * e = cons.createEpoch(ets, controller);
+             * } else {
+             * e.clear();
+             * }
+             */
             if (e == null || e.getTimestamp() != regency) {
                 e = cons.createEpoch(regency, controller);
             } else {
                 e.clear();
             }
-            
+
             /********* LEADER CHANGE CODE ********/
             cons.removeWritten(tmpval);
             cons.addWritten(tmpval);
             /*************************************/
-            
+
             byte[] hash = tom.computeHash(tmpval);
             e.propValueHash = hash;
             e.propValue = tmpval;
@@ -1181,15 +1250,16 @@ public class Synchronizer {
                 e.setAccept(me, hash);
 
                 /********* LEADER CHANGE CODE ********/
-                logger.debug("[CFT Mode] Setting consensus " + currentCID + " QuorumWrite tiemstamp to " + e.getConsensus().getEts() + " and value " + Arrays.toString(hash));
- 	        e.getConsensus().setQuorumWrites(hash);
+                logger.debug("[CFT Mode] Setting consensus " + currentCID + " QuorumWrite tiemstamp to "
+                        + e.getConsensus().getEts() + " and value " + Arrays.toString(hash));
+                e.getConsensus().setQuorumWrites(hash);
                 /*************************************/
 
             }
 
             // resume normal operation
             execManager.restart();
-            //leaderChanged = true;
+            // leaderChanged = true;
             tom.setInExec(currentCID);
             if (iAmLeader) {
                 logger.debug("Waking up proposer thread");
@@ -1198,11 +1268,13 @@ public class Synchronizer {
 
             // send a WRITE/ACCEPT message to the other replicas
             if (this.controller.getStaticConf().isBFT()) {
-                logger.info("Sending WRITE message for CID " + currentCID + ", timestamp " + e.getTimestamp() + ", value " + Arrays.toString(e.propValueHash));
+                logger.info("Sending WRITE message for CID " + currentCID + ", timestamp " + e.getTimestamp()
+                        + ", value " + Arrays.toString(e.propValueHash));
                 communication.send(this.controller.getCurrentViewOtherAcceptors(),
                         acceptor.getFactory().createWrite(currentCID, e.getTimestamp(), e.propValueHash));
             } else {
-                logger.info("Sending ACCEPT message for CID " + currentCID + ", timestamp " + e.getTimestamp() + ", value " + Arrays.toString(e.propValueHash));
+                logger.info("Sending ACCEPT message for CID " + currentCID + ", timestamp " + e.getTimestamp()
+                        + ", value " + Arrays.toString(e.propValueHash));
                 communication.send(this.controller.getCurrentViewOtherAcceptors(),
                         acceptor.getFactory().createAccept(currentCID, e.getTimestamp(), e.propValueHash));
             }

@@ -112,7 +112,7 @@ public class YCSBServer extends DefaultRecoverable {
             }
             replies[index++] = reply.getBytes();
         }
-//		System.out.println("RETURNING REPLY");
+        // System.out.println("RETURNING REPLY");
         return replies;
     }
 
@@ -139,7 +139,8 @@ public class YCSBServer extends DefaultRecoverable {
                             reply = YCSBMessage.newErrorMessage("Record not found");
                             break;
                         } else {
-                            reply = YCSBMessage.newReadResponse(mTables.get(aRequest.getTable()).get(aRequest.getKey()), 0);
+                            reply = YCSBMessage.newReadResponse(mTables.get(aRequest.getTable()).get(aRequest.getKey()),
+                                    0);
                             break;
                         }
                 }

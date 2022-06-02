@@ -43,35 +43,34 @@ import org.slf4j.LoggerFactory;
  * @author Paulo Sousa
  */
 public class NettyTOMMessageDecoder extends ByteToMessageDecoder {
-    
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /**
      * number of measures used to calculate statistics
      */
-    //private final int BENCHMARK_PERIOD = 10000;
+    // private final int BENCHMARK_PERIOD = 10000;
     private boolean isClient;
     private Map sessionTable;
-    //private Storage st;
+    // private Storage st;
     private ViewController controller;
     private boolean firstTime;
     private ReentrantReadWriteLock rl;
-    //******* EDUARDO BEGIN: commented out some unused variables **************//
-    //private long numReceivedMsgs = 0;
-    //private long lastMeasurementStart = 0;
-    //private long max=0;
-    //private Storage st;
-    //private int count = 0;
-   
-    //private Signature signatureEngine;
-    
-    
-     //******* EDUARDO END **************//
-    
+    // ******* EDUARDO BEGIN: commented out some unused variables **************//
+    // private long numReceivedMsgs = 0;
+    // private long lastMeasurementStart = 0;
+    // private long max=0;
+    // private Storage st;
+    // private int count = 0;
+
+    // private Signature signatureEngine;
+
+    // ******* EDUARDO END **************//
+
     private boolean useMAC;
-    
-    public NettyTOMMessageDecoder(boolean isClient, Map sessionTable, ViewController controller, ReentrantReadWriteLock rl, boolean useMAC) {
+
+    public NettyTOMMessageDecoder(boolean isClient, Map sessionTable, ViewController controller,
+            ReentrantReadWriteLock rl, boolean useMAC) {
         this.isClient = isClient;
         this.sessionTable = sessionTable;
         this.controller = controller;
@@ -82,7 +81,7 @@ public class NettyTOMMessageDecoder extends ByteToMessageDecoder {
     }
 
     @Override
-    protected void decode(ChannelHandlerContext context, ByteBuf buffer, List<Object> list) throws Exception  {
+    protected void decode(ChannelHandlerContext context, ByteBuf buffer, List<Object> list) throws Exception {
 
         // Wait until the length prefix is available.
         if (buffer.readableBytes() < Integer.BYTES) {
@@ -91,7 +90,7 @@ public class NettyTOMMessageDecoder extends ByteToMessageDecoder {
 
         int dataLength = buffer.getInt(buffer.readerIndex());
 
-        //Logger.println("Receiving message with "+dataLength+" bytes.");
+        // Logger.println("Receiving message with "+dataLength+" bytes.");
 
         // Wait until the whole data is available.
         if (buffer.readableBytes() < dataLength + Integer.BYTES) {
@@ -107,15 +106,15 @@ public class NettyTOMMessageDecoder extends ByteToMessageDecoder {
 
         byte[] digest = null;
         if (useMAC) {
-            
+
             size = buffer.readInt();
             digest = new byte[size];
             buffer.readBytes(digest);
         }
 
         byte[] signature = null;
-        size = buffer.readInt();            
-            
+        size = buffer.readInt();
+
         if (size > 0) {
 
             signature = new byte[size];
@@ -141,7 +140,7 @@ public class NettyTOMMessageDecoder extends ByteToMessageDecoder {
             }
 
             if (isClient) {
-                //verify MAC
+                // verify MAC
                 if (useMAC) {
                     if (!verifyMAC(sm.getSender(), data, digest)) {
                         logger.error("MAC error: message discarded");
@@ -149,7 +148,7 @@ public class NettyTOMMessageDecoder extends ByteToMessageDecoder {
                     }
                 }
             } else { /* it's a server */
-                //verifies MAC if it's not the first message received from the client
+                // verifies MAC if it's not the first message received from the client
                 rl.readLock().lock();
                 if (sessionTable.containsKey(sm.getSender())) {
                     rl.readLock().unlock();
@@ -160,25 +159,28 @@ public class NettyTOMMessageDecoder extends ByteToMessageDecoder {
                         }
                     }
                 } else {
-                    //creates MAC/publick key stuff if it's the first message received from the client
+                    // creates MAC/publick key stuff if it's the first message received from the
+                    // client
                     logger.debug("Creating MAC/public key stuff, first message from client" + sm.getSender());
                     logger.debug("sessionTable size=" + sessionTable.size());
 
                     rl.readLock().unlock();
-                    
+
                     SecretKeyFactory fac = TOMUtil.getSecretFactory();
-                    String str = sm.getSender() + ":" + this.controller.getStaticConf().getProcessId();                                        
+                    String str = sm.getSender() + ":" + this.controller.getStaticConf().getProcessId();
                     PBEKeySpec spec = TOMUtil.generateKeySpec(str.toCharArray());
                     SecretKey authKey = fac.generateSecret(spec);
-            
+
                     Mac macSend = TOMUtil.getMacFactory();
                     macSend.init(authKey);
                     Mac macReceive = TOMUtil.getMacFactory();
                     macReceive.init(authKey);
-                    NettyClientServerSession cs = new NettyClientServerSession(context.channel(), macSend, macReceive, sm.getSender());
-                                       
+                    NettyClientServerSession cs = new NettyClientServerSession(context.channel(), macSend, macReceive,
+                            sm.getSender());
+
                     rl.writeLock().lock();
-//                    logger.info("PUT INTO SESSIONTABLE - [client id]:"+sm.getSender()+" [channel]: "+cs.getChannel());
+                    // logger.info("PUT INTO SESSIONTABLE - [client id]:"+sm.getSender()+"
+                    // [channel]: "+cs.getChannel());
                     sessionTable.put(sm.getSender(), cs);
                     logger.debug("active clients " + sessionTable.size());
                     rl.writeLock().unlock();
@@ -191,20 +193,20 @@ public class NettyTOMMessageDecoder extends ByteToMessageDecoder {
             logger.debug("Decoded reply from " + sm.getSender() + " with sequence number " + sm.getSequence());
             list.add(sm);
         } catch (Exception ex) {
-            
+
             logger.error("Failed to decode TOMMessage", ex);
         }
         return;
     }
 
     boolean verifyMAC(int id, byte[] data, byte[] digest) {
-        //long startInstant = System.nanoTime();
+        // long startInstant = System.nanoTime();
         rl.readLock().lock();
         Mac macReceive = ((NettyClientServerSession) sessionTable.get(id)).getMacReceive();
         rl.readLock().unlock();
         boolean result = Arrays.equals(macReceive.doFinal(data), digest);
-        //long duration = System.nanoTime() - startInstant;
-        //st.store(duration);
+        // long duration = System.nanoTime() - startInstant;
+        // st.store(duration);
         return result;
     }
 

@@ -39,7 +39,7 @@ public class CounterClient {
         }
 
         ServiceProxy counterProxy = new ServiceProxy(Integer.parseInt(args[0]));
-        
+
         try {
 
             int inc = Integer.parseInt(args[1]);
@@ -51,11 +51,10 @@ public class CounterClient {
                 new DataOutputStream(out).writeInt(inc);
 
                 System.out.print("Invocation " + i);
-                byte[] reply = (inc == 0)?
-                        counterProxy.invokeUnordered(out.toByteArray()):
-                	counterProxy.invokeOrdered(out.toByteArray()); //magic happens here
-                
-                if(reply != null) {
+                byte[] reply = (inc == 0) ? counterProxy.invokeUnordered(out.toByteArray())
+                        : counterProxy.invokeOrdered(out.toByteArray()); // magic happens here
+
+                if (reply != null) {
                     int newValue = new DataInputStream(new ByteArrayInputStream(reply)).readInt();
                     System.out.println(", returned value: " + newValue);
                 } else {
@@ -63,7 +62,7 @@ public class CounterClient {
                     break;
                 }
             }
-        } catch(IOException | NumberFormatException e){
+        } catch (IOException | NumberFormatException e) {
             counterProxy.close();
         }
     }

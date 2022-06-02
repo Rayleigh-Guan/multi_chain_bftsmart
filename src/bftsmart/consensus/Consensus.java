@@ -26,10 +26,10 @@ import bftsmart.reconfiguration.ServerViewController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * This class stands for a consensus instance that implements the algorithm
- * for the Byzantine fault model described in Cachin's 'Yet Another Visit to Paxos' (April 2011)
+ * for the Byzantine fault model described in Cachin's 'Yet Another Visit to
+ * Paxos' (April 2011)
  */
 public class Consensus {
 
@@ -38,20 +38,20 @@ public class Consensus {
     private ExecutionManager manager; // Execution manager for this replica's consensus instances
 
     private Decision decision; // Decision instance to which this consensus works for
-    private HashMap<Integer,Epoch> epochs = new HashMap<Integer,Epoch>(2);
+    private HashMap<Integer, Epoch> epochs = new HashMap<Integer, Epoch>(2);
     private ReentrantLock epochsLock = new ReentrantLock(); // Lock for concurrency control
-    private ReentrantLock writeSetLock = new ReentrantLock(); //lock for this consensus write set
+    private ReentrantLock writeSetLock = new ReentrantLock(); // lock for this consensus write set
 
     private boolean decided; // Is this consensus decided?
     private int decisionEpoch = -1; // epoch at which a decision was made
 
-    //NEW ATTRIBUTES FOR THE LEADER CHANGE
+    // NEW ATTRIBUTES FOR THE LEADER CHANGE
     private int ets = 0;
     private TimestampValuePair quorumWrites = null;
     private HashSet<TimestampValuePair> writeSet = new HashSet<TimestampValuePair>();
 
-    public ReentrantLock lock = new ReentrantLock(); //this consensus lock (called by other classes)
-    
+    public ReentrantLock lock = new ReentrantLock(); // this consensus lock (called by other classes)
+
     /**
      * Creates a new instance of Consensus
      * 
@@ -60,7 +60,7 @@ public class Consensus {
      * 
      * Use 'isDecided()' to check if the consensus already decided a value.
      * 
-     * @param manager Execution manager for this replica's consensus instances
+     * @param manager  Execution manager for this replica's consensus instances
      * @param decision Decision instance to which this consensus works for.
      */
     public Consensus(ExecutionManager manager, Decision decision) {
@@ -70,6 +70,7 @@ public class Consensus {
 
     /**
      * This is the consensus ID
+     * 
      * @return Consensus ID
      */
     public int getId() {
@@ -78,6 +79,7 @@ public class Consensus {
 
     /**
      * This is the execution manager for this replica's consensus instances
+     * 
      * @return Execution manager for this replica
      */
     public ExecutionManager getManager() {
@@ -99,18 +101,20 @@ public class Consensus {
 
     /**
      * Gets a epoch associated with this consensus
-     * @param timestamp The timestamp of the epoch
+     * 
+     * @param timestamp  The timestamp of the epoch
      * @param controller The view controller for the replicas
      * @return The epoch
      */
     public Epoch getEpoch(int timestamp, ServerViewController controller) {
-        return getEpoch(timestamp,true, controller);
+        return getEpoch(timestamp, true, controller);
     }
 
     /**
      * Gets a epoch associated with this consensus
-     * @param timestamp The number of the epoch
-     * @param create if the epoch is to be created if not existent
+     * 
+     * @param timestamp  The number of the epoch
+     * @param create     if the epoch is to be created if not existent
      * @param controller The view controller for the replicas
      * @return The epoch
      */
@@ -118,7 +122,7 @@ public class Consensus {
         epochsLock.lock();
 
         Epoch epoch = epochs.get(timestamp);
-        if(epoch == null && create){
+        if (epoch == null && create) {
             epoch = new Epoch(controller, this, timestamp);
             epochs.put(timestamp, epoch);
         }
@@ -127,37 +131,40 @@ public class Consensus {
 
         return epoch;
     }
-    
+
     /**
-     * Increments the ETS of this consensus, thus advancing 
+     * Increments the ETS of this consensus, thus advancing
      * to the next epoch
      */
     public void incEts() {
         ets++;
     }
-    
+
     /**
-     * Increments the ETS of this consensus, thus advancing 
+     * Increments the ETS of this consensus, thus advancing
      * to the next epoch
      * 
      * @param ets New ETS for this consensus, to advance
-     * to the next epoch. It must be greater than the current ETS
+     *            to the next epoch. It must be greater than the current ETS
      */
     public void setETS(int ets) {
-        
-        if (ets > this.ets) this.ets = ets;
+
+        if (ets > this.ets)
+            this.ets = ets;
     }
-    
+
     /**
      * Returns the timestamp for the current epoch
+     * 
      * @return the timestamp for the current epoch
      */
     public int getEts() {
         return ets;
     }
-    
+
     /**
      * Store the value read from a Byzantine quorum of WRITES
+     * 
      * @param value
      */
     public void setQuorumWrites(byte[] value) {
@@ -168,8 +175,9 @@ public class Consensus {
     /**
      * Return the value read from a Byzantine quorum of WRITES that has
      * previously been stored
+     * 
      * @return the value read from a Byzantine quorum of WRITES, if such
-     * value has been obtained already
+     *         value has been obtained already
      */
     public TimestampValuePair getQuorumWrites() {
         return quorumWrites;
@@ -177,6 +185,7 @@ public class Consensus {
 
     /**
      * Add a value that shall be written to the writeSet
+     * 
      * @param value Value to write to the writeSet
      */
     public void addWritten(byte[] value) {
@@ -187,28 +196,33 @@ public class Consensus {
     }
 
     /**
-     * Remove an already writte value from  writeSet
+     * Remove an already writte value from writeSet
+     * 
      * @param value valor a remover do writeSet
      */
     public void removeWritten(byte[] value) {
 
         writeSetLock.lock();
-        
+
         Set<TimestampValuePair> temp = (HashSet<TimestampValuePair>) writeSet.clone();
-        
+
         for (TimestampValuePair rv : temp) {
 
-            if (Arrays.equals(rv.getValue(), value)) writeSet.remove(rv);
+            if (Arrays.equals(rv.getValue(), value))
+                writeSet.remove(rv);
         }
         writeSetLock.unlock();
 
     }
+
     public HashSet<TimestampValuePair> getWriteSet() {
-        return (HashSet<TimestampValuePair>) writeSet.clone(); 
+        return (HashSet<TimestampValuePair>) writeSet.clone();
     }
+
     /**
      * Creates an epoch associated with this consensus, with the specified timestamp
-     * @param timestamp The timestamp to associated to this epoch
+     * 
+     * @param timestamp  The timestamp to associated to this epoch
      * @param recManager The replica's ServerViewController
      * @return The epoch
      */
@@ -222,8 +236,10 @@ public class Consensus {
 
         return epoch;
     }
+
     /**
      * Creates a epoch associated with this consensus, supposedly the next
+     * 
      * @param recManager The replica's ServerViewController
      * @return The epoch
      */
@@ -234,7 +250,8 @@ public class Consensus {
 
         int max = -1;
         for (int k : keys) {
-            if (k > max) max = k;
+            if (k > max)
+                max = k;
         }
 
         max++;
@@ -254,11 +271,11 @@ public class Consensus {
     public void removeEpochs(int limit) {
         epochsLock.lock();
 
-        for(Integer key : (Integer[])epochs.keySet().toArray(new Integer[0])) {
-            if(key > limit) {
+        for (Integer key : (Integer[]) epochs.keySet().toArray(new Integer[0])) {
+            if (key > limit) {
                 Epoch epoch = epochs.remove(key);
                 epoch.setRemoved();
-                //epoch.getTimeoutTask().cancel();
+                // epoch.getTimeoutTask().cancel();
             }
         }
 
@@ -267,6 +284,7 @@ public class Consensus {
 
     /**
      * The epoch at which a decision was possible to make
+     * 
      * @return Epoch at which a decision was possible to make
      */
     public Epoch getDecisionEpoch() {
@@ -287,7 +305,7 @@ public class Consensus {
             epochsLock.unlock();
             return null;
         }
-        //Epoch epoch = epochs.get(epochs.size() - 1);
+        // Epoch epoch = epochs.get(epochs.size() - 1);
         Epoch epoch = epochs.get(ets); // the last epoch corresponds to the current ETS
         epochsLock.unlock();
         return epoch;
@@ -305,7 +323,7 @@ public class Consensus {
     /**
      * Called by the Acceptor object, to set the decided value
      *
-     * @param epoch The epoch at which a decision was made
+     * @param epoch   The epoch at which a decision was made
      * @param deliver Set to true to deliver decision to TOMLayer/DeliveryThread
      */
     public void decided(Epoch epoch, boolean deliver) {

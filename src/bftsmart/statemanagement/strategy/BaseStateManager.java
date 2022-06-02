@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 public abstract class BaseStateManager implements StateManager {
-    
+
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     protected TOMLayer tomLayer;
@@ -80,7 +80,7 @@ public abstract class BaseStateManager implements StateManager {
     }
 
     protected boolean enoughRegencies(int regency) {
-        
+
         Collection<Integer> regencies = senderRegencies.values();
         int counter = 0;
         for (int r : regencies) {
@@ -93,7 +93,7 @@ public abstract class BaseStateManager implements StateManager {
     }
 
     protected boolean enoughLeaders(int leader) {
-                
+
         Collection<Integer> leaders = senderLeaders.values();
         int counter = 0;
         for (int l : leaders) {
@@ -103,7 +103,7 @@ public abstract class BaseStateManager implements StateManager {
         }
         boolean result = counter > SVController.getQuorum();
         return result;
-        
+
     }
 
     protected boolean enoughViews(View view) {
@@ -117,45 +117,50 @@ public abstract class BaseStateManager implements StateManager {
         boolean result = counter > SVController.getQuorum();
         return result;
     }
-    
-    // check if the consensus messages are consistent without checking the mac/signatures
-    // if it is consistent, it returns the respective consensus ID; otherwise, returns -1
+
+    // check if the consensus messages are consistent without checking the
+    // mac/signatures
+    // if it is consistent, it returns the respective consensus ID; otherwise,
+    // returns -1
     private int proofIsConsistent(Set<ConsensusMessage> proof) {
-        
+
         int id = -1;
         byte[] value = null;
-        
+
         for (ConsensusMessage cm : proof) {
-            
-            if (id == -1) id = cm.getNumber();
-            if (value == null) value = cm.getValue();
-            
+
+            if (id == -1)
+                id = cm.getNumber();
+            if (value == null)
+                value = cm.getValue();
+
             if (id != cm.getNumber() || !Arrays.equals(value, cm.getValue())) {
                 return -1; // they are not consistent, so the proof is invalid
             }
-                    
+
         }
-        
+
         // if the values are still these, this means the proof is empty, thus is invalid
-        if (id == -1 || value == null) return -1;
-        
+        if (id == -1 || value == null)
+            return -1;
+
         return id;
     }
-        
+
     protected boolean enoughProofs(int cid, LCManager lc) {
-        
+
         int counter = 0;
         for (CertifiedDecision cDec : senderProofs.values()) {
-                                    
+
             if (cDec != null && cid == proofIsConsistent(cDec.getConsMessages()) && lc.hasValidProof(cDec)) {
                 counter++;
             }
-            
+
         }
         boolean result = counter > SVController.getQuorum();
         return result;
     }
-    
+
     /**
      * Clear the collections and state hold by this object. Calls clear() in the
      * States, Leaders, regencies and Views collections. Sets the state to
@@ -199,7 +204,8 @@ public abstract class BaseStateManager implements StateManager {
         if (waitingCID == -1) {
             logger.debug("I'm not waiting for any state, so I will keep record of this message");
             if (tomLayer.execManager.isDecidable(cid)) {
-                logger.info("I have now more than " + SVController.getCurrentViewF() + " messages for CID " + cid + " which are beyond CID " + lastCID);
+                logger.info("I have now more than " + SVController.getCurrentViewF() + " messages for CID " + cid
+                        + " which are beyond CID " + lastCID);
                 lastCID = cid;
                 waitingCID = cid - 1;
                 logger.info("I will be waiting for state messages associated to consensus " + waitingCID);
@@ -234,7 +240,7 @@ public abstract class BaseStateManager implements StateManager {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                logger.error("Interruption during sleep",e);
+                logger.error("Interruption during sleep", e);
             }
         }
     }
@@ -243,13 +249,14 @@ public abstract class BaseStateManager implements StateManager {
     public void currentConsensusIdAsked(int sender) {
         int me = SVController.getStaticConf().getProcessId();
         int lastConsensusId = tomLayer.getLastExec();
-        SMMessage currentCIDReply = new StandardSMMessage(me, lastConsensusId, TOMUtil.SM_REPLY_INITIAL, 0, null, null, 0, 0);
-        tomLayer.getCommunication().send(new int[]{sender}, currentCIDReply);
+        SMMessage currentCIDReply = new StandardSMMessage(me, lastConsensusId, TOMUtil.SM_REPLY_INITIAL, 0, null, null,
+                0, 0);
+        tomLayer.getCommunication().send(new int[] { sender }, currentCIDReply);
     }
 
     @Override
     public synchronized void currentConsensusIdReceived(SMMessage smsg) {
-        if (!isInitializing || waitingCID > -1) {            
+        if (!isInitializing || waitingCID > -1) {
             return;
         }
         if (senderCIDs == null) {
@@ -260,9 +267,9 @@ public abstract class BaseStateManager implements StateManager {
 
             HashMap<Integer, Integer> cids = new HashMap<>();
             for (int id : senderCIDs.keySet()) {
-                                
+
                 int value = senderCIDs.get(id);
-                
+
                 Integer count = cids.get(value);
                 if (count == null) {
                     cids.put(value, 0);
@@ -281,7 +288,7 @@ public abstract class BaseStateManager implements StateManager {
                         dt.deliverUnlock();
                         break;
                     } else {
-                        //ask for state
+                        // ask for state
                         logger.info("Requesting state from other replicas");
                         lastCID = key + 1;
                         if (waitingCID == -1) {

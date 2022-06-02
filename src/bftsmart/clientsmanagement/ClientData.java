@@ -28,13 +28,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ClientData {
-    
+
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     ReentrantLock clientLock = new ReentrantLock();
 
     private int clientId;
-    //private PublicKey publicKey = null;
+    // private PublicKey publicKey = null;
 
     private int session = -1;
 
@@ -44,27 +44,27 @@ public class ClientData {
     private int lastMessageDelivered = -1;
 
     private RequestList pendingRequests = new RequestList();
-    //anb: new code to deal with client requests that arrive after their execution
+    // anb: new code to deal with client requests that arrive after their execution
     private RequestList orderedRequests = new RequestList(5);
 
     private Signature signatureVerificator = null;
-    
+
     /**
      * Class constructor. Just store the clientId and creates a signature
      * verificator for a given client public key.
      *
-     * @param clientId client unique id
+     * @param clientId  client unique id
      * @param publicKey client public key
      */
     public ClientData(int clientId, PublicKey publicKey) {
         this.clientId = clientId;
-        if(publicKey != null) {
+        if (publicKey != null) {
             try {
                 signatureVerificator = TOMUtil.getSigEngine();
                 signatureVerificator.initVerify(publicKey);
-                logger.debug("Signature verifier initialized for client "+clientId);
+                logger.debug("Signature verifier initialized for client " + clientId);
             } catch (Exception ex) {
-                logger.error("Failed to create client data object",ex);
+                logger.error("Failed to create client data object", ex);
             }
         }
     }
@@ -114,7 +114,7 @@ public class ClientData {
     }
 
     public boolean verifySignature(byte[] message, byte[] signature) {
-        if(signatureVerificator != null) {
+        if (signatureVerificator != null) {
             try {
                 return TOMUtil.verifySignature(signatureVerificator, message, signature);
             } catch (SignatureException ex) {
@@ -125,8 +125,8 @@ public class ClientData {
     }
 
     public boolean removeOrderedRequest(TOMMessage request) {
-        if(pendingRequests.remove(request)) {
-            //anb: new code to deal with client requests that arrive after their execution
+        if (pendingRequests.remove(request)) {
+            // anb: new code to deal with client requests that arrive after their execution
             orderedRequests.addLast(request);
             return true;
         }
@@ -134,24 +134,24 @@ public class ClientData {
     }
 
     public boolean removeRequest(TOMMessage request) {
-	lastMessageDelivered = request.getSequence();
-	boolean result = pendingRequests.remove(request);
-        //anb: new code to deal with client requests that arrive after their execution
+        lastMessageDelivered = request.getSequence();
+        boolean result = pendingRequests.remove(request);
+        // anb: new code to deal with client requests that arrive after their execution
         orderedRequests.addLast(request);
 
-	for(Iterator<TOMMessage> it = pendingRequests.iterator();it.hasNext();){
-		TOMMessage msg = it.next();
-		if(msg.getSequence()<request.getSequence()){
-			it.remove();
-		}
-	}
+        for (Iterator<TOMMessage> it = pendingRequests.iterator(); it.hasNext();) {
+            TOMMessage msg = it.next();
+            if (msg.getSequence() < request.getSequence()) {
+                it.remove();
+            }
+        }
 
-    	return result;
+        return result;
     }
 
     public TOMMessage getReply(int reqSequence) {
         TOMMessage request = orderedRequests.getBySequence(reqSequence);
-        if(request != null) {
+        if (request != null) {
             return request.reply;
         } else {
             return null;

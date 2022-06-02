@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TOMConfiguration extends Configuration {
-    
+
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     protected int n;
@@ -62,7 +62,7 @@ public class TOMConfiguration extends Configuration {
     private int numNettyWorkers;
     private boolean sameBatchSize;
     private String bindAddress;
-    
+
     /** Creates a new instance of TOMConfiguration */
     public TOMConfiguration(int processId, KeyLoader loader) {
         super(processId, loader);
@@ -72,7 +72,6 @@ public class TOMConfiguration extends Configuration {
     public TOMConfiguration(int processId, String configHome, KeyLoader loader) {
         super(processId, configHome, loader);
     }
-
 
     @Override
     protected void init() {
@@ -135,7 +134,7 @@ public class TOMConfiguration extends Configuration {
                     timeoutHighMark = 1;
                 }
             }
-            
+
             s = (String) configs.remove("system.totalordermulticast.maxbatchsize");
             if (s == null) {
                 maxBatchSize = 100;
@@ -251,49 +250,49 @@ public class TOMConfiguration extends Configuration {
 
             s = (String) configs.remove("system.totalordermulticast.log");
             if (s != null) {
-                    isToLog = Boolean.parseBoolean(s);
+                isToLog = Boolean.parseBoolean(s);
             } else {
-                    isToLog = false;
+                isToLog = false;
             }
 
             s = (String) configs
-                            .remove("system.totalordermulticast.log_parallel");
+                    .remove("system.totalordermulticast.log_parallel");
             if (s != null) {
-                    parallelLog = Boolean.parseBoolean(s);
+                parallelLog = Boolean.parseBoolean(s);
             } else {
-                    parallelLog = false;
+                parallelLog = false;
             }
 
             s = (String) configs
-                            .remove("system.totalordermulticast.log_to_disk");
+                    .remove("system.totalordermulticast.log_to_disk");
             if (s != null) {
-                    logToDisk = Boolean.parseBoolean(s);
+                logToDisk = Boolean.parseBoolean(s);
             } else {
-                    logToDisk = false;
+                logToDisk = false;
             }
 
             s = (String) configs
-                            .remove("system.totalordermulticast.sync_log");
+                    .remove("system.totalordermulticast.sync_log");
             if (s != null) {
-                    syncLog = Boolean.parseBoolean(s);
+                syncLog = Boolean.parseBoolean(s);
             } else {
-                    syncLog = false;
+                syncLog = false;
             }
 
             s = (String) configs
-                            .remove("system.totalordermulticast.checkpoint_to_disk");
+                    .remove("system.totalordermulticast.checkpoint_to_disk");
             if (s == null) {
-                    isToWriteCkpsToDisk = false;
+                isToWriteCkpsToDisk = false;
             } else {
-                    isToWriteCkpsToDisk = Boolean.parseBoolean(s);
+                isToWriteCkpsToDisk = Boolean.parseBoolean(s);
             }
 
             s = (String) configs
-                            .remove("system.totalordermulticast.sync_ckp");
+                    .remove("system.totalordermulticast.sync_ckp");
             if (s == null) {
-                    syncCkp = false;
+                syncCkp = false;
             } else {
-                    syncCkp = Boolean.parseBoolean(s);
+                syncCkp = Boolean.parseBoolean(s);
             }
 
             s = (String) configs.remove("system.totalordermulticast.global_checkpoint_period");
@@ -312,33 +311,34 @@ public class TOMConfiguration extends Configuration {
             } else {
                 numRepliers = Integer.parseInt(s);
             }
- 
+
             s = (String) configs.remove("system.numnettyworkers");
             if (s == null) {
                 numNettyWorkers = 0;
             } else {
                 numNettyWorkers = Integer.parseInt(s);
             }
-            
+
             s = (String) configs.remove("system.communication.bindaddress");
-            
-            Pattern pattern = Pattern.compile("^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$");
+
+            Pattern pattern = Pattern
+                    .compile("^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$");
 
             if (s == null || !pattern.matcher(s).matches()) {
                 bindAddress = "";
             } else {
                 bindAddress = s;
             }
-            
+
             s = (String) configs.remove("system.samebatchsize");
             if (s != null) {
-                    sameBatchSize = Boolean.parseBoolean(s);
+                sameBatchSize = Boolean.parseBoolean(s);
             } else {
-                    sameBatchSize = false;
+                sameBatchSize = false;
             }
-            
+
         } catch (Exception e) {
-            logger.error("Could not parse system configuration file",e);
+            logger.error("Could not parse system configuration file", e);
         }
 
     }
@@ -380,7 +380,7 @@ public class TOMConfiguration extends Configuration {
     public int getF() {
         return f;
     }
-    
+
     public int getPaxosHighMark() {
         return paxosHighMark;
     }
@@ -388,11 +388,11 @@ public class TOMConfiguration extends Configuration {
     public int getRevivalHighMark() {
         return revivalHighMark;
     }
-    
+
     public int getTimeoutHighMark() {
         return timeoutHighMark;
     }
-    
+
     public int getMaxBatchSize() {
         return maxBatchSize;
     }
@@ -418,94 +418,99 @@ public class TOMConfiguration extends Configuration {
     }
 
     /**
-     *     *
+     * *
      */
     public int getNumberOfNIOThreads() {
         return numNIOThreads;
     }
 
-    /**     * @return the numberOfNonces     */
+    /** * @return the numberOfNonces */
     public int getNumberOfNonces() {
         return numberOfNonces;
     }
 
     /**
-     * Indicates if signatures should be used (1) or not (0) to authenticate client requests
+     * Indicates if signatures should be used (1) or not (0) to authenticate client
+     * requests
      */
     public int getUseSignatures() {
         return useSignatures;
     }
 
     /**
-     * Indicates if MACs should be used (1) or not (0) to authenticate client-server and server-server messages
+     * Indicates if MACs should be used (1) or not (0) to authenticate client-server
+     * and server-server messages
      */
     public int getUseMACs() {
         return useMACs;
     }
 
     /**
-     * Indicates the checkpoint period used when fetching the state from the application
+     * Indicates the checkpoint period used when fetching the state from the
+     * application
      */
     public int getCheckpointPeriod() {
         return checkpointPeriod;
     }
 
-	public boolean isToWriteCkpsToDisk() {
-		return isToWriteCkpsToDisk;
-	}
-	
-	public boolean isToWriteSyncCkp() {
-		return syncCkp;
-	}
+    public boolean isToWriteCkpsToDisk() {
+        return isToWriteCkpsToDisk;
+    }
 
-	public boolean isToLog() {
-		return isToLog;
-	}
+    public boolean isToWriteSyncCkp() {
+        return syncCkp;
+    }
 
-	public boolean isToWriteSyncLog() {
-		return syncLog;
-	}
+    public boolean isToLog() {
+        return isToLog;
+    }
 
-	public boolean logToDisk() {
-		return logToDisk;
-	}
+    public boolean isToWriteSyncLog() {
+        return syncLog;
+    }
 
-	public boolean isToLogParallel() {
-		// TODO Auto-generated method stub
-		return parallelLog;
-	}
+    public boolean logToDisk() {
+        return logToDisk;
+    }
+
+    public boolean isToLogParallel() {
+        // TODO Auto-generated method stub
+        return parallelLog;
+    }
 
     /**
-     * Indicates the checkpoint period used when fetching the state from the application
+     * Indicates the checkpoint period used when fetching the state from the
+     * application
      */
     public int getGlobalCheckpointPeriod() {
         return globalCheckpointPeriod;
     }
 
     /**
-     * Indicates if a simple control flow mechanism should be used to avoid an overflow of client requests
+     * Indicates if a simple control flow mechanism should be used to avoid an
+     * overflow of client requests
      */
     public int getUseControlFlow() {
         return useControlFlow;
     }
 
-    public boolean isBFT(){
-    	
-    	return this.isBFT;
+    public boolean isBFT() {
+
+        return this.isBFT;
     }
 
     public int getNumRepliers() {
         return numRepliers;
     }
-    
+
     public int getNumNettyWorkers() {
         return numNettyWorkers;
     }
-    
+
     public boolean getSameBatchSize() {
         return sameBatchSize;
     }
-    
+
     public String getBindAddress() {
         return bindAddress;
     }

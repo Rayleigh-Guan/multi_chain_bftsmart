@@ -22,39 +22,38 @@ import io.netty.handler.codec.MessageToByteEncoder;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-
 import bftsmart.reconfiguration.ClientViewController;
 
-
-public class NettyClientPipelineFactory{
+public class NettyClientPipelineFactory {
 
     NettyClientServerCommunicationSystemClientSide ncs;
     Map sessionTable;
 
-    //******* EDUARDO BEGIN **************//
+    // ******* EDUARDO BEGIN **************//
     ClientViewController controller;
-    //******* EDUARDO END **************//
+    // ******* EDUARDO END **************//
 
     ReentrantReadWriteLock rl;
 
-    public NettyClientPipelineFactory(NettyClientServerCommunicationSystemClientSide ncs, Map sessionTable, ClientViewController controller, ReentrantReadWriteLock rl) {
+    public NettyClientPipelineFactory(NettyClientServerCommunicationSystemClientSide ncs, Map sessionTable,
+            ClientViewController controller, ReentrantReadWriteLock rl) {
         this.ncs = ncs;
         this.sessionTable = sessionTable;
         this.rl = rl;
         this.controller = controller;
     }
 
+    public ByteToMessageDecoder getDecoder() {
+        return new NettyTOMMessageDecoder(true, sessionTable, controller, rl,
+                controller.getStaticConf().getUseMACs() == 1);
+    }
 
-    public ByteToMessageDecoder getDecoder(){
-    	return new NettyTOMMessageDecoder(true, sessionTable,controller,rl,controller.getStaticConf().getUseMACs()==1);	
+    public MessageToByteEncoder getEncoder() {
+        return new NettyTOMMessageEncoder(true, sessionTable, rl, controller.getStaticConf().getUseMACs() == 1);
     }
-    
-    public MessageToByteEncoder getEncoder(){
-    	return new NettyTOMMessageEncoder(true, sessionTable,rl, controller.getStaticConf().getUseMACs()==1);	
-    }
-    
-    public SimpleChannelInboundHandler getHandler(){
-    	return ncs;	
+
+    public SimpleChannelInboundHandler getHandler() {
+        return ncs;
     }
 
 }

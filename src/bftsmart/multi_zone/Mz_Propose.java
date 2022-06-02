@@ -11,7 +11,7 @@ public class Mz_Propose {
     public int numNounces;
     public long seed;
     public int numBatchlistItems;
-    public List<Mz_BatchListItem> list=new ArrayList<>();
+    public List<Mz_BatchListItem> list = new ArrayList<>();
     public int numofnotsyncreq;
     public RequestList notsyncreq;
 

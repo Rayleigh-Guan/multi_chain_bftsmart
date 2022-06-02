@@ -22,7 +22,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.crypto.Mac;
 
-
 /**
  *
  * @author Paulo Sousa
@@ -40,20 +39,17 @@ public class NettyClientServerSession {
         this.macSend = macSend;
         this.macReceive = macReceive;
         this.replicaId = replicaId;
-        this.lock =  new ReentrantLock();
+        this.lock = new ReentrantLock();
         this.lastMsgReceived = -1;
     }
-    
 
     public Mac getMacReceive() {
         return macReceive;
     }
 
-
     public Mac getMacSend() {
         return macSend;
     }
-
 
     public Channel getChannel() {
         return channel;
@@ -63,15 +59,15 @@ public class NettyClientServerSession {
         return replicaId;
     }
 
-    public Lock getLock(){
+    public Lock getLock() {
         return lock;
     }
 
-    public int getLastMsgReceived(){
+    public int getLastMsgReceived() {
         return lastMsgReceived;
     }
 
-    public void setLastMsgReceived(int lastMsgReceived_){
+    public void setLastMsgReceived(int lastMsgReceived_) {
         this.lastMsgReceived = lastMsgReceived_;
     }
 

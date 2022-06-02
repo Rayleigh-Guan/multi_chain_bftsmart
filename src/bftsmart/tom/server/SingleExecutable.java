@@ -18,7 +18,8 @@ package bftsmart.tom.server;
 import bftsmart.tom.MessageContext;
 
 /**
- * Executables that implement this interface will receive client requests individually.
+ * Executables that implement this interface will receive client requests
+ * individually.
  *
  */
 public interface SingleExecutable extends Executable {
@@ -35,7 +36,7 @@ public interface SingleExecutable extends Executable {
      * therefore, ensure the determinism required in a replicated state machine.
      *
      * @param command the command issue by the client
-     * @param msgCtx information related with the command
+     * @param msgCtx  information related with the command
      * 
      * @return the reply for the request issued by the client
      */

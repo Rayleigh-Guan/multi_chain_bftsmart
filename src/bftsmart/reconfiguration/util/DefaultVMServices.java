@@ -12,18 +12,17 @@ import bftsmart.reconfiguration.VMServices;
  * @author joao
  */
 public class DefaultVMServices extends VMServices {
-    
+
     public static void main(String[] args) throws InterruptedException {
 
-        if(args.length == 1){
+        if (args.length == 1) {
             System.out.println("####Tpp Service[Disjoint]####");
 
             int smartId = Integer.parseInt(args[0]);
-            
+
             (new DefaultVMServices()).removeServer(smartId);
-            
-                
-        }else if(args.length == 3){
+
+        } else if (args.length == 3) {
             System.out.println("####Tpp Service[Join]####");
 
             int smartId = Integer.parseInt(args[0]);
@@ -32,13 +31,12 @@ public class DefaultVMServices extends VMServices {
 
             (new DefaultVMServices()).addServer(smartId, ipAddress, port);
 
-        }else{
+        } else {
             System.out.println("Usage: java -jar TppServices <smart id> [ip address] [port]");
             System.exit(1);
         }
 
-        Thread.sleep(2000);//2s
-        
+        Thread.sleep(2000);// 2s
 
         System.exit(0);
     }

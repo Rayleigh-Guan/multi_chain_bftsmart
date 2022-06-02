@@ -24,6 +24,7 @@ import bftsmart.tom.util.TOMUtil;
 
 /**
  * Message used during leader change and synchronization
+ * 
  * @author Joao Sousa
  */
 public class LCMessage extends SystemMessage {
@@ -37,17 +38,17 @@ public class LCMessage extends SystemMessage {
     /**
      * Empty constructor
      */
-    public LCMessage(){
-    
+    public LCMessage() {
+
         this.TRIGGER_LC_LOCALLY = false;
     }
 
-
     /**
      * Constructor
-     * @param from replica that creates this message
-     * @param type type of the message (STOP, SYNC, CATCH-UP)
-     * @param ts timestamp of leader change and synchronization
+     * 
+     * @param from    replica that creates this message
+     * @param type    type of the message (STOP, SYNC, CATCH-UP)
+     * @param ts      timestamp of leader change and synchronization
      * @param payload dada that comes with the message
      */
     public LCMessage(int from, int type, int ts, byte[] payload) {
@@ -55,12 +56,15 @@ public class LCMessage extends SystemMessage {
         this.type = type;
         this.ts = ts;
         this.payload = payload == null ? new byte[0] : payload;
-        if (type == TOMUtil.TRIGGER_LC_LOCALLY && from == -1) this.TRIGGER_LC_LOCALLY = true;
-        else this.TRIGGER_LC_LOCALLY  = false;
+        if (type == TOMUtil.TRIGGER_LC_LOCALLY && from == -1)
+            this.TRIGGER_LC_LOCALLY = true;
+        else
+            this.TRIGGER_LC_LOCALLY = false;
     }
 
     /**
      * Get type of message
+     * 
      * @return type of message
      */
     public int getType() {
@@ -69,6 +73,7 @@ public class LCMessage extends SystemMessage {
 
     /**
      * Get timestamp of leader change and synchronization
+     * 
      * @return timestamp of leader change and synchronization
      */
     public int getReg() {
@@ -77,6 +82,7 @@ public class LCMessage extends SystemMessage {
 
     /**
      * Obter data of the message
+     * 
      * @return data of the message
      */
     public byte[] getPayload() {
@@ -84,7 +90,7 @@ public class LCMessage extends SystemMessage {
     }
 
     @Override
-    public void writeExternal(ObjectOutput out) throws IOException{
+    public void writeExternal(ObjectOutput out) throws IOException {
         super.writeExternal(out);
 
         out.writeInt(type);
@@ -93,7 +99,7 @@ public class LCMessage extends SystemMessage {
     }
 
     @Override
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException{
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         super.readExternal(in);
 
         type = in.readInt();

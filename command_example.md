@@ -15,3 +15,6 @@
 ```shell
 ./runscripts/smartrun.sh bftsmart.demo.microbenchmarks.ThroughputLatencyClient 0 50 1000 1024 1 0 1 > client0.out
 ```
+
+
+sh ./runscripts/smartrun.sh bftsmart.demo.testErasureCode.TestErasureCodec 3 1 10240

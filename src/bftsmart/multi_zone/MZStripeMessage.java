@@ -18,30 +18,58 @@ import java.util.Objects;
  */
 
 public class MZStripeMessage extends SystemMessage{
+
     private int batchChainId;       // batchChainId is the producer's ID. 
     private int batchHeight;
+    private int totalLen;           // total length of all stripes' data
     private int stripeId;           // stripeId
+    private int dataLen;            // the valid data length
     private byte[] stripe;
-
 
     public MZStripeMessage(){
 
     }
 
-    public MZStripeMessage(int from, int batchChainId, int batchHeight, int stripeId, byte[] stripe) {
+    public MZStripeMessage(int from, int batchChainId, int batchHeight, int totalLen, int stripeId, int dataLen, byte[] stripe) {
         super(from);
         this.batchChainId = batchChainId;
         this.batchHeight = batchHeight;
+        this.totalLen = totalLen;
         this.stripeId = stripeId;
+        this.dataLen = dataLen;
         this.stripe = stripe;
+        assert(dataLen <= stripe.length);
     }
+
+    public int getHeight(){
+        return this.batchHeight;
+    }
+
+    public int getBatchChainId(){
+        return this.batchChainId;
+    }
+
+    public int getStripeId(){
+        return this.stripeId;
+    }
+
+    public int getValidDataLen(){
+        return this.dataLen;
+    }
+
+    public int getTotalLen(){
+        return this.totalLen;
+    }
+
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
         super.writeExternal(out);
-        out.writeInt(batchChainId);
+        out.writeInt(this.batchChainId);
         out.writeInt(this.batchHeight);
+        out.writeInt(this.totalLen);
         out.writeInt(this.stripeId);
+        out.writeInt(this.dataLen);
         if(stripe == null) {
             out.writeInt(-1);
         }else {
@@ -55,7 +83,9 @@ public class MZStripeMessage extends SystemMessage{
         super.readExternal(in);
         this.batchChainId = in.readInt();
         this.batchHeight = in.readInt();
+        this.totalLen = in.readInt();
         this.stripeId = in.readInt();
+        this.dataLen = in.readInt();
         int toRead = in.readInt();
         if (toRead != -1) {
             stripe = new byte[toRead];
@@ -93,11 +123,10 @@ public class MZStripeMessage extends SystemMessage{
         Objects.equals(stripe, msg.stripe) ;
     }
 
-
     @Override
     public String toString(){
-        return String.format("BatchChain: %d, height: %d, stripeId: %d, stripeLen: %d\n",
-                this.batchChainId, this.batchHeight, this.stripeId, this.stripe.length);
+        return String.format("Sender_%d_BatchChain_%d_height_%d_totalLen_%d_stripeId_%d_stripeLen_%d_validDataLen_%d",
+            this.getSender(), this.batchChainId, this.batchHeight, this.totalLen, this.stripeId, this.stripe.length, this.dataLen);
     }
     
 }

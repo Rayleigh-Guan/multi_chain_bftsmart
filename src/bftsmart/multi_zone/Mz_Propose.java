@@ -15,4 +15,11 @@ public class Mz_Propose {
     public int numofnotsyncreq;
     public RequestList notsyncreq;
 
+    @Override
+    public String toString(){
+        String notsyncreqStr = (notsyncreq == null) ? "|":notsyncreq.toString();
+        String listStr = (list == null) ? "|":list.toString();
+        return String.format("timestamp:%d_nounce:%d_seed:%d_numBatchlistItems:%d_list:%s_numofnotsyncreq:%d_notsyncreq%s", 
+            timestamp, numNounces, seed, numBatchlistItems, listStr, numofnotsyncreq, notsyncreqStr);
+    }
 }

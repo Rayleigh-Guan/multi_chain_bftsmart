@@ -19,4 +19,9 @@ public class Mz_Batch {
     public int getNodeId() {
         return NodeId;
     }
+
+    @Override
+    public String toString(){
+        return String.format("NodeId:%d, BatchId:%d,Req:%s,chainPooltip:%s", NodeId, BatchId, Req.toString(), chainPooltip.toString());
+    }
 }

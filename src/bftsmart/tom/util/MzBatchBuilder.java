@@ -5,6 +5,7 @@ import bftsmart.tom.core.messages.TOMMessage;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
+import java.util.Arrays;
 
 public class MzBatchBuilder {
     private void putMessage(ByteBuffer MzBatchBuffer, byte[] message, boolean addSig, byte[] signature, Long recp) {
@@ -84,4 +85,23 @@ public class MzBatchBuilder {
         return MzBacthBuffer.array();
     }
 
+    /**
+     * 
+     * @param bytes batch array
+     * @param k the number stripes to divide
+     * @param m the number of extra stripes to recovery
+     * @return a squre of byte array.
+     */
+    public byte[][] prepareByteArray(byte[] bytes, int k, int m) {
+        assert(k <= bytes.length );
+        final int arrayLen = (int) Math.ceil(bytes.length/((double) k));
+        byte[][] result = new byte[k+m][arrayLen];
+        int from, to;
+        for (int i = 0; i < k; i++) {
+            from = i * arrayLen;
+            to = from + arrayLen;
+            result[i] = Arrays.copyOfRange(bytes, from, to);
+        }
+        return result;
+    }
 }

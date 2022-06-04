@@ -24,8 +24,10 @@ import bftsmart.tom.core.messages.TOMMessage;
 import bftsmart.tom.core.messages.ForwardedMessage;
 import bftsmart.tom.leaderchange.LCMessage;
 import bftsmart.tom.util.TOMUtil;
+import bftsmart.multi_zone.MZBlock;
 import bftsmart.multi_zone.MZMessage;
 import bftsmart.multi_zone.MZNodeMan;
+import bftsmart.multi_zone.MZStripeMessage;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -136,6 +138,14 @@ public class MessageHandler {
         else if (sm instanceof MZMessage) {
             MZMessage mzMessage = (MZMessage) sm;
             this.mzNodeMan.deliver(mzMessage);  
+        }
+        else if (sm instanceof MZStripeMessage) {
+            MZStripeMessage msg = (MZStripeMessage) sm;
+            this.tomLayer.OnMZStripe(msg);
+        }
+        else if (sm instanceof MZBlock) {
+            MZBlock block = (MZBlock) sm;
+            this.tomLayer.OnMZBlock(block);
         }
         else {
             if (tomLayer.controller.getStaticConf().getUseMACs() == 0 || sm.authenticated) {

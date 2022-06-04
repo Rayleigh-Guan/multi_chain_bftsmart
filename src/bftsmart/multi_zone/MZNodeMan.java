@@ -1,9 +1,11 @@
 package bftsmart.multi_zone;
 
+import bftsmart.tom.util.MzProposeBuilder;
+
 import bftsmart.reconfiguration.ServerViewController;
 import bftsmart.communication.ServerCommunicationSystem;
 import bftsmart.consensus.messages.ConsensusMessage;
-import bftsmart.consensus.messages.MessageFactory;
+import bftsmart.communication.SystemMessage;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Queue;
@@ -15,10 +17,8 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,8 +46,8 @@ public class MZNodeMan {
     private Map<Integer, Map<Integer, Long>> routingTable; // Map<consensusNode, <nextJumpNode, latency>>
 
     // stripe, block, mzbatch that need to forward.
-    private Queue<ConsensusMessage> dataQueue ;
-    private Map<byte[], ConsensusMessage> candidateBlockMap;
+    private Queue<SystemMessage> dataQueue ;
+    private Map<String, SystemMessage> candidateBlockMap;
 
     private int myId;
     private int zoneId;
@@ -77,7 +77,7 @@ public class MZNodeMan {
         this.lastReceivedRelayerMsg = null;
 
         // for send data to subscriber node.
-        this.dataQueue = new ConcurrentLinkedQueue<ConsensusMessage>();
+        this.dataQueue = new ConcurrentLinkedQueue<SystemMessage>();
         this.candidateBlockMap = new ConcurrentHashMap<>();
 
         this.isRelayer = false;
@@ -102,33 +102,54 @@ public class MZNodeMan {
         return replyMsg;
     }
 
-    public void addForwardData(ConsensusMessage msg) {
+    public void addForwardData(SystemMessage msg) {
+        assert(msg != null);
         this.dataQueue.add(msg);
     }
 
     // forward a new block to subscribers.
-    public void forwardNewBlock(byte[] blockHash, Set<ConsensusMessage> proofSet) {
-        ConsensusMessage msg = this.candidateBlockMap.get(blockHash);
-
+    public void forwardNewBlock(byte[] blockHash) {
+        String hash = new String(blockHash).substring(0, 16);
+        SystemMessage msg = this.candidateBlockMap.get(hash);
+        if (msg == null) {
+            logger.info("forwardNewBlock can not find the candidateblock [{}]", hash);
+            return;
+        }
         // baozhuang msg into a MZMessage.
         addForwardData(msg);
     }
 
-    public void addCandidateBlock(byte[] hash, ConsensusMessage msg) {
-        this.candidateBlockMap.put(hash, msg);
+    public void addCandidateBlock(byte[] blockHash, Mz_Propose propose) {
+        MZBlock candidateBlock = new MZBlock(myId, blockHash, propose);
+        String hash = new String(blockHash).substring(0, 16);
+        this.candidateBlockMap.put(hash, candidateBlock);
+        logger.info("Node {} add msg [{}] to candidateblock [{}]", myId, hash);
     }
 
     public void ForwardDataToSubscriber() {
         if (this.dataQueue.isEmpty()) 
             return;
         logger.info("dataQueue size: {}, consensus nodes: {}, subscriberMap: {}", dataQueue.size(), this.controller.getCurrentViewAcceptors(),this.subscriberMap);
-        ConsensusMessage msg = this.dataQueue.poll();
+        SystemMessage msg = this.dataQueue.poll();
         for(Map.Entry<Integer, HashSet<Integer>> entry: this.subscriberMap.entrySet()) {
             int nodeId = entry.getKey();
             int[] target = {nodeId};
-            if (msg.getType() == MessageFactory.MZBATCH) {
-                cs.send(target, msg);
+            if (msg instanceof  ConsensusMessage) {
+                ConsensusMessage conMsg = (ConsensusMessage)(msg);
+                cs.send(target, conMsg);
                 logger.info("Forward {} to {}", msg.toString(), target);
+            } else if (msg instanceof MZBlock) {
+                MZBlock block = (MZBlock)(msg);
+                // seralize block content
+                Mz_Propose propose = block.getPropose();
+                boolean useSig = (this.controller.getStaticConf().getUseSignatures() == 1);
+                MzProposeBuilder mzpb = new MzProposeBuilder(System.nanoTime());
+                mzpb.makeMzPropose(propose.list, propose.notsyncreq, propose.numNounces, System.currentTimeMillis(), useSig);
+                cs.send(target, block);
+                logger.info("Forward {} to {}", msg.toString(), target);
+            } else if (msg instanceof MZStripeMessage){
+                MZStripeMessage stripe = (MZStripeMessage)(msg);
+                cs.send(target, stripe);
             }
         } 
         // broadcast data hash to other nodes.

@@ -13,4 +13,9 @@ public class Mz_BatchListItem {
         this.EndHeight = eh;
         this.usedful = uf;
     }
+
+    @Override
+    public String toString(){
+        return String.format("NodeId:%d_StartHeight:%d_EndHeight:%d_usedful:%d", NodeId, StartHeight,EndHeight,usedful);
+    }
 }

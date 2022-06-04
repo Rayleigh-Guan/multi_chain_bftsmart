@@ -11,10 +11,13 @@
 ./runscripts/smartrun.sh bftsmart.demo.microbenchmarks.ThroughputLatencyServer 3 400 0 0 2 > server3.out
 ```
 
-## client:
+## ThroughputLatencyClient:
 ```shell
-./runscripts/smartrun.sh bftsmart.demo.microbenchmarks.ThroughputLatencyClient 0 50 1000 1024 1 0 1 > client0.out
+./runscripts/smartrun.sh bftsmart.demo.microbenchmarks.ThroughputLatencyClient 0 50 1000 1024 1 false true > client0.out
 ```
 
+## AsyncLatencyClient
+sh ./runscripts/smartrun.sh bftsmart.demo.microbenchmarks.AsyncLatencyClient 3 5 100 512 7 false true 
 
+## test erasure code
 sh ./runscripts/smartrun.sh bftsmart.demo.testErasureCode.TestErasureCodec 3 1 10240

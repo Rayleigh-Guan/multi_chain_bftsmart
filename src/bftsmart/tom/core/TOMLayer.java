@@ -38,12 +38,6 @@ import bftsmart.consensus.messages.ConsensusMessage;
 import bftsmart.consensus.messages.MessageFactory;
 import bftsmart.consensus.roles.Acceptor;
 import bftsmart.multi_zone.*;
-import bftsmart.multi_zone.MZNodeMan;
-import bftsmart.multi_zone.MZMessage;
-import bftsmart.multi_zone.Mz_Batch;
-import bftsmart.multi_zone.Mz_BatchListItem;
-import bftsmart.multi_zone.Mz_Propose;
-import bftsmart.multi_zone.multi_chain;
 import bftsmart.reconfiguration.ServerViewController;
 import bftsmart.statemanagement.StateManager;
 import bftsmart.tom.ServiceReplica;
@@ -54,6 +48,9 @@ import bftsmart.tom.leaderchange.RequestsTimer;
 import bftsmart.tom.server.Recoverable;
 import bftsmart.tom.server.RequestVerifier;
 import bftsmart.tom.util.*;
+
+import bftsmart.erasureCode.ReedSolomon;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.concurrent.CountDownLatch;
@@ -199,7 +196,8 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         this.clientsManager = new ClientsManager(this.controller, requestsTimer, this.verifier);
 
         this.syncher = new Synchronizer(this); // create synchronizer
-        this.multiChain = new multi_chain(receiver.getId());
+        this.multiChain = new multi_chain(receiver.getId(), this.controller.getCurrentViewN(), 
+            this.controller.getCurrentViewF(),  this.controller.getStaticConf().getUseSignatures()==1);
 
         this.mzNodeMan = mzNodeMan;
         if (this.controller.isInCurrentView())
@@ -423,11 +421,13 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     @Override
     public void run() {
         logger.debug("Running."); // TODO: can't this be outside of the loop?
-        this.mznodeThread.start();
-        if (this.controller.isInCurrentView()){
+        
+        // this.mznodeThread.start();
+        if (this.controller.isInCurrentView() ){
             // pack batch
             this.packbatchthread.start();
-            // create propose
+            
+            // leader node start to create propose
             startCreatePropose();
         }
 
@@ -447,7 +447,9 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         this.dt.delivery(dec); // Sends the decision to the delivery thread
         // forward candidate block
         Epoch epoch = dec.getDecisionEpoch();
-        this.mzNodeMan.forwardNewBlock(epoch.propValueHash, epoch.getProof());
+
+        // Todo forward block to other nodes
+        this.mzNodeMan.forwardNewBlock(epoch.propValueHash);
     }
 
     /**
@@ -615,6 +617,65 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         }
     }
 
+    public void OnMZStripe(MZStripeMessage msg) {
+        int myId = this.controller.getStaticConf().getProcessId();
+        // only forward stripe from other node
+        if (msg.getBatchChainId() == myId || msg.getSender() == myId)   return;
+        // logger.info("Node {} receive a MZStripeMsg: {}", myId, msg.toString());
+        this.multiChain.addStripeMsg(msg);
+
+        // if I am a consensus node and stripeId is myId,
+        // then forward the message to other consensus nodes.
+        if (this.controller.isInCurrentView() && msg.getStripeId() == myId) {
+            MZStripeMessage forwardMsg = new MZStripeMessage(myId, msg.getBatchChainId(), msg.getHeight(),
+                msg.getTotalLen(), msg.getStripeId(),msg.getValidDataLen(), msg.getStripe());
+            int[] consensusNodes = this.controller.getCurrentViewAcceptors();
+            for(int nodeId: consensusNodes){
+                if (nodeId == myId || nodeId == msg.getSender())    continue;
+                communication.send(new int[]{nodeId}, forwardMsg);
+                // logger.info("Forward a MZStripeMsg: {} to {}", forwardMsg.toString(), nodeId);     
+            }
+        }
+        // Todo forward stripe to my subscriber
+    }
+
+    public byte[] rebuildPropose(Mz_Propose mz_propose) {
+        getsync_reply reply = this.multiChain.getsyncedRequestfromlist(mz_propose.list);
+        if (!reply.getok()) {
+            logger.error("Stage:OnMzPropose2 --err in getsyncedRequestfromlist");
+            return null;
+        }
+        this.multiChain.setLastbatchlist(mz_propose.list);
+        RequestList totalreqlist = new RequestList();
+        int numNotSyncReq = 0, numSyncReq = 0;
+        if (mz_propose.numofnotsyncreq > 0) {
+            numNotSyncReq = mz_propose.notsyncreq.size();
+            totalreqlist.addAll(mz_propose.notsyncreq);
+        }
+        if (reply.getlist().isEmpty() == false) {
+            numSyncReq = reply.getlist().size();
+            totalreqlist.addAll(reply.getlist());
+        }
+        int myId = this.controller.getStaticConf().getProcessId();
+        logger.info("Node {} receive a mzpropose, {} full txes, {} batch txes, total {} txes", myId, numNotSyncReq, numSyncReq, totalreqlist.size());
+        byte[] batch = bb.makeBatch(totalreqlist, mz_propose.numNounces, mz_propose.seed, mz_propose.timestamp, 
+        controller.getStaticConf().getUseSignatures() == 1);
+        return batch;
+    }
+
+    public void OnMZBlock(MZBlock block){
+        boolean useSig = this.controller.getStaticConf().getUseSignatures()==1;
+        Mz_Propose mz_propose = block.deseralizePropose(useSig);
+        byte[] batch = rebuildPropose(mz_propose);
+        byte[] blockHash = computeHash(batch);
+        if (blockHash == block.getBlockHash()) {
+            logger.info("Successfully receives a new block {}", blockHash.toString());
+        }
+        else {
+            logger.warn("Failed to rebuild a block {}, propose: {}", blockHash.toString(), mz_propose.toString());
+        }
+    }
+
     public void OnMzPropose(Epoch epoch, ConsensusMessage msg) {
         MzProposeReader mzproposeReader = new MzProposeReader(msg.getValue(),
                 controller.getStaticConf().getUseSignatures() == 1);
@@ -643,44 +704,29 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     }
 
     public void OnMzPropose(ConsensusMessage msg) {
-        byte[] blockHash = computeHash(msg.getValue());
-        this.mzNodeMan.addCandidateBlock(blockHash, msg);
         MzProposeReader mzproposeReader = new MzProposeReader(msg.getValue(),
                 controller.getStaticConf().getUseSignatures() == 1);
         int myId = this.controller.getStaticConf().getProcessId();
-        logger.debug("Stage:OnMzPropose2 --Nodeid: " + myId + " received mzpropose from: " + msg.getSender()
-                + " --msg type: " + msg.getType());
-        System.out.println("Stage: received Mzpropose at：" + System.currentTimeMillis());
         Mz_Propose mz_propose = mzproposeReader.deserialisemsg();
-        getsync_reply reply = this.multiChain.getsyncedRequestfromlist(mz_propose.list);
-        if (!reply.getok()) {
-            logger.error("Stage:OnMzPropose2 --err in getsyncedRequestfromlist");
-            return;
-        }
-        MessageFactory messageFactory = new MessageFactory(msg.getSender());
-
-        this.multiChain.setLastbatchlist(mz_propose.list);
-        RequestList totalreqlist = new RequestList();
-        int numNotSyncReq = 0, numSyncReq = 0;
-
-        if (mz_propose.numofnotsyncreq > 0) {
-            numNotSyncReq = mz_propose.notsyncreq.size();
-            totalreqlist.addAll(mz_propose.notsyncreq);
-        }
-        if (reply.getlist().isEmpty() == false) {
-            numSyncReq = reply.getlist().size();
-            totalreqlist.addAll(reply.getlist());
-        }
+        logger.debug("Stage:OnMzPropose2 --Nodeid: " + myId + " received mzpropose from: " + msg.getSender()
+        + " --msg type: " + msg.getType());
+        System.out.println("Stage: received Mzpropose at: " + System.currentTimeMillis());
+        
+        // record last tiem receive a propose
         long now = System.currentTimeMillis();
-        long timediff = (now - lastTimeReceiveMzPropose);
-        logger.info(
-                "Node {} receive a mzpropose from node {}, {} full txes, {} batch txes, total {} txes, msg: {}, at time {}, after {} ms",
-                myId, msg.getSender(), numNotSyncReq, numSyncReq, totalreqlist.size(), msg.toString(), now, timediff);
-        lastTimeReceiveMzPropose = now;
-        this.acceptor.deliver(messageFactory.createPropose(msg.getNumber(), msg.getEpoch(),
-                bb.makeBatch(totalreqlist, mz_propose.numNounces, mz_propose.seed, mz_propose.timestamp,
-                        controller.getStaticConf().getUseSignatures() == 1)));
+        long timediff = (now - this.lastTimeReceiveMzPropose);
+        this.lastTimeReceiveMzPropose = now;
+        logger.info("Node {} receive a mzpropose from node {}, msg: {}, at time {}, after {} ms",myId, msg.getSender(),msg.toString(), now, timediff);
+        
+        byte[] batch = rebuildPropose(mz_propose);
 
+        // record the candidate block
+        byte[] blockHash = computeHash(batch);
+        this.mzNodeMan.addCandidateBlock(blockHash, mz_propose);
+        
+        // convert the msg to a propose message 
+        MessageFactory messageFactory = new MessageFactory(msg.getSender());
+        this.acceptor.deliver(messageFactory.createPropose(msg.getNumber(), msg.getEpoch(), batch));
     }
 
     public void updatepackedheight() {
@@ -695,45 +741,88 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                 int myId = controller.getStaticConf().getProcessId();
                 int useSignature = controller.getStaticConf().getUseSignatures();
                 MessageFactory messageFactory = new MessageFactory(myId);
+                // until there are requests to be packed.
+                messagesLock.lock();
+                if (clientsManager.havePendingRequests() == false) {
+                    haveMessages.awaitUninterruptibly();
+                }
+                messagesLock.unlock();
                 while (!Thread.interrupted()) {
-                    // // blocks until there are requests to be packed or the batch tip need to be
-                    // updated.
-                    // messagesLock.lock();
-                    // if (! && multiChain.getUpdateTipState() == false) {
-                    // haveMessages.awaitUninterruptibly();
-                    // }
-                    // messagesLock.unlock();
                     long interval = System.currentTimeMillis() - lastsend;
                     // todo multiChain.getMyGeneratedHeight()!=-1
                     // 是否有必要？以及对于空batch只是用来更新的batchid是否需要递增，以及是否需要存？
                     if ((interval > 5 && clientsManager.havePendingRequests()) || (interval > 500
                             && multiChain.getUpdateTipState() && multiChain.getMyGeneratedHeight() != -1)) {
                         RequestList reqlist = clientsManager.getPendingRequests();
-                        if (!reqlist.isEmpty()) {
-                            multiChain.updateMyGeneratedHeight();
-                        }
-                        // multiChain.setUpdateTipState(false); //如果本来有更新，那么也无法发送了
-                        // 如果注释掉，没有地方置为false，会一直处于更新的状态，发送很多无用的空batch
+                        // 无论 reqlist 是否为空，都更新 batchheight
+                        // 1. 这样保证每个 batch 都是唯一的，不应该存在两个相同高度的batch,如果允许的话，拜占庭节点可以在同一个高度制造很多个不同的batch
+                        // 2. 每个节点收到一个 stripe 后根据 stripe 对应的 batchchain编号、batch 高度，stripe编号存储并解码 batch，
+                        //     同一个高度的两个batch 会导致 stripe 解码失败
+                        // if (!reqlist.isEmpty()) {
+                        //     multiChain.updateMyGeneratedHeight();
+                        // }
+                        multiChain.updateMyGeneratedHeight();
                         multiChain.setUpdateTipState(false);
                         Map<Integer, Integer> chainPoolTip = multiChain.getMyChainPoolTip();
                         // chainPoolTip.put(myId, multiChain.getMyGeneratedHeight()); 多余的操作
-                        multiChain.add(new Mz_Batch(myId, multiChain.getMyGeneratedHeight(), reqlist, chainPoolTip));
-                        byte[] batch = mzbb.makeMzBatch(myId, multiChain.getMyGeneratedHeight(), reqlist,
-                                useSignature == 1, chainPoolTip);
-                        ConsensusMessage batchMessage = messageFactory.createMzBatch(0, 0, batch);
-                        System.out.println("Stage: packbatch try to send --Nodeid: " + myId + " create Mzbatch height:"
-                                + (multiChain.getMyGeneratedHeight()) + " batch size: " + reqlist.size() + " at time: "
-                                + System.currentTimeMillis());
-                        communication.send(controller.getCurrentViewAcceptors(), batchMessage);
-                        System.out.println("Stage: packbatch have sended --Nodeid: " + myId + " create Mzbatch height:"
-                                + (multiChain.getMyGeneratedHeight()) + " batch size: " + reqlist.size() + " at time: "
-                                + System.currentTimeMillis());
+                        Mz_Batch mzbatch = new Mz_Batch(myId, multiChain.getMyGeneratedHeight(), reqlist, chainPoolTip);
+                        multiChain.add(mzbatch);
+                        byte[] batch = mzbb.makeMzBatch(myId, multiChain.getMyGeneratedHeight(), reqlist, useSignature == 1, chainPoolTip);
+                        if (controller.getStaticConf().getDataDisStrategy() == "MZ") {
+                            // use erasure code to encode stripe array
+                            int N = controller.getCurrentViewN();
+                            int F = controller.getCurrentViewF();
+                            byte[][] stripeArray = mzbb.prepareByteArray(batch, N-F, F);
 
-                        logger.info("Stage: packbatch --Nodeid: " + myId + " create Mzbatch height:"
-                                + (multiChain.getMyGeneratedHeight()) + " batch size: " + reqlist.size() + " at time: "
-                                + System.currentTimeMillis());
-                        logger.debug("Batch Request: {}", reqlist.toString());
-                        lastsend = System.currentTimeMillis();
+                            // for debug
+                            for (int i = 0; i < stripeArray.length; ++i) {
+                                System.out.printf("stripeArray[%d]'s len: %d", i ,stripeArray[i].length);
+                            }
+                            System.out.printf(" batch len: %d \n", batch.length);
+
+                            ReedSolomon rs = ReedSolomon.create(N-F, F);
+                            long encodeStart = System.nanoTime();
+                            rs.encodeParity(stripeArray, 0, stripeArray[0].length);
+                            long encodeTime = System.nanoTime() - encodeStart;
+                            final int batchLen = batch.length;
+                            logger.info("Node {} encode a batch {}, length {} Bytes, uses {} ns", myId, mzbatch, batchLen, encodeTime);
+                            MZStripeMessage[] msgArray = new MZStripeMessage[N];
+                            
+                            // create MZStripeMessage and broadcast to other nodes
+                            assert(stripeArray.length > 0);
+                            int dataLen = stripeArray[0].length, totalLen = 0;
+                            for(int stripeId = 0; stripeId < N; ++stripeId) {
+                                if (totalLen + stripeArray[stripeId].length > batchLen)
+                                    dataLen = batchLen - totalLen;
+                                totalLen += dataLen;
+                                msgArray[stripeId] = new MZStripeMessage(myId, myId, multiChain.getMyGeneratedHeight(), batchLen, stripeId, dataLen, stripeArray[stripeId]);
+                                if (stripeId == myId) 
+                                    continue;
+                                logger.info("Node {} Send a stripe to node {}, stripe: {}", myId, stripeId, msgArray[stripeId].toString());
+                                communication.send(new int[]{stripeId}, msgArray[stripeId]);
+                            }  
+
+                            // broadcast my stripe to all nodes.
+                            assert(myId >= 0 && myId < N);
+                            logger.info("Node {} broadcasts stripe {} to all nodes", myId, msgArray[myId].toString());
+                            communication.send(controller.getCurrentViewAcceptors(), msgArray[myId]);
+                        }
+                        else {
+                            ConsensusMessage batchMessage = messageFactory.createMzBatch(0, 0, batch);
+                            System.out.println("Stage: packbatch try to send --Nodeid: " + myId + " create Mzbatch height:"
+                                    + (multiChain.getMyGeneratedHeight()) + " batch size: " + reqlist.size() + " at time: "
+                                    + System.currentTimeMillis());
+                            communication.send(controller.getCurrentViewAcceptors(), batchMessage);
+                            System.out.println("Stage: packbatch have sended --Nodeid: " + myId + " create Mzbatch height:"
+                                    + (multiChain.getMyGeneratedHeight()) + " batch size: " + reqlist.size() + " at time: "
+                                    + System.currentTimeMillis());
+
+                            logger.info("Stage: packbatch --Nodeid: " + myId + " create Mzbatch height:"
+                                    + (multiChain.getMyGeneratedHeight()) + " batch size: " + reqlist.size() + " at time: "
+                                    + System.currentTimeMillis());
+                            logger.debug("Batch Request: {}", reqlist.toString());
+                            lastsend = System.currentTimeMillis();
+                        }
                     }
                 }
             }
@@ -771,21 +860,10 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                 if (!doWork)
                     break;
     
-                logger.debug("Node %d start to create Propose\n", myId);
-    
                 logger.debug("I'm the leader.");
-    
-                // blocks until there are requests to be processed/ordered
-                // messagesLock.lock();
-                // if (!clientsManager.havePendingRequests()) {
-                // haveMessages.awaitUninterruptibly();
-                // }
-                // messagesLock.unlock();
     
                 if (!doWork)
                     break;
-    
-                logger.debug("There are messages to be ordered.");
     
                 logger.debug("I can try to propose.");
     

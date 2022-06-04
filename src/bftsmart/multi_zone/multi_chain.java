@@ -2,6 +2,10 @@ package bftsmart.multi_zone;
 
 import bftsmart.clientsmanagement.RequestList;
 import bftsmart.tom.core.messages.TOMMessage;
+import bftsmart.tom.util.MzBatchReader;
+import bftsmart.consensus.messages.ConsensusMessage;
+import bftsmart.consensus.messages.MessageFactory;
+import bftsmart.multi_zone.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,13 +14,13 @@ import java.util.List;
 import java.util.Map;
 import java.lang.Math;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class multi_chain {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     private int replica_num = 4;
-
     private List<Mz_Batch>[] ChainPool = new ArrayList[this.replica_num];
     private int[] nTxArray;
     private int[] PackagedHeight = new int[this.replica_num];
@@ -27,9 +31,17 @@ public class multi_chain {
     private ReentrantLock mzlock = new ReentrantLock();
     private List<Mz_BatchListItem> lastbatchlist = new ArrayList<>();
 
-    public multi_chain(Integer nodeid) {
+    private Map<Integer, StripeMessageCache> stripeMsgMap;
+    private int f;
+    private boolean useSig;
+
+    public multi_chain(int nodeid, int replicaNum, int f, boolean useSig) {
         multicastTip = new AtomicBoolean(false);
+        this.replica_num = replicaNum;
+        this.f = f;
+        this.useSig = useSig;
         nTxArray = new int[this.replica_num];
+        this.stripeMsgMap = new ConcurrentHashMap<>();
         for (int i = 0; i < this.replica_num; i++) {
             this.ChainPool[i] = new ArrayList<>();
             this.PackagedHeight[i] = -1;
@@ -47,23 +59,44 @@ public class multi_chain {
         return multicastTip.get();
     }
 
+    public void addStripeMsg(MZStripeMessage msg){
+        if (this.stripeMsgMap.containsKey(msg.getBatchChainId()) == false){
+            this.stripeMsgMap.put(msg.getBatchChainId(), new StripeMessageCache(this.replica_num-this.f, this.replica_num));
+        }
+        StripeMessageCache cache = this.stripeMsgMap.get(msg.getBatchChainId());
+        if (cache.oldMsg(msg))  return;
+        boolean res = cache.addStripe(msg);
+        logger.info("Node_{}_add_{}_res_{}_receive {} stripes, quorum is {}", NodeID, msg.toString(), res,cache.getReceivedStripeNum(msg.getHeight()), cache.getQuorum());
+        
+        // Todo 如果这个 stripe 对应高度更低的 batch 我没有收到，直接解码后放入 ChainPool 会导致问题
+        if (cache.receiveQuorum(msg.getHeight())){
+            long decodeStart = System.nanoTime();
+            byte[] batch = cache.decodeMsg(msg.getHeight());
+            long decodeTime = System.nanoTime() - decodeStart;
+            MzBatchReader batchReader = new MzBatchReader(batch, this.useSig);
+            Mz_Batch mzbatch = batchReader.deserialisemsg();
+            logger.info("Node {} deseralize a batch {}, length {} Bytes, uses {} ns", NodeID, mzbatch, batch.length, decodeTime);
+            this.add(mzbatch);
+        }
+    }
+
     public void add(Mz_Batch value) {
         this.mzlock.lock();
         int nodeid = value.NodeId;
-        if (!value.Req.isEmpty()) {
-            this.ChainPool[nodeid].add(value);
-        }
+        // if (!value.Req.isEmpty()) {
+        //    this.ChainPool[nodeid].add(value);
+        // }
+        // Todo: if the value's BatchId not equal to the ChainPool[nodeId]'s tail batch?
+        this.ChainPool[nodeid].add(value);
         // received a new batch, we need to update our tip.
         if (nodeid != this.NodeID && !value.Req.isEmpty()) {
             setUpdateTipState(true);
         }
         nTxArray[nodeid] += value.Req.size();
         logger.info(
-                "--Nodeid: {}, received Batch from {}, batchId: {}, request num:{}, current batch len: {}, tipArray: {}, total received Tx: {}, should I update my Tip: {}",
+                "Node {} received Batch from {}, batchId: {}, request num:{}, current batch len: {}, tipArray: {}, total received Tx: {}, should I update my Tip: {}",
                 this.NodeID, nodeid, value.BatchId, value.Req.size(), this.ChainPool[nodeid].size(),
                 value.chainPooltip.toString(), nTxArray[nodeid], getUpdateTipState());
-        logger.info("--Nodeid: {}, received Batch from {}, requests: {}", this.NodeID, nodeid, value.BatchId,
-                value.Req);
         this.mzlock.unlock();
         System.out.println("--Nodeid: " + this.NodeID + ", received Batch from " + nodeid + ", requests: " + value.Req
                 + " at time: " + System.currentTimeMillis());

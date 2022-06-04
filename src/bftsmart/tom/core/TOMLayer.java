@@ -422,7 +422,8 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     public void run() {
         logger.debug("Running."); // TODO: can't this be outside of the loop?
         
-        // this.mznodeThread.start();
+        if (this.controller.getStaticConf().getDataDisStrategy() == "MZ")
+            this.mznodeThread.start();
         if (this.controller.isInCurrentView() ){
             // pack batch
             this.packbatchthread.start();
@@ -620,15 +621,17 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     public void OnMZStripe(MZStripeMessage msg) {
         int myId = this.controller.getStaticConf().getProcessId();
         // only forward stripe from other node
-        if (msg.getBatchChainId() == myId || msg.getSender() == myId)   return;
-        // logger.info("Node {} receive a MZStripeMsg: {}", myId, msg.toString());
+        if (msg.getBatchChainId() == myId || msg.getSender() == myId)
+           return;
+        if (false == this.controller.isInCurrentView())
+            logger.info("Node {} receive a MZStripeMsg: {}", myId, msg.toString());
         this.multiChain.addStripeMsg(msg);
 
         // if I am a consensus node and stripeId is myId,
         // then forward the message to other consensus nodes.
-        if (this.controller.isInCurrentView() && msg.getStripeId() == myId) {
-            MZStripeMessage forwardMsg = new MZStripeMessage(myId, msg.getBatchChainId(), msg.getHeight(),
+        MZStripeMessage forwardMsg = new MZStripeMessage(myId, msg.getBatchChainId(), msg.getHeight(),
                 msg.getTotalLen(), msg.getStripeId(),msg.getValidDataLen(), msg.getStripe());
+        if (this.controller.isInCurrentView() && msg.getStripeId() == myId) {
             int[] consensusNodes = this.controller.getCurrentViewAcceptors();
             for(int nodeId: consensusNodes){
                 if (nodeId == myId || nodeId == msg.getSender())    continue;
@@ -636,13 +639,18 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                 // logger.info("Forward a MZStripeMsg: {} to {}", forwardMsg.toString(), nodeId);     
             }
         }
-        // Todo forward stripe to my subscriber
+        // A non-consensus node always relays a stripe message
+        // A consensus node only relays stripes whose stripeId equals to its id.
+        if (this.controller.isInCurrentView()==false || msg.getStripeId() == myId ) {
+            // Todo forward stripe to my subscriber
+            mzNodeMan.addForwardData(forwardMsg);
+        }
     }
 
     public byte[] rebuildPropose(Mz_Propose mz_propose) {
         getsync_reply reply = this.multiChain.getsyncedRequestfromlist(mz_propose.list);
         if (!reply.getok()) {
-            logger.error("Stage:OnMzPropose2 --err in getsyncedRequestfromlist");
+            logger.error("Stage:rebuildPropose --err in getsyncedRequestfromlist");
             return null;
         }
         this.multiChain.setLastbatchlist(mz_propose.list);
@@ -664,15 +672,17 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     }
 
     public void OnMZBlock(MZBlock block){
+        logger.info("Node {} receive a block {}", this.controller.getStaticConf().getProcessId(), MZNodeMan.bytesToHex(block.getBlockHash()));
         boolean useSig = this.controller.getStaticConf().getUseSignatures()==1;
         Mz_Propose mz_propose = block.deseralizePropose(useSig);
         byte[] batch = rebuildPropose(mz_propose);
         byte[] blockHash = computeHash(batch);
-        if (blockHash == block.getBlockHash()) {
-            logger.info("Successfully receives a new block {}", blockHash.toString());
+        
+        if (Arrays.equals(blockHash, block.getBlockHash())) {
+            logger.info("Successfully receives a new block {}", MZNodeMan.bytesToHex(blockHash));
         }
         else {
-            logger.warn("Failed to rebuild a block {}, propose: {}", blockHash.toString(), mz_propose.toString());
+            logger.warn("Failed to rebuild a block {}, myhash: {}",MZNodeMan.bytesToHex(blockHash), MZNodeMan.bytesToHex(block.getBlockHash()));
         }
     }
 
@@ -722,7 +732,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
 
         // record the candidate block
         byte[] blockHash = computeHash(batch);
-        this.mzNodeMan.addCandidateBlock(blockHash, mz_propose);
+        this.mzNodeMan.addCandidateBlock(blockHash, mz_propose, msg.getValue());
         
         // convert the msg to a propose message 
         MessageFactory messageFactory = new MessageFactory(msg.getSender());
@@ -806,6 +816,9 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                             assert(myId >= 0 && myId < N);
                             logger.info("Node {} broadcasts stripe {} to all nodes", myId, msgArray[myId].toString());
                             communication.send(controller.getCurrentViewAcceptors(), msgArray[myId]);
+
+                            // forward the data to my subscriber
+                            mzNodeMan.addForwardData(msgArray[myId]);
                         }
                         else {
                             ConsensusMessage batchMessage = messageFactory.createMzBatch(0, 0, batch);

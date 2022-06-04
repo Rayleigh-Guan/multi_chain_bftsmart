@@ -91,7 +91,7 @@ public class MzProposeBuilder {
 
     public byte[] createMzBatch(List<Mz_BatchListItem> msgs, int numNounces, long timestamp) {
         System.out.println("Stage: makeMzPropose --Node make a Mzpropose to byte");
-        int numBatchlistItems = msgs.size();
+        int numBatchlistItems = msgs ==null ? 0 : msgs.size();
         int size = 20 + // timestamp 8, nonces 4, notsyncrequestnum 4,numBatchlistItems 4
                 (numNounces > 0 ? 8 : 0) + // seed if needed
                 (4 * 4 * numBatchlistItems);// Items length
@@ -112,15 +112,16 @@ public class MzProposeBuilder {
 
         System.out.println("Stage: makeMzPropose --Mzpropose notsyncrequestnum: " + 0);
         MzProposeBuffer.putInt(numBatchlistItems);
-        for (Mz_BatchListItem msg : msgs) {
-            MzProposeBuffer.putInt(msg.NodeId);
-            MzProposeBuffer.putInt(msg.StartHeight);
-            MzProposeBuffer.putInt(msg.EndHeight);
-            MzProposeBuffer.putInt(msg.usedful);
-            System.out.println("Stage: makeMzPropose --Mzpropose BatchlistItem: --nd: " + msg.NodeId + " --st: "
-                    + msg.StartHeight + " --ed: " + msg.EndHeight + " --uf: " + msg.usedful);
+        if (msgs != null) {
+            for (Mz_BatchListItem msg : msgs) {
+                MzProposeBuffer.putInt(msg.NodeId);
+                MzProposeBuffer.putInt(msg.StartHeight);
+                MzProposeBuffer.putInt(msg.EndHeight);
+                MzProposeBuffer.putInt(msg.usedful);
+                System.out.println("Stage: makeMzPropose --Mzpropose BatchlistItem: --nd: " + msg.NodeId + " --st: "
+                        + msg.StartHeight + " --ed: " + msg.EndHeight + " --uf: " + msg.usedful);
+            }
         }
-
         // return the MzPropose
         return MzProposeBuffer.array();
     }
@@ -128,8 +129,7 @@ public class MzProposeBuilder {
     public byte[] makeMzPropose(List<Mz_BatchListItem> msgs, List<TOMMessage> list, int numNounces, long timestamp,
             boolean useSignature) {
 
-        int numnotsyncreq = list.size();
-        int totalreqSize = 0; // total size of the req being batched
+        int numnotsyncreq = list==null ? 0 : list.size();
         if (numnotsyncreq == 0)
             return createMzBatch(msgs, numNounces, timestamp);
 
@@ -138,7 +138,7 @@ public class MzProposeBuilder {
         Long[] recptime = new Long[numnotsyncreq];
         // Fill the array of bytes for the messages/signatures being batched
         int i = 0;
-
+        int totalreqSize = 0; // total size of the req being batched
         for (TOMMessage req : list) {
             messages[i] = req.serializedMessage;
             signatures[i] = req.serializedMessageSignature;

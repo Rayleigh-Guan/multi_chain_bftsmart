@@ -3,11 +3,10 @@ package bftsmart.multi_zone;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.Set;
 
 import bftsmart.communication.SystemMessage;
-import bftsmart.consensus.messages.ConsensusMessage;
 import bftsmart.tom.util.MzProposeReader;
+
 
 
 
@@ -15,26 +14,29 @@ public class MZBlock extends SystemMessage{
     // ecah proof is HashMap<Integer, byte[]> macVector = new HashMap<>();
     // private Set<ConsensusMessage> proof;
     
-    private byte[] blockHash ;
-    private byte[] blockContent;
-    private Mz_Propose propose;
+    private byte[] blockHash ;                  // block hash
+    private byte[] blockContent;                // seralized Mz_Propose
+    private Mz_Propose propose;                 // Mz_Propose to rebuild original block
     
-    public MZBlock(int from, byte[] blockHash, byte[] blockContent) {
-        super(from);
-        this.blockHash = blockHash;
-        this.blockContent = blockContent;
-        this.propose = null;
+    public MZBlock() {
+        
     }
 
-    public MZBlock(int from, byte[] blockHash, Mz_Propose propose) {
+    public MZBlock(int from, byte[] blockHash, Mz_Propose propose, byte[] seralizedPropose) {
         super(from);
         this.blockHash = blockHash;
         this.propose = propose;
-        this.blockContent = null;
+        this.blockContent = seralizedPropose;
     }
 
     public byte[] getBlockHash(){
         return this.blockHash;
+    }
+
+    public String getBlockHashStr(int digit) {
+        String str = new String(this.blockHash);
+        digit = Math.min(digit, this.blockHash.length);
+        return str.substring(0, digit);
     }
 
     public Mz_Propose deseralizePropose(boolean useSig){

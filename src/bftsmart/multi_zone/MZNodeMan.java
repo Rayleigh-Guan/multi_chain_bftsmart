@@ -96,6 +96,17 @@ public class MZNodeMan {
         adjust = true;
     }
 
+    final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
+	public static String bytesToHex(byte[] bytes) {
+		char[] hexChars = new char[bytes.length * 2];
+		for ( int j = 0; j < bytes.length; j++ ) {
+			int v = bytes[j] & 0xFF;
+			hexChars[j * 2] = hexArray[v >>> 4];
+			hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+		}
+		return new String(hexChars);
+	}
+
     public MZMessage createMZMessage(int type, byte[] content) {
         long ts = System.currentTimeMillis();
         MZMessage replyMsg = new MZMessage(myId, type, ts, zoneId, content);
@@ -119,8 +130,8 @@ public class MZNodeMan {
         addForwardData(msg);
     }
 
-    public void addCandidateBlock(byte[] blockHash, Mz_Propose propose) {
-        MZBlock candidateBlock = new MZBlock(myId, blockHash, propose);
+    public void addCandidateBlock(byte[] blockHash, Mz_Propose propose, byte[] seralizedPropose) {
+        MZBlock candidateBlock = new MZBlock(myId, blockHash, propose, seralizedPropose);
         String hash = new String(blockHash).substring(0, 16);
         this.candidateBlockMap.put(hash, candidateBlock);
         logger.info("Node {} add msg [{}] to candidateblock [{}]", myId, hash);
@@ -136,8 +147,8 @@ public class MZNodeMan {
             int[] target = {nodeId};
             if (msg instanceof  ConsensusMessage) {
                 ConsensusMessage conMsg = (ConsensusMessage)(msg);
-                cs.send(target, conMsg);
                 logger.info("Forward {} to {}", msg.toString(), target);
+                cs.send(target, conMsg);
             } else if (msg instanceof MZBlock) {
                 MZBlock block = (MZBlock)(msg);
                 // seralize block content
@@ -145,10 +156,11 @@ public class MZNodeMan {
                 boolean useSig = (this.controller.getStaticConf().getUseSignatures() == 1);
                 MzProposeBuilder mzpb = new MzProposeBuilder(System.nanoTime());
                 mzpb.makeMzPropose(propose.list, propose.notsyncreq, propose.numNounces, System.currentTimeMillis(), useSig);
-                cs.send(target, block);
                 logger.info("Forward {} to {}", msg.toString(), target);
+                cs.send(target, block);
             } else if (msg instanceof MZStripeMessage){
                 MZStripeMessage stripe = (MZStripeMessage)(msg);
+                logger.info("Forward {} to {}", msg.toString(), target);
                 cs.send(target, stripe);
             }
         } 
@@ -389,7 +401,7 @@ public class MZNodeMan {
     public void latencyDetectMsgReceived(MZMessage msg) {
         if (addGossipedMsg(msg) == false)
             return;
-        logger.info("latencyDetectMsgReceived: received {}, routingTable: {}", msg.toString(), this.routingTable);
+        // logger.info("latencyDetectMsgReceived: received {}, routingTable: {}", msg.toString(), this.routingTable);
         ArrayList<Object> content = this.mzmMsgSrlzTool.deseraliceLatencyDetect(msg.getValue());
         ArrayList<Integer> nodeIdList = new ArrayList<>();
         ArrayList<Long> tsList = new ArrayList<>();
@@ -437,8 +449,8 @@ public class MZNodeMan {
             // Don't set timestap for latency-detect msg !!!!
             // msg.setTimeStamp(System.currentTimeMillis());
             multicastMsg(msg, neighbors);
-            logger.info("latencyDetectMsgReceived: multicast {} to neighbors {}, routing table{} ", msg.toString(),
-                    neighbors, this.routingTable);
+            // logger.info("latencyDetectMsgReceived: multicast {} to neighbors {}, routing table{} ", msg.toString(),
+            //         neighbors, this.routingTable);
         }
 
     }

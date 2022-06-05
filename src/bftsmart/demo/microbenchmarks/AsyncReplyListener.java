@@ -61,6 +61,7 @@ public class AsyncReplyListener implements ReplyListener {
     public void printStaticsInfo() {
         int numberOfOps = replyRecvTime.size();
         Storage st = new Storage(numberOfOps);
+        Storage stforsend = new Storage(numberOfOps);
         for (HashMap.Entry<Integer, Long> entry : replyRecvTime.entrySet()) {
             long recvTime = entry.getValue();
             int reqId = entry.getKey();
@@ -69,6 +70,7 @@ public class AsyncReplyListener implements ReplyListener {
             else
             {
                 st.store(recvTime - reqSendTime.get(reqId));
+                stforsend.store(reqCompletedSendime.get(reqId)-reqSendTime.get(reqId));
                 System.out.println(this.id+" "+reqId+" "+reqSendTime.get(reqId)+" "+reqCompletedSendime.get(reqId)+" "+recvTime);
             }
                 
@@ -77,6 +79,8 @@ public class AsyncReplyListener implements ReplyListener {
         System.out.println(this.id + "// Total send " + reqSendTime.size() +" cmds, receives "+ replyRecvTime.size());
         System.out.println(this.id + " // Average time for " + numberOfOps + " executions (-10%) = "
         + st.getAverage(true) + " ms ");
+        System.out.println(this.id + " // Average time for " + numberOfOps + " complete send (-10%) = "
+                + stforsend.getAverage(true) + " ms ");
         System.out.println(this.id + " // Standard desviation for " + numberOfOps + " executions (-10%) = "
                 + st.getDP(true) + " ms ");
         System.out.println(this.id + " // Average time for " + numberOfOps + " executions (all samples) = "

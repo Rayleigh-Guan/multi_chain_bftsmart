@@ -332,13 +332,13 @@ public class NettyClientServerCommunicationSystemClientSide extends SimpleChanne
 
         int quorum;
         
-        if (controller.getStaticConf().isBFT()) {
-                quorum = (int) Math.ceil((controller.getCurrentViewN()
-                                + controller.getCurrentViewF()) / 2) + 1;
-        } else {
-                quorum = (int) Math.ceil((controller.getCurrentViewN()) / 2) + 1;
-        }
-        
+//        if (controller.getStaticConf().isBFT()) {
+//                quorum = (int) Math.ceil((controller.getCurrentViewN()
+//                                + controller.getCurrentViewF()) / 2) + 1;
+//        } else {
+//                quorum = (int) Math.ceil((controller.getCurrentViewN()) / 2) + 1;
+//        }
+        quorum=1;
         listener.waitForChannels(quorum); // wait for the previous transmission to complete
         
         logger.debug("Sending request from " + sm.getSender() + " with sequence number " + sm.getSequence() + " to " + Arrays.toString(targets));
@@ -395,10 +395,10 @@ public class NettyClientServerCommunicationSystemClientSide extends SimpleChanne
             }
         }
 
-        if (targets.length > controller.getCurrentViewF() && sent < controller.getCurrentViewF() + 1) {
-            //if less than f+1 servers are connected send an exception to the client
-            throw new RuntimeException("Impossible to connect to servers!");
-        }
+//        if (targets.length > controller.getCurrentViewF() && sent < controller.getCurrentViewF() + 1) {
+//            //if less than f+1 servers are connected send an exception to the client
+//            throw new RuntimeException("Impossible to connect to servers!");
+//        }
         if(targets.length == 1 && sent == 0)
                 throw new RuntimeException("Server not connected");
     }

@@ -91,10 +91,10 @@ public class AsynchServiceProxy extends ServiceProxy {
      */
     public int invokeAsynchRequest(byte[] request, ReplyListener replyListener, TOMMessageType reqType) {
         // send to one replica only by hzx
-        //int[] replicaArray = (super.getViewManager().getCurrentViewProcesses());
-		//int[] targets = {replicaArray[getProcessId() % replicaArray.length]};
-        //return invokeAsynchRequest(request, targets, replyListener, reqType);
-        return invokeAsynchRequest(request, super.getViewManager().getCurrentViewProcesses(), replyListener, reqType);
+        int[] replicaArray = (super.getViewManager().getCurrentViewProcesses());
+		int[] targets = {replicaArray[getProcessId() % replicaArray.length]};
+        return invokeAsynchRequest(request, targets, replyListener, reqType);
+        //return invokeAsynchRequest(request, super.getViewManager().getCurrentViewProcesses(), replyListener, reqType);
     }
 
     /**

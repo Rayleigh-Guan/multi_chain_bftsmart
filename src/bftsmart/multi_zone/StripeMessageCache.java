@@ -38,12 +38,19 @@ public class StripeMessageCache {
         if (this.receivedStripeMap.containsKey(msg.getHeight()) == false)
             this.receivedStripeMap.put(msg.getHeight(), new ArrayList<MZStripeMessage>());
         ArrayList<MZStripeMessage> stripeList = this.receivedStripeMap.get(msg.getHeight());
-        boolean res = false;
-        if (stripeList.contains(msg) == false ) {
-            stripeList.add(msg);
-            res = true;
+        boolean addRes = true;
+        for(MZStripeMessage stripe: stripeList){
+            if (stripe.getBatchChainId() == msg.getBatchChainId() &&
+                stripe.getHeight() == msg.getHeight() &&
+                stripe.getStripeId() == msg.getStripeId()
+            ) {
+                addRes = false;
+                break;
+            }
         }
-        return res;     
+        if (addRes) 
+            stripeList.add(msg);
+        return addRes;     
     }
 
     public boolean oldMsg(MZStripeMessage msg) {

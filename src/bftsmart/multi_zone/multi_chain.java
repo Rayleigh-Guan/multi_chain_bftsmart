@@ -51,6 +51,18 @@ public class multi_chain {
         NPackedTx = 0;
     }
 
+    public Mz_Batch getLastBatch(int chainId) {
+        int idx = ChainPool[chainId].size()-1;
+        if (idx < 0) return null;
+        return ChainPool[chainId].get(idx);
+    }
+
+    public int getLastBatchHeight(int chainId) {
+        Mz_Batch batch = getLastBatch(chainId);
+        if (batch == null) return -1;
+        return batch.BatchId;
+    }
+
     public void setUpdateTipState(boolean b) {
         multicastTip.set(b);
     }
@@ -59,25 +71,45 @@ public class multi_chain {
         return multicastTip.get();
     }
 
-    public void addStripeMsg(MZStripeMessage msg){
+    /**
+     * add a stripe to 
+     * @param msg
+     */
+    public boolean addStripeMsg(MZStripeMessage msg){
         if (this.stripeMsgMap.containsKey(msg.getBatchChainId()) == false){
             this.stripeMsgMap.put(msg.getBatchChainId(), new StripeMessageCache(this.replica_num-this.f, this.replica_num));
         }
         StripeMessageCache cache = this.stripeMsgMap.get(msg.getBatchChainId());
-        if (cache.oldMsg(msg))  return;
+        if (cache.oldMsg(msg))  return false;
         boolean res = cache.addStripe(msg);
         logger.info("Node_{}_add_{}_res_{}_receive {} stripes, quorum is {}", NodeID, msg.toString(), res,cache.getReceivedStripeNum(msg.getHeight()), cache.getQuorum());
         
-        // Todo 如果这个 stripe 对应高度更低的 batch 我没有收到，直接解码后放入 ChainPool 会导致问题
-        if (cache.receiveQuorum(msg.getHeight())){
-            long decodeStart = System.nanoTime();
-            byte[] batch = cache.decodeMsg(msg.getHeight());
-            long decodeTime = System.nanoTime() - decodeStart;
-            MzBatchReader batchReader = new MzBatchReader(batch, this.useSig);
-            Mz_Batch mzbatch = batchReader.deserialisemsg();
-            logger.info("Node {} deseralize a batch {}, length {} Bytes, uses {} ns", NodeID, mzbatch, batch.length, decodeTime);
-            this.add(mzbatch);
+        int chainId = msg.getBatchChainId();
+        int lastBatchHeight = this.getLastBatchHeight(chainId);
+        for(int nextBatchHeight = lastBatchHeight+1; nextBatchHeight <= msg.getHeight(); ++nextBatchHeight) {
+            if (cache.receiveQuorum(nextBatchHeight)) {
+                long decodeStart = System.nanoTime();
+                byte[] batch = cache.decodeMsg(nextBatchHeight);
+                long decodeTime = System.nanoTime() - decodeStart;
+                MzBatchReader batchReader = new MzBatchReader(batch, this.useSig);
+                Mz_Batch mzbatch = batchReader.deserialisemsg();
+                logger.info("Node {} decode a batch {}, length {} Bytes, uses {} ns", NodeID, mzbatch, batch.length, decodeTime);
+                this.add(mzbatch);
+            } else {
+                break;
+            }
         }
+        return res;
+        // // Todo 如果这个 stripe 对应高度更低的 batch, 若没有收到，直接解码后放入 ChainPool 会导致问题?
+        // if (cache.receiveQuorum(msg.getHeight())){
+        //     long decodeStart = System.nanoTime();
+        //     byte[] batch = cache.decodeMsg(msg.getHeight());
+        //     long decodeTime = System.nanoTime() - decodeStart;
+        //     MzBatchReader batchReader = new MzBatchReader(batch, this.useSig);
+        //     Mz_Batch mzbatch = batchReader.deserialisemsg();
+        //     logger.info("Node {} deseralize a batch {}, length {} Bytes, uses {} ns", NodeID, mzbatch, batch.length, decodeTime);
+        //     this.add(mzbatch);
+        // }
     }
 
     public void add(Mz_Batch value) {
@@ -98,7 +130,7 @@ public class multi_chain {
                 this.NodeID, nodeid, value.BatchId, value.Req.size(), this.ChainPool[nodeid].size(),
                 value.chainPooltip.toString(), nTxArray[nodeid], getUpdateTipState());
         this.mzlock.unlock();
-        System.out.println("--Nodeid: " + this.NodeID + ", received Batch from " + nodeid + ", requests: " + value.Req
+        System.out.println("-- Node" + this.NodeID + ", received Batch from " + nodeid + ", requests: " + value.Req
                 + " at time: " + System.currentTimeMillis());
 
     }
@@ -230,7 +262,7 @@ public class multi_chain {
         return chainPoolTip;
     }
 
-    // TODO: to fix IndexOutOfBoundsException in line 198
+    // 
     public getsync_reply getsyncedRequestfromlist(List<Mz_BatchListItem> rev) {
 
         getsync_reply reply = new getsync_reply();
@@ -245,10 +277,10 @@ public class multi_chain {
                     + " usebatch " + uf);
             if (uf == 0)
                 continue;
-            if (ed > this.ChainPool[nd].get(this.ChainPool[nd].size() - 1).BatchId) {
+            int tipIdx = this.ChainPool[nd].size() - 1;
+            if (tipIdx < 0 || ed > this.ChainPool[nd].get(tipIdx).BatchId) {
                 reply.setOk(false);
-                logger.debug("Stage: getsyncedRequestfromlist --ed>len --ed:" + ed + " --len: "
-                        + this.ChainPool[nd].get(this.ChainPool[nd].size() - 1).BatchId);
+                logger.error("Stage: getsyncedRequestfromlist batchchainId {}, endHeight {} >len {} ",nd,  ed, tipIdx >= 0 ? this.ChainPool[nd].get(tipIdx).BatchId: tipIdx);
                 return reply;
             }
             for (int j = st; j <= ed; j++) {
@@ -278,7 +310,7 @@ public class multi_chain {
             int ed = mz_batchListItem.EndHeight;
             int nd = mz_batchListItem.NodeId;
             int uf = mz_batchListItem.usedful;
-            logger.debug("Stage: getnotsyncRequestfromlist --Nodeid: " + nd + " StartHeight: " + st + " EndHeight: "
+            logger.debug("Stage: getnotsyncRequestfromlist --Node " + nd + " StartHeight: " + st + " EndHeight: "
                     + ed + " usebatch " + uf);
             if (uf == 1)
                 continue;

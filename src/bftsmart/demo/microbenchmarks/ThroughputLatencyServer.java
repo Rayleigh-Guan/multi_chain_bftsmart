@@ -116,9 +116,9 @@ public final class ThroughputLatencyServer extends DefaultRecoverable {
                         .store(msgCtx.getFirstInBatch().writeSentTime - msgCtx.getFirstInBatch().consensusStartTime);
                 writeLatency.store(msgCtx.getFirstInBatch().acceptSentTime - msgCtx.getFirstInBatch().writeSentTime);
                 acceptLatency.store(msgCtx.getFirstInBatch().decisionTime - msgCtx.getFirstInBatch().acceptSentTime);
-                System.out.println("latencyana: " + msgCtx.getFirstInBatch().getSequence() + " "
-                        + msgCtx.getFirstInBatch().getSender() + " " + msgCtx.getFirstInBatch().receptionTime + " "
-                        + msgCtx.getFirstInBatch().executedTime);
+                // System.out.println("latencyana: " + msgCtx.getFirstInBatch().getSequence() + " "
+                //         + msgCtx.getFirstInBatch().getSender() + " " + msgCtx.getFirstInBatch().receptionTime + " "
+                //         + msgCtx.getFirstInBatch().executedTime);
 
             } else {
 

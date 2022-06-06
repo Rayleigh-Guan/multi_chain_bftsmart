@@ -5,7 +5,6 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
 import bftsmart.communication.SystemMessage;
-import bftsmart.tom.util.MzProposeReader;
 
 
 
@@ -19,7 +18,9 @@ public class MZBlock extends SystemMessage{
     private Mz_Propose propose;                 // Mz_Propose to rebuild original block
     
     public MZBlock() {
-        
+        this.propose = null;
+        this.blockHash = null;
+        this.blockContent = null;
     }
 
     public MZBlock(int from, byte[] blockHash, Mz_Propose propose, byte[] seralizedPropose) {
@@ -33,6 +34,11 @@ public class MZBlock extends SystemMessage{
         return this.blockHash;
     }
 
+
+    public byte[] getBlockContent(){
+        return this.blockContent;
+    }
+
     public String getBlockHashStr(int digit) {
         String str = new String(this.blockHash);
         digit = Math.min(digit, this.blockHash.length);
@@ -41,8 +47,7 @@ public class MZBlock extends SystemMessage{
 
     public Mz_Propose deseralizePropose(boolean useSig){
         if (this.propose == null){
-            MzProposeReader mzproposeReader = new MzProposeReader(blockContent, useSig);
-            this.propose = mzproposeReader.deserialisemsg();    
+            this.propose = Mz_Propose.deseralizeMZPropose(this.blockContent, useSig);
         }
         return this.propose;
     }

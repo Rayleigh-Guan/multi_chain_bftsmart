@@ -1,7 +1,5 @@
 package bftsmart.multi_zone;
 
-import bftsmart.tom.util.MzProposeBuilder;
-
 import bftsmart.reconfiguration.ServerViewController;
 import bftsmart.communication.ServerCommunicationSystem;
 import bftsmart.consensus.messages.ConsensusMessage;
@@ -26,15 +24,13 @@ public class MZNodeMan {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private ServerViewController controller;
-    private ServerCommunicationSystem cs; // comunication system
-    private Map<Integer, HashSet<Integer>> subscriberMap; // nodeId --> stripeId other nodes subscribed
-    private Map<Integer, HashSet<Integer>> subscribeMap; // nodeId --> stripeId I subscribed
-    private Map<Integer, Integer> stripeSenderMap; // stripeId --> nodeId send to me
+    private ServerCommunicationSystem cs;                       // comunication system
+    private Map<Integer, HashSet<Integer>> subscriberMap;       // nodeId --> stripeId other nodes subscribed
+    private Map<Integer, HashSet<Integer>> subscribeMap;        // nodeId --> stripeId I subscribed
+    private Map<Integer, Integer> stripeSenderMap;              // stripeId --> nodeId send to me
     private Map<Integer, HashSet<Integer>> zoneRelayerMap;
-    private Map<Integer, HashSet<Integer>> relayerStripeMap; // relayerId-> stripe it relayed.
-    private Map<Integer, HashSet<Integer>> subscribeMsgSentMap; // subscribe msg I send to other nodes but not
-                                                                // received
-                                                                // replies.
+    private Map<Integer, HashSet<Integer>> relayerStripeMap;    // relayerId-> stripe it relayed.
+    private Map<Integer, HashSet<Integer>> subscribeMsgSentMap; // subscribe msg I send to other nodes but not received replies.
     private boolean isRelayer = false;
     private boolean isConsensusNode = false;
     private MZMessageSeralizeTool mzmMsgSrlzTool;
@@ -48,6 +44,8 @@ public class MZNodeMan {
     // stripe, block, mzbatch that need to forward.
     private Queue<SystemMessage> dataQueue ;
     private Map<String, SystemMessage> candidateBlockMap;
+
+    public Map<String, MZBlock> blockchain;
 
     private int myId;
     private int zoneId;
@@ -80,6 +78,8 @@ public class MZNodeMan {
         this.dataQueue = new ConcurrentLinkedQueue<SystemMessage>();
         this.candidateBlockMap = new ConcurrentHashMap<>();
 
+        this.blockchain = new HashMap<>();
+
         this.isRelayer = false;
         this.isConsensusNode = false;
         this.cs = cs;
@@ -97,14 +97,15 @@ public class MZNodeMan {
     }
 
     final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
-	public static String bytesToHex(byte[] bytes) {
+	public static String bytesToHex(byte[] bytes, int digit) {
 		char[] hexChars = new char[bytes.length * 2];
 		for ( int j = 0; j < bytes.length; j++ ) {
 			int v = bytes[j] & 0xFF;
 			hexChars[j * 2] = hexArray[v >>> 4];
 			hexChars[j * 2 + 1] = hexArray[v & 0x0F];
 		}
-		return new String(hexChars);
+        String str = new String(hexChars);
+		return str.substring(0,Math.min(digit, str.length()));
 	}
 
     public MZMessage createMZMessage(int type, byte[] content) {
@@ -119,20 +120,25 @@ public class MZNodeMan {
     }
 
     // forward a new block to subscribers.
-    public void forwardNewBlock(byte[] blockHash) {
-        String hash = new String(blockHash).substring(0, 16);
+    public MZBlock forwardNewBlock(byte[] blockHash) {
+        String hash = MZNodeMan.bytesToHex(blockHash, 16);
         SystemMessage msg = this.candidateBlockMap.get(hash);
         if (msg == null) {
             logger.info("forwardNewBlock can not find the candidateblock [{}]", hash);
-            return;
+            return null;
         }
+       
         // baozhuang msg into a MZMessage.
         addForwardData(msg);
+        return (MZBlock)(msg);
     }
 
     public void addCandidateBlock(byte[] blockHash, Mz_Propose propose, byte[] seralizedPropose) {
+        if (seralizedPropose == null || propose == null) {
+            logger.error("Error candidateblock {}", bytesToHex(blockHash, 8));
+        }
         MZBlock candidateBlock = new MZBlock(myId, blockHash, propose, seralizedPropose);
-        String hash = new String(blockHash).substring(0, 16);
+        String hash = MZNodeMan.bytesToHex(blockHash, 16);
         this.candidateBlockMap.put(hash, candidateBlock);
         logger.info("Node {} add msg [{}] to candidateblock [{}]", myId, hash);
     }
@@ -141,31 +147,36 @@ public class MZNodeMan {
         if (this.dataQueue.isEmpty()) 
             return;
         logger.info("dataQueue size: {}, consensus nodes: {}, subscriberMap: {}", dataQueue.size(), this.controller.getCurrentViewAcceptors(),this.subscriberMap);
+        while (this.dataQueue.isEmpty() == false) {
         SystemMessage msg = this.dataQueue.poll();
-        for(Map.Entry<Integer, HashSet<Integer>> entry: this.subscriberMap.entrySet()) {
-            int nodeId = entry.getKey();
-            int[] target = {nodeId};
-            if (msg instanceof  ConsensusMessage) {
-                ConsensusMessage conMsg = (ConsensusMessage)(msg);
-                logger.info("Forward {} to {}", msg.toString(), target);
-                cs.send(target, conMsg);
-            } else if (msg instanceof MZBlock) {
-                MZBlock block = (MZBlock)(msg);
-                // seralize block content
-                Mz_Propose propose = block.getPropose();
-                boolean useSig = (this.controller.getStaticConf().getUseSignatures() == 1);
-                MzProposeBuilder mzpb = new MzProposeBuilder(System.nanoTime());
-                mzpb.makeMzPropose(propose.list, propose.notsyncreq, propose.numNounces, System.currentTimeMillis(), useSig);
-                logger.info("Forward {} to {}", msg.toString(), target);
-                cs.send(target, block);
-            } else if (msg instanceof MZStripeMessage){
-                MZStripeMessage stripe = (MZStripeMessage)(msg);
-                logger.info("Forward {} to {}", msg.toString(), target);
-                cs.send(target, stripe);
-            }
-        } 
-        // broadcast data hash to other nodes.
-        // Todo
+            for(Map.Entry<Integer, HashSet<Integer>> entry: this.subscriberMap.entrySet()) {
+                int nodeId = entry.getKey();
+                int[] target = {nodeId};
+                if (msg instanceof  ConsensusMessage) {
+                    ConsensusMessage conMsg = (ConsensusMessage)(msg);
+                    logger.info("Forward {} to {}", msg.toString(), target);
+                    cs.send(target, conMsg);
+                } else if (msg instanceof MZBlock) {
+                    MZBlock block = (MZBlock)(msg);
+                    // seralize block content
+                    Mz_Propose propose = block.getPropose();
+                    // boolean useSig = (this.controller.getStaticConf().getUseSignatures() == 1);
+                    // MzProposeBuilder mzpb = new MzProposeBuilder(System.nanoTime());
+                    // mzpb.makeMzPropose(propose.list, propose.notsyncreq, propose.numNounces, System.currentTimeMillis(), useSig);
+                    logger.info("Forward block {} to {}, propose {}, batch: {}", bytesToHex(block.getBlockHash(),8), target, propose.toString(), block.getBlockContent().length);
+                    cs.send(target, block);
+                } else if (msg instanceof MZStripeMessage){
+                    MZStripeMessage stripe = (MZStripeMessage)(msg);
+                    HashSet<Integer> stripeSet = entry.getValue();
+                    if (stripeSet == null || stripeSet.contains(stripe.getStripeId())) {
+                        logger.info("Forward stripe {} to subscriber {}", msg.toString(), target);
+                        cs.send(target, stripe);
+                    } 
+                }
+            } 
+            // broadcast data hash to other nodes.
+            // Todo
+        }
     }
 
     public ArrayList<Integer> getNeighborNodes() {
@@ -212,11 +223,16 @@ public class MZNodeMan {
         }
     }
 
+    /**
+     * add a message to gossip it
+     * @param msg
+     * @return
+     */
     public boolean addGossipedMsg(MZMessage msg) {
-        if (this.gossipedMsg.contains(msg))
+        if (this.gossipedMsg.contains(msg) || msg.getSender() == myId)
             return false;
         this.gossipedMsg.add(msg);
-        if (gossipedMsgSender.containsKey(msg.getSender()) == false)
+        if (gossipedMsgSender.containsKey(msg) == false)
             gossipedMsgSender.put(msg, new HashSet<>());
         this.gossipedMsgSender.get(msg).add(msg.getSender());
         if (this.gossipedMsg.size() > 1000) {
@@ -250,6 +266,7 @@ public class MZNodeMan {
         MZMessage unsubscribeMsg = createMZMessage(TOMUtil.UNSUBSCRIBE, content);
         int[] targets = { target };
         cs.send(targets, unsubscribeMsg);
+        // if I am a relayer node, update relayerStripeMap.
         if (isRelayer() && this.controller.isCurrentViewMember(target)) {
             this.relayerStripeMap.get(myId).removeAll(stripes);
         }
@@ -363,7 +380,7 @@ public class MZNodeMan {
         HashSet<Integer> hs = this.subscribeMsgSentMap.get(msg.getSender());
         assert(hs != null):"hs is empty!!";
         
-        // add a new relayer
+        // if sender is a consensus node, then, mark myself is a new relayer
         if (this.controller.isCurrentViewMember(msg.getSender())) {
             this.setRelayer(true);
             addRelayer(this.myId, this.zoneId, new ArrayList<>(hs));
@@ -374,28 +391,29 @@ public class MZNodeMan {
         // update my subscribeMap
         if (subscribeMap.get(msg.getSender()) == null)
             subscribeMap.put(msg.getSender(), new HashSet<Integer>());
-        for (int stripeId : hs) {
-            Integer previousSender = this.stripeSenderMap.get(stripeId);
-            if (previousSender != null && previousSender.intValue() != msg.getSender()) {
-                if (unsubscribeMap.containsKey(previousSender.intValue()) == false)
-                    unsubscribeMap.put(previousSender.intValue(), new HashSet<Integer>());
-                unsubscribeMap.get(previousSender.intValue()).add(stripeId);
+        if (hs != null) {
+            for (int stripeId : hs) {
+                Integer previousSender = this.stripeSenderMap.get(stripeId);
+                if (previousSender != null && previousSender.intValue() != msg.getSender()) {
+                    if (unsubscribeMap.containsKey(previousSender.intValue()) == false)
+                        unsubscribeMap.put(previousSender.intValue(), new HashSet<Integer>());
+                    unsubscribeMap.get(previousSender.intValue()).add(stripeId);
 
-                // update subscribeMap
-                assert(this.subscribeMap.containsKey(previousSender)):"Error in update this.subscribeMap";
-                this.subscribeMap.get(previousSender).remove(stripeId);
+                    // update subscribeMap
+                    assert(this.subscribeMap.containsKey(previousSender)):"Error in update this.subscribeMap";
+                    this.subscribeMap.get(previousSender).remove(stripeId);
+                }
+                // change stripe sender
+                this.stripeSenderMap.put(stripeId, msg.getSender());
                 this.subscribeMap.get(msg.getSender()).add(stripeId);
             }
-
-            // change stripe sender
-            this.stripeSenderMap.put(stripeId, msg.getSender());
         }
         for (HashMap.Entry<Integer, Set<Integer>> entry : unsubscribeMap.entrySet()) 
             sendUnSubscribedMsgTo(entry.getKey(), entry.getValue());
 
         // remove sent subscribe history
         this.subscribeMsgSentMap.remove(msg.getSender());
-        logger.info("acceptSubscribeMsgReceived received msg: {}, mysubscribeMap: {}, stripeSender: {}", msg.toString(), this.subscribeMap, this.stripeSenderMap);
+        logger.info("acceptSubscribeMsgReceived received msg: {}, subscribeMap: {}, stripeSender: {}", msg.toString(), this.subscribeMap, this.stripeSenderMap);
     }
 
     public void latencyDetectMsgReceived(MZMessage msg) {
@@ -469,30 +487,41 @@ public class MZNodeMan {
 
         // a relayer should subscribe stripes from a relayer to recude consensus nodes'
         // bandwidth burden.
-        if (this.isRelayer() && this.myId < relayerId) {
+        if (this.isRelayer() ) {
             HashSet<Integer> hs = new HashSet<>();
             hs.addAll(this.relayerStripeMap.get(myId));
             hs.retainAll(relayedStripes);
-            // a relayer can not subscribe all stripes from another relayer.
-            if (hs.size() == this.relayerStripeMap.get(myId).size()) {
-                for (int stripe : hs) {
-                    hs.remove(stripe);
-                    break;
+            if (this.myId < relayerId) {
+                // a relayer can not subscribe all stripes from another relayer.
+                if (hs.size() == this.relayerStripeMap.get(myId).size()) {
+                    for (int stripe : hs) {
+                        hs.remove(stripe);
+                        break;
+                    }
+                }
+                if (hs.isEmpty() == false) {
+                    sendSubscribeMsgTo(relayerId, hs);
                 }
             }
-            if (hs.isEmpty() == false) {
-                sendSubscribeMsgTo(relayerId, hs);
+            else {
+                // if that relayer relayed only one stripe and I also relay that stripe
+                // the relayedStripes.size() must be one !!!, or the algorithm will fail!!!
+                if (relayedStripes.size() == 1 && hs.isEmpty() == false) {  
+                    sendSubscribeMsgTo(relayerId, hs);
+                }
             }
         }
+        
         int relayerZone = this.controller.getStaticConf().getZoneId(relayerId);
         updateRelayer(relayerId, relayerZone, new ArrayList<Integer>(relayedStripes));
 
-        // record the sender has send this msg to me.
+        // record the sender and creator have send this msg to me.
         if (this.gossipedMsgSender.containsKey(msg) == false)
             this.gossipedMsgSender.put(msg, new HashSet<>());
         this.gossipedMsgSender.get(msg).add(msg.getSender());
+        this.gossipedMsgSender.get(msg).add(msg.getMsgCreator());
 
-        // forward to neighbors exclude those neighbors that send that msg to me
+        // forward to neighbors exclude msg creator and those neighbors that send that msg to me.
         ArrayList<Integer> neighbors = getNeighborNodes();
         neighbors.removeAll(gossipedMsgSender.get(msg));
         msg.setSender(myId);
@@ -637,9 +666,13 @@ public class MZNodeMan {
         nodeIdTimeStampList.add(System.currentTimeMillis());
         byte[] content = this.mzmMsgSrlzTool.seralizeLatencyDetect(nodeIdTimeStampList);
         MZMessage msg = createMZMessage(TOMUtil.LATENCY_DETECT, content);
-        ArrayList<Integer> neighbors = getNeighborNodes();
+        ArrayList<Integer> neighbors = new ArrayList<>();
+        for(Integer nodeId: subscriberMap.keySet()) {
+            if (subscriberMap.get(nodeId) != null)
+                neighbors.add(nodeId);
+        }
         multicastMsg(msg, neighbors);
-        nextTimeBroadcastLatencyDetect.set(now + 60000);
+        nextTimeBroadcastLatencyDetect.set(now + 120000);
         logger.info("Multicast [{}] to neighbors {}, content: {}", msg.toString(), neighbors, nodeIdTimeStampList);
     }
 

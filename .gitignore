@@ -1,0 +1,6 @@
+bin/bftsmart
+bin/BFT-SMaRt.jar
+config/currentView
+test
+*.txt
+*.out

@@ -745,10 +745,10 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         long now = System.currentTimeMillis();
         long timediff = (now - this.lastTimeReceiveMzPropose);
         this.lastTimeReceiveMzPropose = now;
-        logger.info("Node {} receive a mzpropose from node {}, msg: {}, at time {}, after {} ms",myId, msg.getSender(),msg.toString(), now, timediff);
-        
-        byte[] batch = rebuildPropose(mz_propose);
 
+        byte[] batch = rebuildPropose(mz_propose);
+        logger.info("Node {} receive a mzpropose from node {}, msg: {}, at time {}, after {} ms, mz_propose size {}, tx size {}",myId, msg.getSender(),msg.toString(), now, timediff, msg.getValue().length, batch.length);
+        
         // record the candidate block
         byte[] blockHash = computeHash(batch);
         this.mzNodeMan.addCandidateBlock(blockHash, mz_propose, msg.getValue());
@@ -969,11 +969,11 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             final int digit = 16;
             final String blockHashStr = MZNodeMan.bytesToHex(block.getBlockHash(), digit);
             if (batch == null) {
-                logger.info("Node {} cannot recovery block {} from {}, propose:{}, batch len:{}, newBlockQueue: {}", myId, blockHashStr, block.getSender(), mzpropose.toString(), -1, this.newBlockQueue.size());
+                logger.info("Node {} cannot recovery block {} from {}, propose:{}, batch size:{}, newBlockQueue: {}", myId, blockHashStr, block.getSender(), mzpropose.toString(), -1, this.newBlockQueue.size());
                 break;
             }
                 
-            logger.debug("Node {} redovery a block {} from {}, propose:{}, batch len: {}", myId, blockHashStr, block.getSender(), mzpropose.toString(), batch.length);
+            logger.debug("Node {} redovery a block {} from {}, propose:{}, batch size: {}, propose size {}", myId, blockHashStr, block.getSender(), mzpropose.toString(), batch.length, block.getBlockContent().length);
             byte[] computedBlockHash = computeHash(batch);
             final String computedBlockHashStr = MZNodeMan.bytesToHex(computedBlockHash, digit);
             

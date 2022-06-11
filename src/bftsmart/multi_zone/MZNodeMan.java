@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -257,7 +258,7 @@ public class MZNodeMan {
         int[] targets = { target };
         cs.send(targets, subscribeMsg);
         this.subscribeMsgSentMap.put(target, new HashSet<Integer>(subStripes));
-        logger.info("Send {} to {}, subscripes: {}", subscribeMsg, target, this.subscribeMsgSentMap.get(target));
+        logger.info("sendSubscribeMsgTo Send [{}] to {}, subscripes: {}", subscribeMsg, target, this.subscribeMsgSentMap.get(target));
         this.nextTimeBroadcastRelayer.set(System.currentTimeMillis() + 5000);
     }
 
@@ -269,8 +270,16 @@ public class MZNodeMan {
         // if I am a relayer node, update relayerStripeMap.
         if (isRelayer() && this.controller.isCurrentViewMember(target)) {
             this.relayerStripeMap.get(myId).removeAll(stripes);
+            updateRelayer(myId, zoneId, new ArrayList<>(this.relayerStripeMap.get(myId)));
         }
-        logger.info("Send {} to {}, relayStripeMap: {}", unsubscribeMsg, target, this.relayerStripeMap.get(myId));
+        // update subscribeMap
+        if(this.subscribeMap.containsKey(target)) {
+            this.subscribeMap.get(target).removeAll(stripes);
+            if (this.subscribeMap.get(target).isEmpty())
+                this.subscribeMap.remove(target);
+        }
+            
+        logger.info("sendUnSubscribedMsgTo Send [{}] to {}, relayStripeMap: {}", unsubscribeMsg, target, this.relayerStripeMap.get(myId));
     }
 
     /**
@@ -285,20 +294,27 @@ public class MZNodeMan {
         MZMessage replyMsg = createMZMessage(TOMUtil.RELAY_NODES, content);
         int target[] = { msg.getSender() };
         this.cs.send(target, replyMsg);
-        logger.info("getRelayMsgReceived: received msg: {}, relayerStripeMap: {}", msg.toString(),
+        logger.info("getRelayMsgReceived: received msg: [{}], relayerStripeMap: {}", msg.toString(),
                 this.relayerStripeMap);
     }
 
     public void updateRelayer(int relayerId, int relayerZone, ArrayList<Integer> relayerStripes) {
-        assert (null != relayerStripes) : "updateRelayer: relayerStripes is empty!!";
+        // assert (null != relayerStripes) : "updateRelayer: relayerStripes is empty!!";
         // clear
         if (this.relayerStripeMap.containsKey(relayerId))
             this.relayerStripeMap.get(relayerId).clear();
-        addRelayer(relayerId, relayerZone, relayerStripes);
+        if (relayerStripes.isEmpty() == false)
+            addRelayer(relayerId, relayerZone, relayerStripes);
+        else {
+            // an empty relayerStripes means that node do not be a relayer anymore.
+            this.zoneRelayerMap.get(relayerZone).remove(relayerId);
+            this.relayerStripeMap.remove(relayerId);
+            logger.info("updateRelayer Node {} receive an empty relayerMsg for zone {}, this.zoneRelayerMap: {}", this.myId, relayerZone, this.zoneRelayerMap.get(relayerId));
+        }
     }
 
     public void addRelayer(int relayerId, int relayerZone, ArrayList<Integer> relayerStripes) {
-        assert (null != relayerStripes) : "addRelayer: relayerStripes is empty!!";
+        // assert (null != relayerStripes) : "addRelayer: relayerStripes is empty!!";
         // add to zoneRelayerMap
         if (this.zoneRelayerMap.containsKey(relayerZone) == false)
             this.zoneRelayerMap.put(relayerZone, new HashSet<>());
@@ -322,7 +338,7 @@ public class MZNodeMan {
             return;
         nRelayNodesMsgReceived.incrementAndGet();
         HashMap<Integer, HashSet<Integer>> tmpRelayStripeMap = this.mzmMsgSrlzTool.deseralizeRelayNodes(msg.getValue());
-        logger.info("relayNodesMsgReceived received msg: {}, zoneRelayerMap: {}, relayerStripeMap:{}", msg.toString(),
+        logger.info("relayNodesMsgReceived received msg: [{}], zoneRelayerMap: {}, relayerStripeMap:{}", msg.toString(),
                 this.zoneRelayerMap, this.relayerStripeMap);
         for (HashMap.Entry<Integer, HashSet<Integer>> entry : tmpRelayStripeMap.entrySet()) {
             int relayerId = entry.getKey();
@@ -333,11 +349,12 @@ public class MZNodeMan {
     }
 
     public void subscribeMsgReceived(MZMessage msg) {
-        if (this.zoneRelayerMap.containsKey(msg.getZoneId()) == false)
-            this.zoneRelayerMap.put(msg.getZoneId(), new HashSet<>());
-        HashSet<Integer> relayerSet = this.zoneRelayerMap.get(msg.getZoneId());
+        // if (this.zoneRelayerMap.containsKey(msg.getZoneId()) == false)
+        //     this.zoneRelayerMap.put(msg.getZoneId(), new HashSet<>());
+        // HashSet<Integer> relayerSet = this.zoneRelayerMap.get(msg.getZoneId());
 
-        if (relayerSet.size() > this.controller.getCurrentViewN()) {
+        // a relayer node only receives 32 connections
+        if (this.isRelayer() && this.subscriberMap.size() >= 32) {
             msg.setType(TOMUtil.GET_RELAY_NODE);
             getRelayMsgReceived(msg);
         } else {
@@ -357,7 +374,7 @@ public class MZNodeMan {
             cs.send(target, replyMsg);
 
         }
-        logger.info("subscribeMsgReceived received msg: {}, zoneRelayerMap: {}, relayerStripeMap:{}, subscriberMap: {}", msg.toString(),
+        logger.info("subscribeMsgReceived received msg: [{}], zoneRelayerMap: {}, relayerStripeMap:{}, subscriberMap: {}", msg.toString(),
                 this.zoneRelayerMap, this.relayerStripeMap, this.subscriberMap);
 
     }
@@ -367,13 +384,20 @@ public class MZNodeMan {
             return;
         ArrayList<Integer> unsubStripes = this.mzmMsgSrlzTool.deseralizeSubscribe(msg.getValue());
         this.subscriberMap.get(msg.getSender()).removeAll(unsubStripes);
+        if (this.subscriberMap.get(msg.getSender()).isEmpty())
+            this.subscriberMap.remove(msg.getSender());
 
         // adjust node's relayer info
         if (this.controller.isInCurrentView()) {
             this.relayerStripeMap.get(msg.getSender()).removeAll(unsubStripes);
+            // this node will be a non-relayer if its relayed stripes are empty
+            if (this.relayerStripeMap.get(msg.getSender()).isEmpty()) {
+                this.relayerStripeMap.remove(msg.getSender());
+                this.zoneRelayerMap.get(msg.getZoneId()).remove(msg.getSender());
+            }
         }
-        logger.info("receive {} , relayerStripeMap: {}, sender's subscriberMap: {}", msg,
-                this.relayerStripeMap.get(myId), this.subscriberMap.get(msg.getSender()));
+        logger.info("unsubscribeMsgReceived receive [{}] , relayerStripeMap: {}, sender's subscriberMap: {}", msg,
+            this.relayerStripeMap.get(myId), this.subscriberMap.get(msg.getSender()));
     }
 
     public void acceptSubscribeMsgReceived(MZMessage msg) {
@@ -399,9 +423,6 @@ public class MZNodeMan {
                         unsubscribeMap.put(previousSender.intValue(), new HashSet<Integer>());
                     unsubscribeMap.get(previousSender.intValue()).add(stripeId);
 
-                    // update subscribeMap
-                    assert(this.subscribeMap.containsKey(previousSender)):"Error in update this.subscribeMap";
-                    this.subscribeMap.get(previousSender).remove(stripeId);
                 }
                 // change stripe sender
                 this.stripeSenderMap.put(stripeId, msg.getSender());
@@ -505,11 +526,27 @@ public class MZNodeMan {
             }
             else {
                 // if that relayer relayed only one stripe and I also relay that stripe
-                // the relayedStripes.size() must be one !!!, or the algorithm will fail!!!
-                if (relayedStripes.size() == 1 && hs.isEmpty() == false) {  
+                // and the number of current relayers is more than N
+                // I should subscribe msg from that node
+                int nRelayers = this.zoneRelayerMap.get(this.zoneId).size();
+                if (relayedStripes.size() == 1 && hs.isEmpty() == false && nRelayers > this.controller.getCurrentViewN()) {  
                     sendSubscribeMsgTo(relayerId, hs);
                 }
             }
+
+            // I should change stripe sender if my a stripe sender do not relay my subscribed stripe
+            // for example, I am node 5, subscribe stripe 1 from node 4, but node 4 do not relay stripe 1 and now node 6 relays stripe 1.
+            // I should subscribe stripe 1 from node 6.
+            hs.clear();
+            for (Integer stripeId: relayedStripes) {
+                if (this.stripeSenderMap.containsKey(stripeId) == false)
+                    continue;  
+                int currentSender = this.stripeSenderMap.get(stripeId);
+                if (this.relayerStripeMap.get(currentSender).contains(stripeId) == false)
+                    hs.add(stripeId);
+            }
+            if (hs.isEmpty() == false)
+                sendSubscribeMsgTo(relayerId, hs);
         }
         
         int relayerZone = this.controller.getStaticConf().getZoneId(relayerId);
@@ -650,6 +687,11 @@ public class MZNodeMan {
             this.nextTimeBroadcastRelayer.set(now + 60000);
             logger.info("broadcastRelayerMsg: Multicast [{}] to neighbors {}, stripes I relayed: {}", msg.toString(),
                     neighbors, this.relayerStripeMap.get(myId));
+        }
+
+        // If I do not relay stripes from consensus node, I should be an ordinary node.
+        if (relayerStripeMap.get(myId).isEmpty() || relayerStripeMap.size() == 0) {
+            this.setRelayer(false);
         }
     }
 

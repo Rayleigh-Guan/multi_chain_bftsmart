@@ -549,7 +549,7 @@ public class MZNodeMan {
                 if (this.stripeSenderMap.containsKey(stripeId) == false)
                     continue;  
                 int currentSender = this.stripeSenderMap.get(stripeId);
-                if (this.relayerStripeMap.get(currentSender).contains(stripeId) == false)
+                if (this.relayerStripeMap.containsKey(currentSender) == false || this.relayerStripeMap.get(currentSender).contains(stripeId) == false)
                     hs.add(stripeId);
             }
             if (hs.isEmpty() == false)

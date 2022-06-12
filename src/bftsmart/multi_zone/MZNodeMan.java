@@ -509,10 +509,11 @@ public class MZNodeMan {
         HashSet<Integer> relayedStripes = this.mzmMsgSrlzTool.deseralizeRelayer(msg.getValue());
         logger.info("relayerMsgReceived received msg: {}, stripes: {}", msg.toString(), relayedStripes);
         int relayerId = msg.getMsgCreator();
-
+        int relayerZone = this.controller.getStaticConf().getZoneId(relayerId);
         // a relayer should subscribe stripes from a relayer to recude consensus nodes'
         // bandwidth burden.
-        if (this.isRelayer() ) {
+        // only process msg from a same zone
+        if (this.isRelayer() && relayerZone == this.zoneId) {
             HashSet<Integer> hs = new HashSet<>();
             hs.addAll(this.relayerStripeMap.get(myId));
             hs.retainAll(relayedStripes);
@@ -559,7 +560,6 @@ public class MZNodeMan {
                 sendSubscribeMsgTo(relayerId, hs);
         }
         
-        int relayerZone = this.controller.getStaticConf().getZoneId(relayerId);
         updateRelayer(relayerId, relayerZone, new ArrayList<Integer>(relayedStripes));
 
         // record the sender and creator have send this msg to me.
@@ -569,15 +569,21 @@ public class MZNodeMan {
         this.gossipedMsgSender.get(msg).add(msg.getMsgCreator());
 
         // forward to neighbors exclude msg creator and those neighbors that send that msg to me.
-        ArrayList<Integer> neighbors = getNeighborNodes();
-        neighbors.removeAll(this.gossipedMsgSender.get(msg));
-        msg.setSender(myId);
-        msg.setZoneId(zoneId);
-        // Don't set timestap for relayer msg !!!!
-        // msg.setTimeStamp(System.currentTimeMillis());
-        multicastMsg(msg, neighbors);
-        logger.info("relayerMsgReceived: forward [{}] to neighbors {}, zoneRelayerMap:{}, relayerStripeMap:{}, subscribeMap: {}, subscriberMap:{}",
-                msg.toString(), neighbors, this.zoneRelayerMap, this.relayerStripeMap, this.subscribeMap, this.subscriberMap);
+        // ArrayList<Integer> neighbors = getNeighborNodes();
+        // neighbors.removeAll(this.gossipedMsgSender.get(msg));
+        // only forward zone msg that belongs to myzone, only forward to my subscribers.
+        if (relayerZone == this.zoneId) {
+            ArrayList<Integer> neighbors = new ArrayList<>(this.subscriberMap.keySet());
+            neighbors.removeAll(this.gossipedMsgSender.get(msg));
+            msg.setSender(myId);
+            msg.setZoneId(zoneId);
+            // Don't set timestap for relayer msg !!!!
+            // msg.setTimeStamp(System.currentTimeMillis());
+            
+            multicastMsg(msg, neighbors);
+            logger.info("relayerMsgReceived: forward [{}] to neighbors {}, zoneRelayerMap:{}, relayerStripeMap:{}, subscribeMap: {}, subscriberMap:{}",
+                    msg.toString(), neighbors, this.zoneRelayerMap, this.relayerStripeMap, this.subscribeMap, this.subscriberMap);
+        }
     }
 
     public void adjustFromReceivedRelayNodeMsgs() {
@@ -692,8 +698,15 @@ public class MZNodeMan {
         if (this.isRelayer() && now > this.nextTimeBroadcastRelayer.get()) {
             byte[] content = this.mzmMsgSrlzTool.seralizeRelayer(this.relayerStripeMap.get(myId));
             MZMessage msg = this.createMZMessage(TOMUtil.RELAYER, content);
+            // only broadcast to nodes in myzone and consensus nodes.
             ArrayList<Integer> neighbors = getNeighborNodes();
-            this.multicastMsg(msg, neighbors);
+            ArrayList<Integer> tmpNeighbors = new ArrayList<>();
+            for(int nodeId: neighbors) {
+                int tmpZoneId = this.controller.getStaticConf().getZoneId(nodeId);
+                if (this.controller.isCurrentViewMember(nodeId) || tmpZoneId == this.zoneId)
+                    tmpNeighbors.add(nodeId);
+            }
+            this.multicastMsg(msg, tmpNeighbors);
             // broadcast every one minute.
             this.nextTimeBroadcastRelayer.set(now + 60000);
             logger.info("broadcastRelayerMsg: Multicast [{}] to neighbors {}, stripes I relayed: {}", msg.toString(),

@@ -394,7 +394,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     // our propose
     public byte[] createMzPropose(Decision dec) {
         long timeStamp = System.currentTimeMillis();
-        logger.debug("Stage: createMzPropose --Node create a Mzpropose at：" + timeStamp);
+        logger.debug("Stage: createMzPropose --Node create a Mzpropose at:" + timeStamp);
         // List<Mz_BatchListItem> pendingBatch = multiChain.packList();
         List<Mz_BatchListItem> pendingBatch = multiChain.packListWithTip();
         if (pendingBatch.size() == 0) {
@@ -404,7 +404,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             logger.info("Stage: createMzPropose --Node create a mzpropose ,and success get a packlist,list size:"
                     + pendingBatch.size());
         }
-        System.out.println("Stage: createMzPropose --Node create a Mzpropose at：" + timeStamp);
+        logger.info("Stage: createMzPropose --Node create a Mzpropose at:" + timeStamp);
         RequestList requestnotsync = multiChain.getnotsyncRequestfromlist(pendingBatch);
 
         int numberOfItems = pendingBatch.size(); // number of messages retrieved
@@ -685,7 +685,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             totalreqlist.addAll(reply.getlist());
         }
         int myId = this.controller.getStaticConf().getProcessId();
-        logger.info("Node {} receive a mzpropose, {} full txes, {} batch txes, total {} txes", myId, numNotSyncReq, numSyncReq, totalreqlist.size());
+        logger.info("rebuildPropose: Node {} rebuild a mzpropose, {} full txes, {} batch txes, total {} txes", myId, numNotSyncReq, numSyncReq, totalreqlist.size());
         byte[] batch = bb.makeBatch(totalreqlist, mz_propose.numNounces, mz_propose.seed, mz_propose.timestamp, 
         controller.getStaticConf().getUseSignatures() == 1);
         return batch;
@@ -699,7 +699,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             return;
         long now = System.currentTimeMillis();
         int myId = this.controller.getStaticConf().getProcessId();
-        logger.info("Node {} receive block {} use {} ms", myId,block.toString(), now - block.getPropose().timestamp);
+        logger.info("Node {} receive blockheight: {} use {} ms", myId, blockHeight, now - block.getPropose().timestamp);
         
         blockchain.put(blockHeight, block);
         this.newBlockQueue.add(block);
@@ -747,7 +747,8 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         this.lastTimeReceiveMzPropose = now;
 
         byte[] batch = rebuildPropose(mz_propose);
-        logger.info("Node {} receive a mzpropose from node {}, msg: [{}], at time {}, after {} ms, mz_propose size {}, tx size {}",myId, msg.getSender(),msg.toString(), now, timediff, msg.getValue().length, batch.length);
+        logger.info("Node {} receive a mzpropose from node {}, msg: [{}], at time {}, after {} ms, mz_propose size {}, tx size {}",
+            myId, msg.getSender(), mz_propose.toString(), now, timediff, msg.getValue().length, batch.length);
         
         // record the candidate block
         byte[] blockHash = computeHash(batch);
@@ -978,7 +979,9 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             final String computedBlockHashStr = MZNodeMan.bytesToHex(computedBlockHash, digit);
             
             if (Arrays.equals(computedBlockHash, block.getBlockHash())) {
-                logger.info("Node {} successfully recovery a new block {}, blockheight: {}, sender: {}",myId, blockHashStr, mzpropose.blockHeight, mzpropose.blockHeight, block.getSender());
+                long now = System.currentTimeMillis();
+                logger.info("Node {} successfully recovery a new block {}, blockheight: {}, sender: {}, orignal tx size: {}, Mzblock size {}, use {} ms",
+                    myId, blockHashStr, mzpropose.blockHeight, block.getSender(), batch.length, block.getBlockContent().length, now - mzpropose.timestamp);
             }
             else {
                 logger.info("Node {} failed recovery a new block {}, blockheight: {}, sender: {}, computedHash: {}",myId, blockHashStr, mzpropose.blockHeight, mzpropose.blockHeight, block.getSender(),computedBlockHashStr);

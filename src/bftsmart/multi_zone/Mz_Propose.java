@@ -35,7 +35,7 @@ public class Mz_Propose {
     public String toString(){
         String reqListStr = (reqList == null) ? "|":reqList.toString();
         String bundleListStr = (bundleSliceList == null) ? "|":bundleSliceList.toString();
-        return String.format("blockHeight:%d_timestamp:%d_nounce:%d_seed:%d_bundleSliceList:%s_reqList:%s", 
+        return String.format("blockheight:%d_timestamp:%d_nounce:%d_seed:%d_bundleSliceList:%s_reqList:%s", 
             blockHeight, timestamp, numNounces, seed, bundleListStr, reqListStr);
     }
 
@@ -58,7 +58,7 @@ public class Mz_Propose {
         int totalSize = prefixSize + reqLenSize + reqSize + receptiontimeSize + bundleSliceLen * Integer.BYTES * 4;
         if (useSig)
             totalSize += sigSize + reqLen * Integer.BYTES;
-        System.out.println("Stage: makeMzPropose --Mzpropose size: " + totalSize);
+        // System.out.println("Stage: makeMzPropose --Mzpropose size: " + totalSize);
         ByteBuffer buffer = ByteBuffer.allocate(totalSize);
         buffer.putInt(mzpropose.blockHeight);   // blockHeight
         buffer.putLong(mzpropose.timestamp);    // timestamp
@@ -68,7 +68,7 @@ public class Mz_Propose {
         buffer.putInt((useSig ? reqLen: 0));    // signature's length        
         buffer.putInt(bundleSliceLen);          // bundleSliceList's length
 
-        System.out.println("Stage: makeMzPropose --Mzpropose timestamp: " + mzpropose.timestamp + "block height: " + mzpropose.blockHeight);
+        // System.out.println("Stage: makeMzPropose --Mzpropose timestamp: " + mzpropose.timestamp + "block height: " + mzpropose.blockHeight);
 
         // seralize requests with its signature and reception time
         for(int i = 0; i < reqLen; ++i) {
@@ -108,7 +108,7 @@ public class Mz_Propose {
         int bundleSliceLen = buff.getInt();
 
 
-        System.out.printf("Stage: MzProposedeserialisemsg-- blockheight: %d, timestamp: %d, --numNounces: %d\n",mzpropose.blockHeight, mzpropose.timestamp , mzpropose.numNounces);
+        // System.out.printf("Stage: MzProposedeserialisemsg-- blockheight: %d, timestamp: %d, --numNounces: %d\n",mzpropose.blockHeight, mzpropose.timestamp , mzpropose.numNounces);
         
         // deseralize requests with its signature and reception time
         mzpropose.reqList = new RequestList();
@@ -140,7 +140,7 @@ public class Mz_Propose {
             --reqLen;
         }
 
-        System.out.println("Stage: MzProposedeserialisemsg --bundleSliceList: ");
+        // System.out.println("Stage: MzProposedeserialisemsg --bundleSliceList: ");
         
         // deseralize bundleSlice
         mzpropose.bundleSliceList = new ArrayList<>();

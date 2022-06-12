@@ -699,7 +699,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             return;
         long now = System.currentTimeMillis();
         int myId = this.controller.getStaticConf().getProcessId();
-        logger.info("Node {} receive block {} use {} ms\n", myId, now - block.getPropose().timestamp);
+        logger.info("Node {} receive block {} use {} ms", myId,block.toString(), now - block.getPropose().timestamp);
         
         blockchain.put(blockHeight, block);
         this.newBlockQueue.add(block);
@@ -747,7 +747,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         this.lastTimeReceiveMzPropose = now;
 
         byte[] batch = rebuildPropose(mz_propose);
-        logger.info("Node {} receive a mzpropose from node {}, msg: {}, at time {}, after {} ms, mz_propose size {}, tx size {}",myId, msg.getSender(),msg.toString(), now, timediff, msg.getValue().length, batch.length);
+        logger.info("Node {} receive a mzpropose from node {}, msg: [{}], at time {}, after {} ms, mz_propose size {}, tx size {}",myId, msg.getSender(),msg.toString(), now, timediff, msg.getValue().length, batch.length);
         
         // record the candidate block
         byte[] blockHash = computeHash(batch);
@@ -934,7 +934,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                     byte[] value = createMzPropose(dec);
                     if (value != null) {
                         long now = System.currentTimeMillis();
-                        logger.info("Leader {} create mzpropose at time {}, interval: {}", myId, now,
+                        logger.info("Leader {} create mzpropose at time {}, interval: {}ms", myId, now,
                                 now - lastTimeCreatePropose);
                         lastTimeCreatePropose = now;
                         execManager.getProposer().startConsensus(execId, value);

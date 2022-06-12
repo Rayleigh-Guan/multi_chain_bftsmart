@@ -141,7 +141,7 @@ public class MZNodeMan {
         MZBlock candidateBlock = new MZBlock(myId, blockHash, propose, seralizedPropose);
         String hash = MZNodeMan.bytesToHex(blockHash, 16);
         this.candidateBlockMap.put(hash, candidateBlock);
-        logger.info("Node {} add msg [{}] to candidateblock [{}]", myId, hash);
+        logger.info("Node {} add msg [{}] to candidateblock [{}]", myId, hash, candidateBlock.toString());
     }
 
     public void ForwardDataToSubscriber() {
@@ -549,7 +549,10 @@ public class MZNodeMan {
                 if (this.stripeSenderMap.containsKey(stripeId) == false)
                     continue;  
                 int currentSender = this.stripeSenderMap.get(stripeId);
-                if (this.relayerStripeMap.containsKey(currentSender) == false || this.relayerStripeMap.get(currentSender).contains(stripeId) == false)
+                if (this.controller.isCurrentViewMember(currentSender)) 
+                    continue;
+                if (this.relayerStripeMap.containsKey(currentSender) == false || 
+                    this.relayerStripeMap.get(currentSender).contains(stripeId) == false)
                     hs.add(stripeId);
             }
             if (hs.isEmpty() == false)

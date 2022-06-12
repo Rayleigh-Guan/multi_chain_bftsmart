@@ -196,7 +196,7 @@ public class multi_chain {
                 else
                     endHeight = startHeight;
                 Mz_BatchListItem temp = new Mz_BatchListItem(i, startHeight, endHeight, useBatchhash);
-                logger.info(
+                logger.debug(
                         "Node {} packListWithTip for chain {} , startHeight: {}, endHeight:{}, tip: {}, usebatch: {}",
                         NodeID, i, startHeight, endHeight, localTip, useBatchhash);
                 list.add(temp);

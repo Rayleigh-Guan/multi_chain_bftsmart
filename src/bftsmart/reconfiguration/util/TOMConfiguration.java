@@ -16,6 +16,8 @@ limitations under the License.
 package bftsmart.reconfiguration.util;
 
 import bftsmart.tom.util.KeyLoader;
+import bftsmart.tom.util.TOMUtil;
+
 import java.security.Provider;
 import java.util.StringTokenizer;
 
@@ -63,9 +65,21 @@ public class TOMConfiguration extends Configuration {
     private boolean sameBatchSize;
     private String bindAddress;
 
-    private String dataDisStrategy;
+    private int dataDisStrategy;                // data distribution strategy
+    private int networkmode;                    // networkmode mode
+    private int nMaximumSubscriber;             // maximum neighbors in multi_zone or random networking mode
     private int minConWithConseususNode;
     private int minConWithRelayerNode;
+
+    private int fabricTTLDirect;
+    private int fabricTTL;
+    private int fabricFout;
+
+    private int dsInRandommode;
+
+    private String dataDisStrategyStr;
+    private String networkingModeStr;
+    private String dsInRandommodeStr;
     
     /** Creates a new instance of TOMConfiguration */
     public TOMConfiguration(int processId, KeyLoader loader) {
@@ -357,19 +371,93 @@ public class TOMConfiguration extends Configuration {
             else {
                 minConWithRelayerNode = n;
             }
-
+            
             s = (String) configs.remove("system.ds");
-            if (s == null){
-                dataDisStrategy = "None";
+            System.out.println("parsed ds: "+s);
+            if (s == null) {
+                dataDisStrategy = TOMUtil.DS_ORIGINAL;
+                dataDisStrategyStr = "ORGINAL";
             }
-            else {
-                dataDisStrategy = "MZ";
+            else if (s.equals("predis_ec")) {
+                dataDisStrategy = TOMUtil.DS_PREDIS_EC;
+                dataDisStrategyStr = "PREDIS_EC";
             }
+            else if (s.equals("predis_full")) {
+                dataDisStrategy = TOMUtil.DS_PREDIS_FULL;
+                dataDisStrategyStr = "PREDIS_FULL";
+            }
+
+            s = (String) configs.remove("system.networkmode");
+            System.out.println("parsed networkmode: "+s);
+            if (s == null) {
+                networkmode = TOMUtil.NM_CONSENSUS;
+                networkingModeStr = "CONSENSUS";
+            }
+            else if (s.equals("multi_zone") ) {
+                networkmode = TOMUtil.NM_MULTI_ZONE;
+                networkingModeStr = "MULTI_ZONE";
+            } 
+            else if (s.equals("random")) {
+                networkmode = TOMUtil.NM_RANDOM;
+                networkingModeStr = "RANDOM";
+            } 
+            else if (s.equals("star")) {
+                networkmode = TOMUtil.NM_STAR;
+                networkingModeStr = "STAR";
+            }  
+            
+            s = (String) configs.remove("system.ds_in_random");
+            System.out.println("parsed ds_in_random: "+s);
+            if (s == null) {
+                dsInRandommode = TOMUtil.DS_RANDOM_ENHANCED_FAB;
+                dsInRandommodeStr = "DS_RANDOM_ENHANCED_FAB";
+            }
+            else if (s.equals("enchanced_fabric") ) {
+                dsInRandommode = TOMUtil.DS_RANDOM_ENHANCED_FAB;
+                dsInRandommodeStr = "DS_RANDOM_ENHANCED_FAB";
+            } 
+            else if (s.equals("btc")) {
+                dsInRandommode = TOMUtil.DS_RANDOM_BTC;
+                dsInRandommodeStr = "DS_RANDOM_BTC";
+            } 
+            else if (s.equals("eth")) {
+                dsInRandommode = TOMUtil.DS_RANDOM_ETH;
+                dsInRandommodeStr = "DS_RANDOM_ETH";
+            }
+
+            s = (String) configs.remove("system.maximumSubscriber");
+            
+            if (s == null)
+                nMaximumSubscriber = 24;
+            else
+                nMaximumSubscriber = Integer.parseInt(s);
+            
+            s = (String) configs.remove("system.fabricTTLDirect");
+            if (s == null)
+                fabricTTLDirect = 2;
+            else
+                fabricTTLDirect = Integer.parseInt(s);
+
+            
+            s = (String) configs.remove("system.fabricTTL");
+            if (s == null)
+                fabricTTL = 9;
+            else
+                fabricTTL = Integer.parseInt(s);
+
+            
+            s = (String) configs.remove("system.fabricFout");
+            if (s == null)
+                fabricFout = 4;
+            else
+                fabricFout = Integer.parseInt(s);
 
             logger = LoggerFactory.getLogger(this.getClass());
             logger.info("Qc(Quorum connections to consensus node) = " + minConWithConseususNode);
             logger.info("Qr(Quorum connections to relay node) = " + minConWithRelayerNode );
-            logger.info("Data distribution strategy is "+ dataDisStrategy);
+            logger.info("Data distribution strategy is "+ dataDisStrategyStr);
+            logger.info("Networking mode is " + networkingModeStr);
+            logger.info("Maximum subscriber is "+ nMaximumSubscriber);
             logger.info("Initialview: {}", initialView);
             
         } catch (Exception e) {
@@ -550,7 +638,7 @@ public class TOMConfiguration extends Configuration {
         return bindAddress;
     }
 
-    public String getDataDisStrategy() {
+    public int getDataDisStrategy() {
         return dataDisStrategy;
     }
 
@@ -560,5 +648,37 @@ public class TOMConfiguration extends Configuration {
 
     public int getMinConWithRelayerNode(){
         return minConWithRelayerNode;
+    }
+
+    public int getMaximumSubscriber(){
+        return nMaximumSubscriber;
+    }
+
+    public int getNetworkingMode(){
+        return networkmode;
+    }
+
+    public int getDataDisForRandom(){
+        return dsInRandommode;
+    }
+
+    public String getDataDisForRandomStr(){
+        return dsInRandommodeStr;
+    }
+
+    public String getNetworkmodeStr(){
+        return networkingModeStr;
+    }
+
+    public int getFabricTTLDirect(){
+        return fabricTTLDirect;
+    }
+
+    public int getFabricTTL(){
+        return fabricTTL;
+    }
+
+    public int getFabricFout(){
+        return fabricFout;
     }
 }

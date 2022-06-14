@@ -89,8 +89,8 @@ public class Mz_Propose {
             buffer.putInt(msg.StartHeight);
             buffer.putInt(msg.EndHeight);
             buffer.putInt(msg.usedful);
-            System.out.println("Stage: makeMzPropose --Mzpropose BatchlistItem: --nd: " + msg.NodeId + " --st: "
-                    + msg.StartHeight + " --ed: " + msg.EndHeight + " --uf: " + msg.usedful);
+            // System.out.println("Stage: makeMzPropose --Mzpropose BatchlistItem: --nd: " + msg.NodeId + " --st: "
+            //         + msg.StartHeight + " --ed: " + msg.EndHeight + " --uf: " + msg.usedful);
         }
         return buffer.array();
     }
@@ -148,9 +148,9 @@ public class Mz_Propose {
             Mz_BatchListItem bundleSlice = new Mz_BatchListItem(buff.getInt(), buff.getInt(),buff.getInt(), buff.getInt());
             mzpropose.bundleSliceList.add(bundleSlice);
 
-            System.out.println("Stage: MzProposedeserialisemsg --bundleSlice: node:" + bundleSlice.NodeId
-            + " start height: " + bundleSlice.StartHeight + " endheight: " + bundleSlice.EndHeight
-            + " usebatch: " + bundleSlice.usedful);
+            // System.out.println("Stage: MzProposedeserialisemsg --bundleSlice: node:" + bundleSlice.NodeId
+            // + " start height: " + bundleSlice.StartHeight + " endheight: " + bundleSlice.EndHeight
+            // + " usebatch: " + bundleSlice.usedful);
             
             --bundleSliceLen;
         }

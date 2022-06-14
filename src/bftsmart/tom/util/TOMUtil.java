@@ -58,6 +58,7 @@ public class TOMUtil {
     public static final int TRIGGER_LC_LOCALLY = 8;
     public static final int TRIGGER_SM_LOCALLY = 9;
 
+    // message for multi_zone
     public static final int GET_RELAY_NODE = 100;
     public static final int RELAY_NODES = 101;
     public static final int SUBSCRIBE = 102;
@@ -68,6 +69,26 @@ public class TOMUtil {
     public static final int LATENCY_DETECT = 107;
     public static final int INV = 108;
     
+    // data distribute strategy
+    public static final int DS_ORIGINAL = 200;
+    public static final int DS_PREDIS_EC = 201;
+    public static final int DS_PREDIS_FULL = 202;
+    public static final int DS_RANDOM_ETH = 203;
+    public static final int DS_RANDOM_BTC = 204;
+    public static final int DS_RANDOM_FABRIC = 205;
+    public static final int DS_RANDOM_ENHANCED_FAB = 206;
+
+    // networking mode
+    public static final int NM_STAR = 300;
+    public static final int NM_RANDOM = 301;
+    public static final int NM_MULTI_ZONE = 302;
+    public static final int NM_CONSENSUS = 303;
+
+    // message for data hash
+    public static final int DH_BLODKHASH = 400;
+    public static final int DH_STRIPEHASH = 401;    
+    public static final int DH_GETBLOCK = 402;
+    public static final int DH_GETSTRIPE = 403;
 
     private static int signatureSize = -1;
     private static boolean init = false;

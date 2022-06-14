@@ -121,8 +121,8 @@ public final class Acceptor {
             logger.debug("Processing paxos msg with id " + msg.getNumber());
             processMessage(msg);
         } else {
-            logger.info("received a message: --message type: " + msg.getPaxosVerboseType()
-                    + " but is regard as out of context, from " + msg.getSender());
+            // logger.info("received a message: --message type: " + msg.getPaxosVerboseType()
+            //         + " but is regard as out of context, from " + msg.getSender());
             if (msg.getType() == MessageFactory.MZPROPOSE) {
                 logger.error("received a Mzporpose message from " + msg.getSender() + " but do not pass check limits");
             }
@@ -180,6 +180,11 @@ public final class Acceptor {
         if (msg.getSender() == executionManager.getCurrentLeader() // Is the replica the leader?
                 && epoch.getTimestamp() == 0 && ts == ets && ets == 0) { // Is all this in epoch 0?
             executePropose(epoch, msg.getValue());
+            
+            // ask tomlayer to store the candidateblcok
+            int ds = this.controller.getStaticConf().getDataDisStrategy();
+            if (ds == TOMUtil.DS_ORIGINAL)
+                this.tomLayer.storeCandidateBlock(epoch.propValue, msg);
         } else {
             logger.debug("Propose received is not from the expected leader");
         }

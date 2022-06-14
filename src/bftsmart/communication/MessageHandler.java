@@ -28,6 +28,7 @@ import bftsmart.multi_zone.MZBlock;
 import bftsmart.multi_zone.MZMessage;
 import bftsmart.multi_zone.MZNodeMan;
 import bftsmart.multi_zone.MZStripeMessage;
+import bftsmart.multi_zone.DataHashMessage;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -77,76 +78,81 @@ public class MessageHandler {
     @SuppressWarnings("unchecked")
     protected void processData(SystemMessage sm) {
         if (sm instanceof ConsensusMessage) {
-
             int myId = tomLayer.controller.getStaticConf().getProcessId();
-
             ConsensusMessage consMsg = (ConsensusMessage) sm;
-            // System.out.println("received a message: --message type: "+consMsg.getType()+"
-            // from "+consMsg.getSender());
-            if (tomLayer.controller.getStaticConf().getUseMACs() == 0 || consMsg.authenticated
-                    || consMsg.getSender() == myId)
-                acceptor.deliver(consMsg);
-            else if (consMsg.getType() == MessageFactory.ACCEPT && consMsg.getProof() != null) {
-
-                // We are going to verify the MAC vector at the algorithm level
-                HashMap<Integer, byte[]> macVector = (HashMap<Integer, byte[]>) consMsg.getProof();
-
-                byte[] recvMAC = macVector.get(myId);
-
-                ConsensusMessage cm = new ConsensusMessage(MessageFactory.ACCEPT, consMsg.getNumber(),
-                        consMsg.getEpoch(), consMsg.getSender(), consMsg.getValue());
-
-                ByteArrayOutputStream bOut = new ByteArrayOutputStream(248);
-                try {
-                    new ObjectOutputStream(bOut).writeObject(cm);
-                } catch (IOException ex) {
-                    logger.error("Failed to serialize consensus message", ex);
-                }
-
-                byte[] data = bOut.toByteArray();
-
-                // byte[] hash = tomLayer.computeHash(data);
-
-                byte[] myMAC = null;
-
-                /*
-                 * byte[] k =
-                 * tomLayer.getCommunication().getServersConn().getSecretKey(paxosMsg.getSender(
-                 * )).getEncoded();
-                 * SecretKeySpec key = new SecretKeySpec(new String(k).substring(0,
-                 * 8).getBytes(), "DES");
-                 */
-
-                SecretKey key = tomLayer.getCommunication().getServersConn().getSecretKey(consMsg.getSender());
-                try {
-                    this.mac.init(key);
-                    myMAC = this.mac.doFinal(data);
-                } catch (/* IllegalBlockSizeException | BadPaddingException | */ InvalidKeyException ex) {
-                    logger.error("Failed to generate MAC", ex);
-                }
-
-                if (recvMAC != null && myMAC != null && Arrays.equals(recvMAC, myMAC))
+            // if I am a consensus node, enter the consensus phase.
+            if (this.tomLayer.controller.isInCurrentView()) {
+                // System.out.println("received a message: --message type: "+consMsg.getType()+"
+                // from "+consMsg.getSender());
+                if (tomLayer.controller.getStaticConf().getUseMACs() == 0 || consMsg.authenticated
+                        || consMsg.getSender() == myId)
                     acceptor.deliver(consMsg);
-                else {
-                    logger.warn("Invalid MAC from " + sm.getSender());
+                else if (consMsg.getType() == MessageFactory.ACCEPT && consMsg.getProof() != null) {
+
+                    // We are going to verify the MAC vector at the algorithm level
+                    HashMap<Integer, byte[]> macVector = (HashMap<Integer, byte[]>) consMsg.getProof();
+
+                    byte[] recvMAC = macVector.get(myId);
+
+                    ConsensusMessage cm = new ConsensusMessage(MessageFactory.ACCEPT, consMsg.getNumber(),
+                            consMsg.getEpoch(), consMsg.getSender(), consMsg.getValue());
+
+                    ByteArrayOutputStream bOut = new ByteArrayOutputStream(248);
+                    try {
+                        new ObjectOutputStream(bOut).writeObject(cm);
+                    } catch (IOException ex) {
+                        logger.error("Failed to serialize consensus message", ex);
+                    }
+
+                    byte[] data = bOut.toByteArray();
+
+                    // byte[] hash = tomLayer.computeHash(data);
+
+                    byte[] myMAC = null;
+
+                    /*
+                     * byte[] k =
+                     * tomLayer.getCommunication().getServersConn().getSecretKey(paxosMsg.getSender(
+                     * )).getEncoded();
+                     * SecretKeySpec key = new SecretKeySpec(new String(k).substring(0,
+                     * 8).getBytes(), "DES");
+                     */
+
+                    SecretKey key = tomLayer.getCommunication().getServersConn().getSecretKey(consMsg.getSender());
+                    try {
+                        this.mac.init(key);
+                        myMAC = this.mac.doFinal(data);
+                    } catch (/* IllegalBlockSizeException | BadPaddingException | */ InvalidKeyException ex) {
+                        logger.error("Failed to generate MAC", ex);
+                    }
+
+                    if (recvMAC != null && myMAC != null && Arrays.equals(recvMAC, myMAC))
+                        acceptor.deliver(consMsg);
+                    else {
+                        logger.warn("Invalid MAC from " + sm.getSender());
+                    }
+                } else {
+                    logger.warn("Discarding unauthenticated message from " + sm.getSender());
                 }
-            } else {
-                logger.warn("Discarding unauthenticated message from " + sm.getSender());
+            }
+            else {
+                this.tomLayer.OnBlock(consMsg);
             }
 
-        } 
-        else if (sm instanceof MZMessage) {
+        } else if (sm instanceof MZMessage) {
             MZMessage mzMessage = (MZMessage) sm;
-            this.mzNodeMan.deliver(mzMessage);  
-        }
-        else if (sm instanceof MZStripeMessage) {
+            this.mzNodeMan.deliver(mzMessage);
+        } else if (sm instanceof MZStripeMessage) {
             MZStripeMessage msg = (MZStripeMessage) sm;
             this.tomLayer.OnMZStripe(msg);
-        }
-        else if (sm instanceof MZBlock) {
+        } else if (sm instanceof MZBlock) {
             MZBlock block = (MZBlock) sm;
             this.tomLayer.OnMZBlock(block);
+        } else if (sm instanceof DataHashMessage){
+            DataHashMessage dh = (DataHashMessage)(sm);
+            this.tomLayer.OnDataHash(dh);
         }
+        
         else {
             if (tomLayer.controller.getStaticConf().getUseMACs() == 0 || sm.authenticated) {
                 /*** This is Joao's code, related to leader change */

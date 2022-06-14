@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 import java.lang.Math;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -69,6 +70,12 @@ public class multi_chain {
 
     public boolean getUpdateTipState() {
         return multicastTip.get();
+    }
+
+    public MZStripeMessage getStripe(int batchchainId, int height, int stripeId) {
+        if (this.stripeMsgMap.containsKey(batchchainId) == false)
+            return null;
+        return this.stripeMsgMap.get(batchchainId).getStripe(height, stripeId);
     }
 
     /**

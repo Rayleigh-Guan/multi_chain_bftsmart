@@ -2,6 +2,8 @@ package bftsmart.multi_zone;
 
 import bftsmart.erasureCode.ReedSolomon;
 
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
@@ -53,6 +55,16 @@ public class StripeMessageCache {
         return addRes;     
     }
 
+    public MZStripeMessage getStripe(int height, int stripeId) {
+        if (this.receivedStripeMap.containsKey(height) == false)
+            return null;
+        for(MZStripeMessage msg: this.receivedStripeMap.get(height)) {
+            if (msg.getStripeId() == stripeId)
+                return msg;
+        }
+        return null;
+    }
+
     public boolean oldMsg(MZStripeMessage msg) {
         // never received this message, its not a old message.
         if (this.alreadyDecoded.containsKey(msg.getHeight()) == false)
@@ -93,7 +105,8 @@ public class StripeMessageCache {
         byte[] batch = mergeByteArray(shards, this.receivedStripeMap.get(height).get(0).getTotalLen());
         // mark this stripe msg as alredy received
         alreadyDecoded.put(height, true);
-        this.receivedStripeMap.remove(height);
+        if (height >= 20 + (receivedStripeMap.keySet().stream().findFirst().get()))
+            this.receivedStripeMap.remove(height);
         return batch;
     }
 

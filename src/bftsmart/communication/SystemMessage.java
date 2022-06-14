@@ -57,6 +57,10 @@ public abstract class SystemMessage implements Externalizable {
         return sender;
     }
 
+    public final void setSender(int sender){
+        this.sender = sender;
+    }
+
     // This methods implement the Externalizable interface
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {

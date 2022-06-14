@@ -31,6 +31,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.Set;
+import java.util.Collections;
 
 
 import bftsmart.communication.SystemMessage;
@@ -91,15 +92,33 @@ public class ServersCommunicationLayer extends Thread {
             }
         }
         else {
-            // connects to consensus nodes first
-            if(this.controller.getStaticConf().getDataDisStrategy() != "None") {
+            int networkmode = this.controller.getStaticConf().getNetworkingMode();
+            // if the networking mode is not NM_consensus
+            // an ordinary node will connect to consensus nodes first
+            if(networkmode != TOMUtil.NM_CONSENSUS) {
                 int myId = this.controller.getStaticConf().getProcessId();
                 int myZoneId = this.controller.getStaticConf().getZoneId(myId);
-                logger.info("Node Id = {}, ZoneId = {}, current consensus nodes are {}", myId, myZoneId, this.controller.getCurrentView());
+                logger.info("Node Id = {}, ZoneId = {}, networkmode:{} current consensus nodes are {}", myId, myZoneId, networkmode, this.controller.getCurrentView());
                 int[] initialV = controller.getCurrentViewAcceptors();
                 for (int i = 0; i < initialV.length; i++) {
                     if (initialV[i] != me) {
-                        getConnection(initialV[i]);
+                        if (networkmode == TOMUtil.NM_STAR || networkmode == TOMUtil.NM_MULTI_ZONE) {
+                            logger.info("Node {} connects to {}", myId, initialV[i]);
+                            getConnection(initialV[i]);
+                        }    
+                    }
+                }
+                // each node connects to several nodes whose id less than him
+                int nMaxSubscriber = this.controller.getStaticConf().getMaximumSubscriber();
+                if (networkmode == TOMUtil.NM_RANDOM) {
+                    // Randomly choose node to connect.
+                    ArrayList<Integer> neighbors = new ArrayList<>();
+                    for(int i = 0; i < myId; ++i)  
+                        neighbors.add(i);
+                    Collections.shuffle(neighbors);
+                    for(int i = 0; i < Math.min(neighbors.size(), nMaxSubscriber); ++i) {
+                        getConnection(i);
+                        logger.info("Node {} connects to {}", myId, initialV[i]);
                     }
                 }
             }
@@ -297,7 +316,7 @@ public class ServersCommunicationLayer extends Thread {
                 int remoteId = new DataInputStream(newSocket.getInputStream()).readInt();
                 logger.info("Receive a connection from {}", remoteId);
                 // ******* EDUARDO BEGIN **************//
-                if (!this.controller.isInCurrentView() && this.controller.getStaticConf().getDataDisStrategy() == "None" &&
+                if (!this.controller.isInCurrentView() && this.controller.getStaticConf().getNetworkingMode() == TOMUtil.NM_CONSENSUS &&
                         (this.controller.getStaticConf().getTTPId() != remoteId)) {
                     waitViewLock.lock();
                     pendingConn.add(new PendingConnection(newSocket, remoteId));
@@ -328,12 +347,12 @@ public class ServersCommunicationLayer extends Thread {
     // ******* EDUARDO BEGIN **************//
     private void establishConnection(Socket newSocket, int remoteId) throws IOException {
         if ((this.controller.getStaticConf().getTTPId() == remoteId) || this.controller.isCurrentViewMember(remoteId) 
-        || this.controller.getStaticConf().getDataDisStrategy() != "None") {
+        || this.controller.getStaticConf().getNetworkingMode() != TOMUtil.NM_CONSENSUS) {
             connectionsLock.lock();
             // System.out.println("Vai se conectar com: "+remoteId);
             if (this.connections.get(remoteId) == null) { // This must never happen!!!
                 // first time that this connection is being established
-                // System.out.println("THIS DOES NOT HAPPEN....."+remoteId);
+                System.out.println("THIS DOES NOT HAPPEN....."+remoteId);
                 this.connections.put(remoteId, new ServerConnection(controller, newSocket, remoteId, inQueue, replica));
             } else {
                 // reconnection

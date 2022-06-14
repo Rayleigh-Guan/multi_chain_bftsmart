@@ -92,4 +92,9 @@ public class MZBlock extends SystemMessage{
             } while (toRead > 0);
         }
     }
+
+    @Override
+    public String toString(){
+        return String.format("blockHash: %s, propose: %s", MZNodeMan.bytesToHex(blockHash, 16), propose!=null ? propose.toString():"[EMPTY PROPOSE]");
+    }
 }

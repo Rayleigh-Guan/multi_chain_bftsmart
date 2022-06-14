@@ -149,10 +149,10 @@ public class MZMessage extends SystemMessage{
         return this.msgCreator;
     }
 
-    
-    public void setSender(int id){
-        this.sender = id;
-    }
+    // @Override
+    // public void setSender(int id){
+    //     this.sender = id;
+    // }
 
 
     @Override

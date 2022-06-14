@@ -273,7 +273,7 @@ public class ServerConnection {
              */
         }
         else {
-            ret = (this.controller.getStaticConf().getDataDisStrategy() != "None" && this.socket == null);
+            ret = (this.controller.getStaticConf().getNetworkingMode() != TOMUtil.NM_CONSENSUS && this.socket == null);
             
         }
         // logger.info("Node {} should connects to {}, result is {} ", this.controller.getStaticConf().getProcessId(), remoteId, ret);

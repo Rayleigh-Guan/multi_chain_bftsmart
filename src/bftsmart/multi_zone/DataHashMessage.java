@@ -7,6 +7,8 @@ import java.io.ObjectOutput;
 import bftsmart.communication.SystemMessage;
 import bftsmart.tom.util.TOMUtil;
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Objects;
 
 
 // This denotes a message of data hash.
@@ -137,6 +139,15 @@ public class DataHashMessage extends SystemMessage{
         if (o == null || getClass() != o.getClass()) return false;
         DataHashMessage msg = (DataHashMessage) o;
         return Arrays.equals(this.dataHash, msg.dataHash) && this.appendix == msg.appendix;
+    }
+
+    @Override
+    public int hashCode(){
+        ArrayList<Integer> ls = new ArrayList<>();
+        ls.add(this.type);
+        for(int d: this.appendix)
+            ls.add(d);
+        return Objects.hash(ls);
     }
     
     @Override

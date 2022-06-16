@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentHashMap;
 
 import bftsmart.clientsmanagement.ClientsManager;
 import bftsmart.clientsmanagement.RequestList;
@@ -138,6 +139,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     private MzBatchBuilder mzbb;
 
     private Map<Integer, SystemMessage> blockchain;
+    private Map<ArrayList<Integer>, ArrayList<Long>> msgInFlightMap;
     // private Map<Integer, ConsensusMessage> blockchain;
     // private MzProposeBuilder mzpb = new MzProposeBuilder(System.nanoTime());
 
@@ -224,6 +226,8 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         this.MZBlockQueue = new ConcurrentLinkedQueue<SystemMessage>();
 
         this.blockchain = new HashMap<>();
+
+        this.msgInFlightMap = new ConcurrentHashMap<>();
     }
 
     /**
@@ -674,6 +678,12 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         // If I have already received this stripe, do not forward the stripe if ds is not DS_ENHANCED_FAB
         if (addRes == false && (networkmode == TOMUtil.NM_RANDOM && ds != TOMUtil.DS_RANDOM_ENHANCED_FAB)) 
             return;
+        // remove the Stripe from msgInFlightMap;
+        ArrayList<Integer> arr = new ArrayList<>();
+        arr.add(msg.getBatchChainId());
+        arr.add(msg.getHeight());
+        arr.add(msg.getStripeId());
+        this.msgInFlightMap.remove(arr);
         // if I am a consensus node and stripeId is myId,
         // then forward the message to other consensus nodes.
         MZStripeMessage forwardMsg = new MZStripeMessage(myId, msg.getBatchChainId(), msg.getHeight(),
@@ -695,8 +705,8 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             }
         }
         else if(networkmode == TOMUtil.NM_STAR) {
-            // consensus nodes forward every stripe to its neighbors.
-            if (this.controller.isInCurrentView()) {
+            // consensus nodes forward stripes whose stripeId equals to its id.
+            if (this.controller.isInCurrentView() && msg.getStripeId() == myId ) {
                 this.mzNodeMan.addForwardData(forwardMsg);
             }
         }
@@ -734,9 +744,15 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         int blockheight = dh.getAppendix()[0];
         int myId = this.controller.getStaticConf().getProcessId();
         int sender = dh.getSender();
+        ArrayList<Long> record = new ArrayList<>();
+        record.add(new Long(dh.getSender()));
+        record.add(System.currentTimeMillis());
         if (type == TOMUtil.DH_BLODKHASH) {
-            if (blockchain.containsKey(blockheight))
+            ArrayList<Integer> arr = new ArrayList<>();
+            arr.add(dh.getAppendix()[0]);
+            if (blockchain.containsKey(blockheight) || msgInFlightMap.containsKey(arr))
                 return;
+            msgInFlightMap.put(arr, record);
             dh.setType(TOMUtil.DH_GETBLOCK);
             dh.setSender(myId);
             this.communication.send(new int[]{sender}, dh);
@@ -750,7 +766,13 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             }
         } else if (type == TOMUtil.DH_STRIPEHASH) {
             MZStripeMessage stripe = this.multiChain.getStripe(dh.getAppendix()[0], dh.getAppendix()[1],dh.getAppendix()[2]);
-            if (stripe == null) {
+            ArrayList<Integer> arr = new ArrayList<>();
+            for(int ele : dh.getAppendix())
+                arr.add(ele);
+            boolean inFlight = this.msgInFlightMap.containsKey(arr);
+            // if this stipe is not in flight or not received, request it.
+            if (inFlight == false && stripe == null ) {
+                this.msgInFlightMap.put(arr, record);
                 dh.setType(TOMUtil.DH_GETSTRIPE);
                 dh.setSender(myId);
                 this.communication.send(new int[]{sender}, dh);
@@ -775,6 +797,12 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         logger.info("Node {} receive a MZBlock blockheight: {} use {} ms", myId, blockHeight, now - block.getPropose().timestamp);
         blockchain.put(blockHeight, block);
         this.MZBlockQueue.add(block);
+        
+        // remove the Stripe from msgInFlightMap;
+        ArrayList<Integer> arr = new ArrayList<>();
+        arr.add(block.getPropose().blockHeight);
+        this.msgInFlightMap.remove(arr);
+
         // forward MZBlock
         block.setSender(myId);
         this.mzNodeMan.addForwardData(block);
@@ -1160,6 +1188,31 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         logger.info("TOMLayer stopped."); 
     }
 
+    public void requestTimeoutMsg(){
+        long now = System.currentTimeMillis();
+        int myId = this.controller.getStaticConf().getProcessId();
+        long timeout = 15000;
+        byte[] dataHash = null;
+        for (ArrayList<Integer> arr: this.msgInFlightMap.keySet()) {
+            ArrayList<Long> value = this.msgInFlightMap.get(arr);
+            int sender = Integer.parseInt(String.valueOf(value.get(0)));
+            long ts = value.get(1);
+            if (now - ts > timeout) {
+                int[] appendix = new int[arr.size()];
+                int type = TOMUtil.DH_GETBLOCK;
+                if (arr.size() == 3) {
+                    type = TOMUtil.DH_GETSTRIPE;
+                }
+                for(int i = 0; i < arr.size(); ++i)
+                    appendix[i] = arr.get(i);
+                DataHashMessage dh = new DataHashMessage(myId, type, now, appendix, dataHash);
+                this.communication.send(new int[]{sender}, dh);
+                value.set(1, now);
+                logger.info("Node Request at {} from {} again", myId, dh, value);
+            }
+        }
+    }
+
     /**
      * This function recovery block from a Mz_propose and forward the block to other nodes.
      */
@@ -1224,6 +1277,10 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                     if (ds != TOMUtil.DS_ORIGINAL && controller.isInCurrentView()==false) {
                         // recovery block
                         recoveryBlock();   
+                    }
+
+                    if (networkMode == TOMUtil.NM_RANDOM) {
+                        requestTimeoutMsg();
                     }
 
                     // a node only forward data to other nodes in non-consensus mode.

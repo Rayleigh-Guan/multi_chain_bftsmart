@@ -53,7 +53,7 @@ public class MZNodeMan {
     // ordinary block I send and received 
     private Map<SystemMessage, Set<Integer>>    blockSendMap;
     private Map<SystemMessage, Set<Integer>>    blockRecvMap;
-    private Map<SystemMessage, Integer>         blockSendCntMap;
+    private Map<SystemMessage, Integer>         msgSendCntMap;
 
     public Map<String, MZBlock> blockchain;
 
@@ -105,7 +105,7 @@ public class MZNodeMan {
 
         this.blockRecvMap = new ConcurrentHashMap<>();
         this.blockSendMap = new ConcurrentHashMap<>();
-        this.blockSendCntMap = new ConcurrentHashMap<>();
+        this.msgSendCntMap = new ConcurrentHashMap<>();
 
         adjust = true;
     }
@@ -207,9 +207,9 @@ public class MZNodeMan {
                 int ds = this.controller.getStaticConf().getDataDisForRandom();
                 if (ds == TOMUtil.DS_RANDOM_ENHANCED_FAB) {
                     ArrayList<Integer> neighbors = this.getNeighborNodesWithoutConsensusNodes();
-                    if (this.blockSendCntMap.containsKey(msg) == false)
-                        this.blockSendCntMap.put(msg, 0);
-                    int sendCnt = this.blockSendCntMap.get(msg);
+                    if (this.msgSendCntMap.containsKey(msg) == false)
+                        this.msgSendCntMap.put(msg, 0);
+                    int sendCnt = this.msgSendCntMap.get(msg);
                     // leader node only send once or stop to send when sendCnt exceeds TTL
                     if ((sendCnt == 1 && this.controller.isInCurrentView()) || sendCnt > fabricTTL)
                         continue;
@@ -252,7 +252,7 @@ public class MZNodeMan {
                         logger.info("ForwardDataToSubscriber Node {} broadcast datahash [{}] to subscriber {}", this.myId, datahashMsg.toString(), foutReceivers);
                     }
                     ++sendCnt;
-                    this.blockSendCntMap.put(msg, sendCnt);
+                    this.msgSendCntMap.put(msg, sendCnt);
                 }
             }
             // broadcast data hash to other nodes.

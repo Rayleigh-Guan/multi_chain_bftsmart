@@ -109,14 +109,14 @@ public class ServersCommunicationLayer extends Thread {
                     }
                 }
                 // each node connects to several nodes whose id less than him
-                int nMaxSubscriber = this.controller.getStaticConf().getMaximumSubscriber();
+                int n = this.controller.getCurrentViewN();
                 if (networkmode == TOMUtil.NM_RANDOM) {
                     // Randomly choose node to connect.
                     ArrayList<Integer> neighbors = new ArrayList<>();
                     for(int i = 0; i < myId; ++i)  
                         neighbors.add(i);
                     Collections.shuffle(neighbors);
-                    for(int i = 0; i < Math.min(neighbors.size(), nMaxSubscriber); ++i) {
+                    for(int i = 0; i < Math.min(neighbors.size(), n); ++i) {
                         getConnection(i);
                         logger.info("Node {} connects to {}", myId, initialV[i]);
                     }

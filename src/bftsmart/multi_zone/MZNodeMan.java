@@ -175,13 +175,7 @@ public class MZNodeMan {
                 // only consensus nodes forward data to other nodes in a star topology.
                 if (this.controller.isInCurrentView() == false)
                     continue;
-                ArrayList<Integer> allNeighbors = getNeighborNodesWithoutConsensusNodes();
-                ArrayList<Integer> neighbors = new ArrayList<>();
-                int N = this.controller.getCurrentViewN();
-                for(int nodeId: allNeighbors){
-                    if ((nodeId % N) == this.myId)
-                        neighbors.add(nodeId);
-                }
+                ArrayList<Integer> neighbors = getNeighborNodesWithoutConsensusNodes();
                 multicastMsg(msg, neighbors);
                 logger.info("ForwardDataToSubscriber Node {} broadcast [{}] to neighbors: {}", this.myId, msg.toString(), neighbors );
             }
@@ -213,14 +207,12 @@ public class MZNodeMan {
                 int ds = this.controller.getStaticConf().getDataDisForRandom();
                 if (ds == TOMUtil.DS_RANDOM_ENHANCED_FAB) {
                     ArrayList<Integer> neighbors = this.getNeighborNodesWithoutConsensusNodes();
-
                     if (this.blockSendCntMap.containsKey(msg) == false)
                         this.blockSendCntMap.put(msg, 0);
                     int sendCnt = this.blockSendCntMap.get(msg);
                     // leader node only send once or stop to send when sendCnt exceeds TTL
                     if ((sendCnt == 1 && this.controller.isInCurrentView()) || sendCnt > fabricTTL)
                         continue;
-                    
                     // randomly choose fout neighbors
                     Collections.shuffle(neighbors);
                     ArrayList<Integer> foutReceivers = new ArrayList<>();

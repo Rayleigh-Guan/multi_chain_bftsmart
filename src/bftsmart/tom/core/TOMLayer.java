@@ -1185,13 +1185,12 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                 long now = System.currentTimeMillis();
                 logger.info("Node {} successfully recovery a new block {}, blockheight: {}, sender: {}, orignal tx size: {}, Mzblock size {}, use {} ms",
                     myId, blockHashStr, mzpropose.blockHeight, block.getSender(), batch.length, block.getBlockContent().length, now - mzpropose.timestamp);
+                this.MZBlockQueue.poll();
             }
             else {
                 logger.info("Node {} failed recovery a new block {}, blockheight: {}, sender: {}, computedHash: {}",myId, blockHashStr, mzpropose.blockHeight, mzpropose.blockHeight, block.getSender(),computedBlockHashStr);
+                break;
             }
-            // Forward the block
-            // this.mzNodeMan.addForwardData(new MZBlock(myId, block.getBlockHash(), mzpropose, block.getBlockContent()));
-            this.MZBlockQueue.poll();
         }
     }
 

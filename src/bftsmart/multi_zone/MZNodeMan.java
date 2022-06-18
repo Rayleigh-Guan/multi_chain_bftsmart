@@ -222,7 +222,7 @@ public class MZNodeMan {
                     if (sendCnt < fabricTTLDirect) {
                         neighbors.addAll(foutReceivers);
                         multicastMsg(msg, foutReceivers);
-                        logger.info("ForwardDataToSubscriber Node {} broadcast [{}] to subscriber {}", this.myId, msg , foutReceivers);
+                        logger.info("ForwardDataToSubscriber Node {} broadcast [{}] to neighbors {}, sendcnt: {}", this.myId, msg , foutReceivers, sendCnt);
                     } 
                     // send block digest.
                     else {
@@ -249,7 +249,7 @@ public class MZNodeMan {
                             datahashMsg = new DataHashMessage(this.myId, dataType, now, appendix, dataHash);
                         }
                         multicastMsg(datahashMsg, foutReceivers);
-                        logger.info("ForwardDataToSubscriber Node {} broadcast datahash [{}] to subscriber {}", this.myId, datahashMsg.toString(), foutReceivers);
+                        logger.info("ForwardDataToSubscriber Node {} broadcast datahash [{}] to neighbors {}", this.myId, datahashMsg.toString(), foutReceivers);
                     }
                     ++sendCnt;
                     this.msgSendCntMap.put(msg, sendCnt);

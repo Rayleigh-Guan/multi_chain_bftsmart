@@ -105,7 +105,7 @@ public class StripeMessageCache {
         byte[] batch = mergeByteArray(shards, this.receivedStripeMap.get(height).get(0).getTotalLen());
         // mark this stripe msg as alredy received
         alreadyDecoded.put(height, true);
-        if (height >= 20 + (receivedStripeMap.keySet().stream().findFirst().get()))
+        if (height >= 1000 + (receivedStripeMap.keySet().stream().findFirst().get()))
             this.receivedStripeMap.remove(height);
         return batch;
     }

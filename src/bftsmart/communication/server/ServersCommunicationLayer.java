@@ -98,27 +98,23 @@ public class ServersCommunicationLayer extends Thread {
             if(networkmode != TOMUtil.NM_CONSENSUS) {
                 int myId = this.controller.getStaticConf().getProcessId();
                 int myZoneId = this.controller.getStaticConf().getZoneId(myId);
+                int n = this.controller.getCurrentViewN();
                 logger.info("Node Id = {}, ZoneId = {}, networkmode:{} current consensus nodes are {}", myId, myZoneId, networkmode, this.controller.getCurrentView());
-                int[] initialV = controller.getCurrentViewAcceptors();
-                for (int i = 0; i < initialV.length; i++) {
-                    if (initialV[i] != me) {
-                        if (networkmode == TOMUtil.NM_STAR || networkmode == TOMUtil.NM_MULTI_ZONE) {
-                            logger.info("Node {} connects to {}", myId, initialV[i]);
-                            getConnection(initialV[i]);
-                        }    
+                if (networkmode == TOMUtil.NM_STAR || networkmode == TOMUtil.NM_MULTI_ZONE) {
+                    int[] initialV = controller.getCurrentViewAcceptors();
+                    logger.info("Node {} connects to {}", myId, initialV.toString());
+                    for (int i = 0; i < initialV.length; i++) {
+                        getConnection(initialV[i]);
                     }
                 }
-                // each node connects to several nodes whose id less than him
-                int n = this.controller.getCurrentViewN();
-                if (networkmode == TOMUtil.NM_RANDOM) {
+                else if (networkmode == TOMUtil.NM_RANDOM) {
                     // Randomly choose node to connect.
                     ArrayList<Integer> neighbors = new ArrayList<>();
                     for(int i = 0; i < myId; ++i)  
                         neighbors.add(i);
                     Collections.shuffle(neighbors);
-                    logger.info("Random chose nodes: {}", neighbors);
+                    logger.info("Random chose nodes: {}", neighbors.subList(0, n));
                     for(int i = 0; i < n; ++i) {
-                        logger.info("Node {} connects to {}", myId, neighbors.get(i));
                         getConnection(neighbors.get(i));
                     }
                 }

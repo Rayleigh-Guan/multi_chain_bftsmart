@@ -44,6 +44,7 @@ import bftsmart.consensus.messages.ConsensusMessage;
 import bftsmart.consensus.messages.MessageFactory;
 import bftsmart.consensus.roles.Acceptor;
 import bftsmart.multi_zone.*;
+import bftsmart.multi_zone.RebuildProposeState;
 import bftsmart.reconfiguration.ServerViewController;
 import bftsmart.statemanagement.StateManager;
 import bftsmart.tom.ServiceReplica;
@@ -78,7 +79,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
 
     public MZNodeMan mzNodeMan;
 
-    public ConcurrentLinkedQueue<SystemMessage> MZBlockQueue;
+    public Map<Integer, SystemMessage> MZBlockMap;
 
     private boolean doWork = true;
     // other components used by the TOMLayer (they are never changed)
@@ -140,6 +141,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
 
     private Map<Integer, SystemMessage> blockchain;
     private Map<ArrayList<Integer>, ArrayList<Long>> msgInFlightMap;
+    private Map<Integer, Integer> failToRecoveryCntMap;     // block fail to recovery and its failed cnt
     // private Map<Integer, ConsensusMessage> blockchain;
     // private MzProposeBuilder mzpb = new MzProposeBuilder(System.nanoTime());
 
@@ -223,11 +225,13 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         initMZNodeThread();
 
         // store candidate block 
-        this.MZBlockQueue = new ConcurrentLinkedQueue<SystemMessage>();
+        this.MZBlockMap = new ConcurrentHashMap();
 
         this.blockchain = new HashMap<>();
 
         this.msgInFlightMap = new ConcurrentHashMap<>();
+
+        this.failToRecoveryCntMap = new HashMap();
     }
 
     /**
@@ -676,14 +680,8 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             logger.info("Node {} receive a MZStripeMsg: {}", myId, msg.toString());
         boolean addRes = this.multiChain.addStripeMsg(msg);
         // If I have already received this stripe, do not forward the stripe if ds is not DS_ENHANCED_FAB
-        if (addRes == false && (networkmode == TOMUtil.NM_RANDOM && ds != TOMUtil.DS_RANDOM_ENHANCED_FAB)) 
+        if (addRes == false && (ds != TOMUtil.DS_RANDOM_ENHANCED_FAB)) 
             return;
-        // remove the Stripe from msgInFlightMap;
-        ArrayList<Integer> arr = new ArrayList<>();
-        arr.add(msg.getBatchChainId());
-        arr.add(msg.getHeight());
-        arr.add(msg.getStripeId());
-        this.msgInFlightMap.remove(arr);
         // if I am a consensus node and stripeId is myId,
         // then forward the message to other consensus nodes.
         MZStripeMessage forwardMsg = new MZStripeMessage(myId, msg.getBatchChainId(), msg.getHeight(),
@@ -715,28 +713,20 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         }
     }
 
-    public byte[] rebuildPropose(Mz_Propose mz_propose) {
-        getsync_reply reply = this.multiChain.getsyncedRequestfromlist(mz_propose.bundleSliceList);
-        if (!reply.getok()) {
-            logger.error("Stage:rebuildPropose --err in getsyncedRequestfromlist");
-            return null;
-        }
-        this.multiChain.setLastbatchlist(mz_propose.bundleSliceList);
-        RequestList totalreqlist = new RequestList();
-        int numNotSyncReq = 0, numSyncReq = 0;
-        if (mz_propose.reqList.size() > 0) {
+    public RebuildProposeState rebuildPropose(Mz_Propose mz_propose) {
+        RebuildProposeState reply = this.multiChain.getsyncedRequestfromlist(mz_propose.bundleSliceList);
+        if (reply.getState()){
+            int numNotSyncReq = 0, numSyncReq = 0;
             numNotSyncReq = mz_propose.reqList.size();
-            totalreqlist.addAll(mz_propose.reqList);
-        }
-        if (reply.getlist().isEmpty() == false) {
             numSyncReq = reply.getlist().size();
-            totalreqlist.addAll(reply.getlist());
+            reply.reqList.addAll(0, mz_propose.reqList);
+            int myId = this.controller.getStaticConf().getProcessId();
+            boolean useSig = this.controller.getStaticConf().getUseSignatures() == 1;
+            reply.batch = bb.makeBatch(reply.getlist(), mz_propose.numNounces, mz_propose.seed, mz_propose.timestamp, useSig);
+            this.multiChain.setLastbatchlist(mz_propose.bundleSliceList);
+            logger.info("rebuildPropose: Node {} rebuild a mzpropose, {} full txes, {} batch txes, total {} txes", myId, numNotSyncReq, numSyncReq, reply.reqList.size());
         }
-        int myId = this.controller.getStaticConf().getProcessId();
-        logger.info("rebuildPropose: Node {} rebuild a mzpropose, {} full txes, {} batch txes, total {} txes", myId, numNotSyncReq, numSyncReq, totalreqlist.size());
-        byte[] batch = bb.makeBatch(totalreqlist, mz_propose.numNounces, mz_propose.seed, mz_propose.timestamp, 
-        controller.getStaticConf().getUseSignatures() == 1);
-        return batch;
+        return reply;
     }
 
     public void OnDataHash(DataHashMessage dh) {
@@ -747,6 +737,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         ArrayList<Long> record = new ArrayList<>();
         record.add(new Long(dh.getSender()));
         record.add(System.currentTimeMillis());
+        logger.info("Node {} receives {}", myId, dh.toString());
         if (type == TOMUtil.DH_BLODKHASH) {
             ArrayList<Integer> arr = new ArrayList<>();
             arr.add(dh.getAppendix()[0]);
@@ -779,7 +770,11 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                 logger.info("Node {} receives DH_STRIPEHASH and send [{}] to {}",myId, dh.toString(), sender);
             }
         } else if (type == TOMUtil.DH_GETSTRIPE) {
-            MZStripeMessage stripe = this.multiChain.getStripe(dh.getAppendix()[0], dh.getAppendix()[1],dh.getAppendix()[2]);
+            MZStripeMessage stripe = this.multiChain.getStripe(dh.getAppendix()[0], dh.getAppendix()[1], dh.getAppendix()[2]);
+            if (stripe == null) {
+                logger.info("Node {} cannot find stripe {}", myId, dh.getAppendix());
+                return;
+            }
             stripe.setSender(myId);
             this.communication.send(new int[]{sender}, stripe);
             logger.info("Node {} receives DH_GETSTRIPE and send [{}] to {}", myId, stripe.toString(), sender);
@@ -787,48 +782,63 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     }
 
     public void OnMZBlock(MZBlock block){
-        block.deseralizePropose(this.controller.getStaticConf().getUseSignatures()==1);
-        int blockHeight = block.getPropose().blockHeight;
-        // If I have already receives this block, don't forward it.
-        if (blockchain.containsKey(blockHeight) == true) 
-            return;
-        long now = System.currentTimeMillis();
         int myId = this.controller.getStaticConf().getProcessId();
-        logger.info("Node {} receive a MZBlock blockheight: {} use {} ms", myId, blockHeight, now - block.getPropose().timestamp);
-        blockchain.put(blockHeight, block);
-        this.MZBlockQueue.add(block);
-        
-        // remove the Stripe from msgInFlightMap;
-        ArrayList<Integer> arr = new ArrayList<>();
-        arr.add(block.getPropose().blockHeight);
-        this.msgInFlightMap.remove(arr);
-
-        // forward MZBlock
-        block.setSender(myId);
-        this.mzNodeMan.addForwardData(block);
+        boolean useSig = this.controller.getStaticConf().getUseSignatures() == 1;
+        block.deseralizePropose(useSig);
+        int blockHeight = block.getPropose().blockHeight;
+        // if I am a consensus node, do not need to recovery block 
+        // I just store and forward the block
+        if (this.controller.isInCurrentView()) {
+            if (blockchain.containsKey(blockHeight) == false) {
+                blockchain.put(blockHeight, block);
+                block.setSender(myId);
+                this.mzNodeMan.addForwardData(block);
+            }
+            return;
+        }
+        // if the first time receives
+        // store the block and let recoveryBlock function to recovery the block
+        // remove the block from msgInFlightMap;
+        // else just forward the block if it is DS_RANDOM_ENHANCED_FAB mode
+        int ds = this.controller.getStaticConf().getDataDisStrategy();
+        if (blockchain.containsKey(blockHeight) == false) {
+            this.MZBlockMap.put(blockHeight, block);
+        }
+        else if (ds == TOMUtil.DS_RANDOM_ENHANCED_FAB) {
+            block.setSender(myId);
+            this.mzNodeMan.addForwardData(block);
+        }
     }
 
     // a node receives a block only in random 
     public void OnBlock(ConsensusMessage block) {
         int blockHeight = block.getNumber();
-        int networkmode = this.controller.getStaticConf().getNetworkingMode();
-        int dsforRandom = this.controller.getStaticConf().getDataDisForRandom();
         int myId = this.controller.getStaticConf().getProcessId();
-        // a non-consensus node only forward data multiple times in FAB data distribute strategy.
-        if (networkmode == TOMUtil.NM_RANDOM &&
-            dsforRandom == TOMUtil.DS_RANDOM_ENHANCED_FAB && 
-            this.controller.isInCurrentView()==false) {
+        // if I am a consensus node, do not need to recovery block 
+        // I just store and forward the block
+        if (this.controller.isInCurrentView()) {
+            if (blockchain.containsKey(blockHeight) == false) {
+                blockchain.put(blockHeight, block);
+                block.setSender(myId);
+                this.mzNodeMan.addForwardData(block);
+            }
+            return;
+        }
+        // if the first time receives
+        // store the block and let recoveryBlock function to recovery the block
+        // else just forward the block if it is DS_RANDOM_ENHANCED_FAB mode
+        int ds = this.controller.getStaticConf().getDataDisStrategy();
+        if (this.blockchain.containsKey(blockHeight) == false) {
+            ArrayList<Integer> arr = new ArrayList<>();
+            arr.add(blockHeight);
+            long now = System.currentTimeMillis();
+            logger.info("Node {} receive a Block blockheight: {} use {} ms", myId, blockHeight, now - block.getTimestamp());
+            this.blockchain.put(blockHeight, block);
+        }
+        else if (ds == TOMUtil.DS_RANDOM_ENHANCED_FAB) {
             block.setSender(myId);
             this.mzNodeMan.addForwardData(block);
         }
-        // If I have already receives this block
-        else if (blockchain.containsKey(blockHeight) == true) 
-            return;
-        long now = System.currentTimeMillis();
-        logger.info("Node {} receive a Block blockheight: {} use {} ms", myId, blockHeight, now - block.getTimestamp());
-        blockchain.put(blockHeight, block);
-        block.setSender(myId);
-        this.mzNodeMan.addForwardData(block);
     }
 
     public void storeCandidateBlock(byte[] blockHash, ConsensusMessage msg) {
@@ -849,8 +859,8 @@ public final class TOMLayer extends Thread implements RequestReceiver {
 
         Mz_Propose mz_propose = Mz_Propose.deseralizeMZPropose(msg.getValue(), controller.getStaticConf().getUseSignatures() == 1);
 
-        getsync_reply reply = this.multiChain.getsyncedRequestfromlist(mz_propose.bundleSliceList);
-        if (!reply.getok())
+        RebuildProposeState reply = this.multiChain.getsyncedRequestfromlist(mz_propose.bundleSliceList);
+        if (!reply.getState())
             return;
         MessageFactory messageFactory = new MessageFactory(msg.getSender());
 
@@ -882,16 +892,19 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         long timediff = (now - this.lastTimeReceiveMzPropose);
         this.lastTimeReceiveMzPropose = now;
 
-        byte[] batch = rebuildPropose(mz_propose);
+        RebuildProposeState reply = rebuildPropose(mz_propose);
+        if (reply.getState() == false) {
+            return;
+        }
         // record the candidate block
-        byte[] blockHash = computeHash(batch);
+        byte[] blockHash = computeHash(reply.batch);
         this.mzNodeMan.addMZCandidateBlock(blockHash, mz_propose, msg.getValue());
         logger.info("Node {} receive a mzpropose from node {}, msg: [{}], at time {}, after {} ms, mz_propose size {}, tx size {}",
-        myId, msg.getSender(), mz_propose.toString(), now, timediff, msg.getValue().length, batch.length);
+        myId, msg.getSender(), mz_propose.toString(), now, timediff, msg.getValue().length, reply.batch.length);
 
         // convert the msg to a propose message 
         MessageFactory messageFactory = new MessageFactory(msg.getSender());
-        this.acceptor.deliver(messageFactory.createPropose(msg.getNumber(), msg.getEpoch(), batch));
+        this.acceptor.deliver(messageFactory.createPropose(msg.getNumber(), msg.getEpoch(), reply.batch));
     }
 
     public void updatepackedheight() {
@@ -1191,26 +1204,44 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     public void requestTimeoutMsg(){
         long now = System.currentTimeMillis();
         int myId = this.controller.getStaticConf().getProcessId();
-        long timeout = 15000;
+        long timeout = 10000;
         byte[] dataHash = null;
+        ArrayList<ArrayList<Integer>> removedKeySet = new ArrayList<>();
         for (ArrayList<Integer> arr: this.msgInFlightMap.keySet()) {
             ArrayList<Long> value = this.msgInFlightMap.get(arr);
             int sender = Integer.parseInt(String.valueOf(value.get(0)));
             long ts = value.get(1);
-            if (now - ts > timeout) {
+            if (now - ts > timeout || ts == 0) {
                 int[] appendix = new int[arr.size()];
-                int type = TOMUtil.DH_GETBLOCK;
-                if (arr.size() == 3) {
+                int type = TOMUtil.DH_GETSTRIPE;
+                if (arr.size() == 1) {
+                    type = TOMUtil.DH_GETBLOCK;
+                    if (this.blockchain.containsKey(arr.get(0)) || this.MZBlockMap.containsKey(arr.get(0))) {
+                        removedKeySet.add(arr);
+                        logger.info("Node {} received block {}, do not need to request", myId, arr.get(0));
+                        continue;
+                    }
+                }
+                else if (arr.size() == 3) {
                     type = TOMUtil.DH_GETSTRIPE;
+                    int lastBatchHeight = this.multiChain.getLastBatchHeight(arr.get(0));
+                    // we have received its batch, do not need to request
+                    if (this.multiChain.getStripe(arr.get(0), arr.get(1), arr.get(2))!= null) {
+                        removedKeySet.add(arr);
+                        logger.info("Node {} do not need to request stripe [{},{},{}], lastheight: {}", myId, arr.get(0), arr.get(1), arr.get(2), lastBatchHeight);
+                        continue;
+                    } 
                 }
                 for(int i = 0; i < arr.size(); ++i)
                     appendix[i] = arr.get(i);
                 DataHashMessage dh = new DataHashMessage(myId, type, now, appendix, dataHash);
                 this.communication.send(new int[]{sender}, dh);
                 value.set(1, now);
-                logger.info("Node Request at {} from {} again", myId, dh, value);
+                logger.info("requestTimeoutMsg node {} request [{}] from node {} again", myId, dh.toString(), sender);
             }
         }
+        for (ArrayList<Integer> ele: removedKeySet)
+            this.msgInFlightMap.remove(ele);
     }
 
     /**
@@ -1218,33 +1249,75 @@ public final class TOMLayer extends Thread implements RequestReceiver {
      */
     public void recoveryBlock() {
         int myId = this.controller.getStaticConf().getProcessId();
-        while(this.MZBlockQueue.isEmpty() == false) {
-            MZBlock block = (MZBlock)(this.MZBlockQueue.peek());
+        ArrayList<Integer> removedBlock = new ArrayList<>();
+        for(int blockheight: this.MZBlockMap.keySet()) {
+            MZBlock block = (MZBlock)(this.MZBlockMap.get(blockheight));
             final boolean useSig = this.controller.getStaticConf().getUseSignatures()==1;
             Mz_Propose mzpropose = block.deseralizePropose(useSig);
-            byte[] batch = rebuildPropose(mzpropose);
+            RebuildProposeState reply = rebuildPropose(mzpropose);
             final int digit = 16;
             final String blockHashStr = MZNodeMan.bytesToHex(block.getBlockHash(), digit);
-            if (batch == null) {
-                logger.info("Node {} cannot recovery block {} from {}, propose:{}, batch size:{}, MZBlockQueue: {}", myId, blockHashStr, block.getSender(), mzpropose.toString(), -1, this.MZBlockQueue.size());
+            if (reply.getState() == false) {
+                if (this.failToRecoveryCntMap.containsKey(mzpropose.blockHeight) == false)
+                    this.failToRecoveryCntMap.put(mzpropose.blockHeight, 0);
+                int cnt = this.failToRecoveryCntMap.get(mzpropose.blockHeight);
+                this.failToRecoveryCntMap.put(mzpropose.blockHeight, cnt + 1);
+                ArrayList<Long> senderTime = new ArrayList<>();
+                senderTime.add(new Long(block.getSender()));
+                senderTime.add(new Long(0));
+                if (cnt == 10) {
+                    logger.info("Node {} cannot recovery block {}, fail_cnt: {}, will request from {}", myId, mzpropose.blockHeight, cnt, block.getSender());
+                    int type = TOMUtil.DH_GETSTRIPE;
+                    long now = System.currentTimeMillis();
+                    for(int batchchainId: reply.missingBatchMap.keySet()) {
+                        int startHeight = reply.missingBatchMap.get(batchchainId).get(0);
+                        int endHeight = reply.missingBatchMap.get(batchchainId).get(1);
+                        logger.info("Node {} cannot recovery [{},{},{}], my tip: {}", myId, batchchainId, startHeight, endHeight, this.multiChain.getLastBatchHeight(batchchainId));
+                        while (startHeight <= endHeight) {
+                            for(int i = 0; i < this.controller.getCurrentViewN(); ++i) {
+                                ArrayList<Integer> appendix = new ArrayList<>(3);
+                                appendix.add(batchchainId);
+                                appendix.add(startHeight);
+                                appendix.add(i);
+                                if (this.multiChain.getStripe(batchchainId, startHeight, i) == null) {
+                                    this.msgInFlightMap.put(appendix, senderTime);
+                                    logger.info("request stripe [{}] from {}", appendix, senderTime);
+                                }else {
+                                    logger.info("hava stripe [{}] in local", appendix);
+                                }
+                            }
+                            ++startHeight;
+                        }
+                    }
+                    // logger.info("this.msgInFlightMap: {}", this.msgInFlightMap); 
+                    // this.failToRecoveryCntMap.put(mzpropose.blockHeight, -1000);
+                }
                 break;
             }
-                
-            logger.debug("Node {} redovery a block {} from {}, propose:{}, batch size: {}, propose size {}", myId, blockHashStr, block.getSender(), mzpropose.toString(), batch.length, block.getBlockContent().length);
-            byte[] computedBlockHash = computeHash(batch);
-            final String computedBlockHashStr = MZNodeMan.bytesToHex(computedBlockHash, digit);
             
+            logger.debug("Node {} recovery a block {} from {}, propose:{}, batch size: {}, propose size {}", myId, blockHashStr, block.getSender(), mzpropose.toString(), reply.batch.length, block.getBlockContent().length);
+            byte[] computedBlockHash = computeHash(reply.batch);
+            final String computedBlockHashStr = MZNodeMan.bytesToHex(computedBlockHash, digit);
             if (Arrays.equals(computedBlockHash, block.getBlockHash())) {
                 long now = System.currentTimeMillis();
                 logger.info("Node {} successfully recovery a new block {}, blockheight: {}, sender: {}, orignal tx size: {}, Mzblock size {}, use {} ms",
-                    myId, blockHashStr, mzpropose.blockHeight, block.getSender(), batch.length, block.getBlockContent().length, now - mzpropose.timestamp);
-                this.MZBlockQueue.poll();
+                    myId, blockHashStr, mzpropose.blockHeight, block.getSender(), reply.batch.length, block.getBlockContent().length, now - mzpropose.timestamp);
+                removedBlock.add(blockheight);
+                // store the block
+                this.blockchain.put(blockheight, block);
+                this.failToRecoveryCntMap.remove(blockheight);
+                // forward MZBlock when I can recovery the block
+                MZBlock forwardBlock = new MZBlock(myId, block.getBlockHash(), block.getPropose(), block.getBlockContent());
+                this.mzNodeMan.addForwardData(forwardBlock);
             }
             else {
                 logger.info("Node {} failed recovery a new block {}, blockheight: {}, sender: {}, computedHash: {}",myId, blockHashStr, mzpropose.blockHeight, mzpropose.blockHeight, block.getSender(),computedBlockHashStr);
                 break;
             }
         }
+        // clear all recoveryed blocks 
+        for(int h: removedBlock)
+            this.MZBlockMap.remove(h);
     }
 
     public void initMZNodeThread(){

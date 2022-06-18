@@ -416,7 +416,12 @@ public abstract class DefaultRecoverable implements Recoverable, BatchExecutable
         this.config = replicaContext.getStaticConfiguration();
         this.controller = replicaContext.getSVController();
         initLog();
-        getStateManager().askCurrentConsensusId();
+        // only a consensus nodes will call askCurrentConsensusId 
+        if (this.controller.isInCurrentView())
+            getStateManager().askCurrentConsensusId();
+        else {
+            logger.info("Node {} is not a consensus node, skip askCurrentConsensusId", this.controller.getStaticConf().getProcessId());
+        }
     }
 
     @Override

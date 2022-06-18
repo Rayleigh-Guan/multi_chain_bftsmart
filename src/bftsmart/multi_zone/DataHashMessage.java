@@ -152,6 +152,10 @@ public class DataHashMessage extends SystemMessage{
     
     @Override
     public String toString() {
-        return String.format("sender:%d, type:%s, timestamp:%d, hash:%s", getSender(), getVerboseType(), getTimeStamp(),MZNodeMan.bytesToHex(dataHash, 8));
+        String appendixStr = "[";
+        for(Integer e : appendix) 
+            appendixStr += e.toString() +", ";
+        appendixStr += "]";
+        return String.format("sender:%d, type:%s, appendix: %s, timestamp:%d", getSender(), getVerboseType(), appendixStr, getTimeStamp());
     }
 }

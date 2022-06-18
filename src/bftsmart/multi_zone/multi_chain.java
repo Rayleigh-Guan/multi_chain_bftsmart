@@ -80,17 +80,17 @@ public class multi_chain {
 
     /**
      * add a stripe to 
-     * @param msg
+     * @param msg`
      */
     public boolean addStripeMsg(MZStripeMessage msg){
         if (this.stripeMsgMap.containsKey(msg.getBatchChainId()) == false){
             this.stripeMsgMap.put(msg.getBatchChainId(), new StripeMessageCache(this.replica_num-this.f, this.replica_num));
         }
         StripeMessageCache cache = this.stripeMsgMap.get(msg.getBatchChainId());
-        if (cache.oldMsg(msg))  return false;
         boolean res = cache.addStripe(msg);
         logger.info("Node_{}_add_{}_res_{}_receive {} stripes, quorum is {}", NodeID, msg.toString(), res,cache.getReceivedStripeNum(msg.getHeight()), cache.getQuorum());
-        
+        if (cache.oldMsg(msg))  return res;
+        // try to decode the stripe to a batch msg
         int chainId = msg.getBatchChainId();
         int lastBatchHeight = this.getLastBatchHeight(chainId);
         for(int nextBatchHeight = lastBatchHeight+1; nextBatchHeight <= msg.getHeight(); ++nextBatchHeight) {
@@ -107,16 +107,6 @@ public class multi_chain {
             }
         }
         return res;
-        // // Todo 如果这个 stripe 对应高度更低的 batch, 若没有收到，直接解码后放入 ChainPool 会导致问题?
-        // if (cache.receiveQuorum(msg.getHeight())){
-        //     long decodeStart = System.nanoTime();
-        //     byte[] batch = cache.decodeMsg(msg.getHeight());
-        //     long decodeTime = System.nanoTime() - decodeStart;
-        //     MzBatchReader batchReader = new MzBatchReader(batch, this.useSig);
-        //     Mz_Batch mzbatch = batchReader.deserialisemsg();
-        //     logger.info("Node {} deseralize a batch {}, length {} Bytes, uses {} ns", NodeID, mzbatch, batch.length, decodeTime);
-        //     this.add(mzbatch);
-        // }
     }
 
     public void add(Mz_Batch value) {
@@ -270,9 +260,8 @@ public class multi_chain {
     }
 
     // 
-    public getsync_reply getsyncedRequestfromlist(List<Mz_BatchListItem> rev) {
-
-        getsync_reply reply = new getsync_reply();
+    public RebuildProposeState getsyncedRequestfromlist(List<Mz_BatchListItem> rev) {
+        RebuildProposeState reply = new RebuildProposeState();
         logger.debug("Stage: getsyncedRequestfromlist try to getRequestfromlist");
         this.mzlock.lock();
         for (Mz_BatchListItem mz_batchListItem : rev) {
@@ -284,14 +273,16 @@ public class multi_chain {
                     + " usebatch " + uf);
             if (uf == 0)
                 continue;
-            int tipIdx = this.ChainPool[nd].size() - 1;
-            if (tipIdx < 0 || ed > this.ChainPool[nd].get(tipIdx).BatchId) {
+            int lastBatchHeight = this.getLastBatchHeight(nd);
+            if (ed > lastBatchHeight) {
                 reply.setOk(false);
-                logger.error("Stage: getsyncedRequestfromlist batchchainId {}, endHeight {} >len {} ",nd,  ed, tipIdx >= 0 ? this.ChainPool[nd].get(tipIdx).BatchId: tipIdx);
-                return reply;
+                // logger.info("BatchChainId: {}, myTip: {}, mzblock range [{},{}], ask for [{}, {}]", nd, lastBatchHeight, st, ed, lastBatchHeight + 1, ed);
+                reply.addMissingBatch(nd, lastBatchHeight + 1, ed);
             }
+            if (reply.getState() == false)
+                continue;
             for (int j = st; j <= ed; j++) {
-                reply.list.addAll(this.ChainPool[nd].get(j).Req);
+                reply.reqList.addAll(this.ChainPool[nd].get(j).Req);
                 logger.debug(
                         "Stage: getsyncedRequestfromlist --Height: " + j + " req: " + this.ChainPool[nd].get(j).Req);
             }
@@ -300,9 +291,9 @@ public class multi_chain {
         // logger.debug("Stage: getsyncedRequestfromlist --totoal reqlist"+reqlist);
         logger.debug("Stage: getsyncedRequestfromlist --total syncedRequesrequest size: {}, request: {}",
                 reply.getlist().size(), reply.getlist().toString());
-        NPackedTx += reply.list.size();
-        if (!reply.list.isEmpty()) {
-            logger.info("Node {} packed {} batched request, NPackedTx: {}", NodeID, reply.list.size(), NPackedTx);
+        NPackedTx += reply.reqList.size();
+        if (!reply.reqList.isEmpty()) {
+            logger.debug("Node {} packed {} batched request, NPackedTx: {}", NodeID, reply.reqList.size(), NPackedTx);
         }
         return reply;
     }

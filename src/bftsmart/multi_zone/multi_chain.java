@@ -92,19 +92,16 @@ public class multi_chain {
         if (cache.oldMsg(msg))  return res;
         // try to decode the stripe to a batch msg
         int chainId = msg.getBatchChainId();
-        int lastBatchHeight = this.getLastBatchHeight(chainId);
-        for(int nextBatchHeight = lastBatchHeight+1; nextBatchHeight <= msg.getHeight(); ++nextBatchHeight) {
-            if (cache.receiveQuorum(nextBatchHeight)) {
-                long decodeStart = System.nanoTime();
-                byte[] batch = cache.decodeMsg(nextBatchHeight);
-                long decodeTime = System.nanoTime() - decodeStart;
-                MzBatchReader batchReader = new MzBatchReader(batch, this.useSig);
-                Mz_Batch mzbatch = batchReader.deserialisemsg();
-                logger.info("Node {} decode a batch {}, length {} Bytes, uses {} ns", NodeID, mzbatch, batch.length, decodeTime);
-                this.add(mzbatch);
-            } else {
-                break;
-            }
+        int nextBatchHeight = this.getLastBatchHeight(chainId) + 1;
+        while(cache.receiveQuorum(nextBatchHeight)) {
+            long decodeStart = System.nanoTime();
+            byte[] batch = cache.decodeMsg(nextBatchHeight);
+            long decodeTime = System.nanoTime() - decodeStart;
+            MzBatchReader batchReader = new MzBatchReader(batch, this.useSig);
+            Mz_Batch mzbatch = batchReader.deserialisemsg();
+            logger.info("Node {} decode a batch {}, length {} Bytes, uses {} ns", NodeID, mzbatch, batch.length, decodeTime);
+            this.add(mzbatch);
+            ++nextBatchHeight;
         }
         return res;
     }

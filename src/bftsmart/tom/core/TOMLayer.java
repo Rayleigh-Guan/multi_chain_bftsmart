@@ -974,6 +974,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                                     dataLen = batchLen - totalLen;
                                 totalLen += dataLen;
                                 msgArray[stripeId] = new MZStripeMessage(myId, myId, multiChain.getMyGeneratedHeight(), batchLen, stripeId, dataLen, stripeArray[stripeId]);
+                                multiChain.addStripeMsg(msgArray[stripeId]);
                                 if (stripeId == myId) 
                                     continue;
                                 logger.info("Node {} Send a stripe to node {}, stripe: {}", myId, stripeId, msgArray[stripeId].toString());

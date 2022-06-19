@@ -189,6 +189,9 @@ public class TOMMessage extends SystemMessage implements Externalizable, Compara
 		return content;
 	}
 
+	public void setContent(byte[] newContent){
+		content=newContent;
+	}
 	/**
 	 * Verifies if two TOMMessage are equal. For performance reasons, the method
 	 * only verifies if the send and sequence are equal.

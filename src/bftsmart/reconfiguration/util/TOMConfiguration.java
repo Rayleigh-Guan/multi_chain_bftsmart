@@ -48,6 +48,7 @@ public class TOMConfiguration extends Configuration {
     private boolean stateTransferEnabled;
     private int checkpointPeriod;
     private int globalCheckpointPeriod;
+    private int proposeMethod;
     private int useControlFlow;
     private int[] initialView;
     private int ttpId;
@@ -303,6 +304,14 @@ public class TOMConfiguration extends Configuration {
                 globalCheckpointPeriod = Integer.parseInt(s);
             }
 
+            s = (String) configs.remove("system.proposeMethod");
+            if (s == null) {
+                proposeMethod = 0;
+            } else {
+                proposeMethod = Integer.parseInt(s);
+            }
+
+
             s = (String) configs.remove("system.bft");
             isBFT = (s != null) ? Boolean.parseBoolean(s) : true;
 
@@ -509,4 +518,5 @@ public class TOMConfiguration extends Configuration {
     public String getBindAddress() {
         return bindAddress;
     }
+    public int getProposeMethod(){return proposeMethod;}
 }

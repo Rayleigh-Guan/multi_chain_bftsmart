@@ -111,7 +111,10 @@ public final class Acceptor {
      * @param msg Paxos messages delivered by the communication layer
      */
     public final void deliver(ConsensusMessage msg) {
-        if (executionManager.checkLimits(msg)) {
+        if (msg.getType()==MessageFactory.HASHPROPOSE)
+        {
+            HashProposeReceived(msg);
+        }else if (executionManager.checkLimits(msg)) {
             logger.debug("Processing paxos msg with id " + msg.getNumber());
             processMessage(msg);
         } else {
@@ -164,6 +167,7 @@ public final class Acceptor {
     	}
         long now = System.currentTimeMillis();
         long timediff = (now - lastTimeReceivePropose);
+        System.out.println(Arrays.toString(msg.getValue()));
         logger.info("Node {} receive a propose from node {}, msg: {}, at time {}, after {} ms", me, msg.getSender(), msg.toString(), now, timediff);
         lastTimeReceivePropose = now;
     }
@@ -218,7 +222,7 @@ public final class Acceptor {
                 
                     computeWrite(cid, epoch, epoch.propValueHash);
                 
-                    logger.debug("WRITE computed for " + cid);
+                    logger.info("WRITE computed for " + cid);
                 
                 } else {
                  	epoch.setAccept(me, epoch.propValueHash);
@@ -430,5 +434,9 @@ public final class Acceptor {
             epoch.getConsensus().getDecision().firstMessageProposed.decisionTime = System.currentTimeMillis();
 
         epoch.getConsensus().decided(epoch, true);
+    }
+    public void HashProposeReceived(ConsensusMessage msg)
+    {
+        tomLayer.OnHashPropose(msg);
     }
 }

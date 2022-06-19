@@ -52,8 +52,16 @@ public class Proposer {
      */
     public void startConsensus(int cid, byte[] value) {
         //******* EDUARDO BEGIN **************//
-        communication.send(this.controller.getCurrentViewAcceptors(),
-                factory.createPropose(cid, 0, value));
+        if (controller.getStaticConf().getProposeMethod()==0)
+        {
+            communication.send(this.controller.getCurrentViewAcceptors(),
+                    factory.createPropose(cid, 0, value));
+        }
+        else{
+            communication.send(this.controller.getCurrentViewAcceptors(),
+                    factory.createHashPropose(cid, 0, value));
+        }
+
         //******* EDUARDO END **************//
     }
 }

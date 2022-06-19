@@ -24,6 +24,7 @@ public class MessageFactory{
     public static final int PROPOSE = 44781;
     public static final int WRITE    = 44782;
     public static final int ACCEPT  = 44783;
+    public static final int HASHPROPOSE = 44787;
 
     private int from; // Replica ID of the process which sent this message
 
@@ -74,6 +75,12 @@ public class MessageFactory{
     public ConsensusMessage createAccept(int id, int epoch, byte[] value) {
 
         return new ConsensusMessage(ACCEPT,id,epoch, from, value);
+
+    }
+
+    public ConsensusMessage createHashPropose(int id, int epoch, byte[] value) {
+
+        return new ConsensusMessage(HASHPROPOSE, id, epoch, from, value);
 
     }
 

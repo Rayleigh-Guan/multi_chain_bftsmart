@@ -196,7 +196,11 @@ public class ConsensusMessage extends SystemMessage {
         return paxosType;
 
     }
+    public void setType(int newType) {
 
+       paxosType=newType;
+
+    }
     /**
      * Returns this message type as a verbose string
      * @return Message type

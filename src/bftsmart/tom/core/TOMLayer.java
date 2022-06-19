@@ -21,6 +21,7 @@ import java.security.MessageDigest;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.SignedObject;
+import java.util.Arrays;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -31,6 +32,8 @@ import bftsmart.communication.client.RequestReceiver;
 import bftsmart.consensus.Decision;
 import bftsmart.consensus.Consensus;
 import bftsmart.consensus.Epoch;
+import bftsmart.consensus.messages.ConsensusMessage;
+import bftsmart.consensus.messages.MessageFactory;
 import bftsmart.consensus.roles.Acceptor;
 import bftsmart.reconfiguration.ServerViewController;
 import bftsmart.statemanagement.StateManager;
@@ -93,7 +96,6 @@ public final class TOMLayer extends Thread implements RequestReceiver {
 
     //the next two are used to generate non-deterministic data in a deterministic way (by the leader)
     public BatchBuilder bb = new BatchBuilder(System.nanoTime());
-
     /* The locks and conditions used to wait upon creating a propose */
     private ReentrantLock leaderLock = new ReentrantLock();
     private Condition iAmLeader = leaderLock.newCondition();
@@ -332,7 +334,32 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         }
         dec.batchSize = numberOfMessages;
 
-        logger.debug("Creating a PROPOSE with " + numberOfMessages + " msgs");
+        logger.info("Creating a PROPOSE with " + numberOfMessages + " msgs");
+
+        return bb.makeBatch(pendingRequests, numberOfNonces, System.currentTimeMillis(), controller.getStaticConf().getUseSignatures() == 1);
+    }
+
+    public byte[] createHashPropose(Decision dec) {
+        // Retrieve a set of pending requests from the clients manager
+        RequestList pendingRequests = clientsManager.getPendingRequests();
+
+        int numberOfMessages = pendingRequests.size(); // number of messages retrieved
+        int numberOfNonces = this.controller.getStaticConf().getNumberOfNonces(); // ammount of nonces to be generated
+
+        //for benchmarking
+        if (dec.getConsensusId() > -1) { // if this is from the leader change, it doesnt matter
+            dec.firstMessageProposed = pendingRequests.getFirst();
+            dec.firstMessageProposed.consensusStartTime = System.currentTimeMillis();
+        }
+        dec.batchSize = numberOfMessages;
+        byte[] NewContent = new byte[24];
+        for (int i=0;i<pendingRequests.size();i++)
+        {
+            System.out.println("before change content: "+Arrays.toString(pendingRequests.get(i).getContent()));
+            pendingRequests.get(i).setContent(NewContent);
+            System.out.println("after change content: "+Arrays.toString(pendingRequests.get(i).getContent()));
+        }
+        logger.debug("Creating a HASHPROPOSE with " + numberOfMessages + " msgs");
 
         return bb.makeBatch(pendingRequests, numberOfNonces, System.currentTimeMillis(), controller.getStaticConf().getUseSignatures() == 1);
     }
@@ -401,8 +428,14 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                 if (controller.getCurrentViewN() == 1) {
 
                     logger.debug("Only one replica, bypassing consensus.");
-                    
-                    byte[] value = createPropose(dec);
+                    byte[] value;
+                    if (controller.getStaticConf().getProposeMethod()==0)
+                    {
+                        value= createPropose(dec);
+                    }
+                    else{
+                        value = createHashPropose(dec);
+                    }
 
                     Consensus consensus = execManager.getConsensus(dec.getConsensusId());
                     Epoch epoch = consensus.getEpoch(0, controller);
@@ -421,7 +454,13 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                 long now = System.currentTimeMillis();
                 logger.info("Leader {} create propose at time {}, interval: {}", this.controller.getStaticConf().getProcessId(), now, now - lastTimeCreatePropose);
                 lastTimeCreatePropose = now;
-                execManager.getProposer().startConsensus(execId, createPropose(dec));
+                if (controller.getStaticConf().getProposeMethod()==0)
+                {
+                    execManager.getProposer().startConsensus(execId, createPropose(dec));
+                }else{
+                    execManager.getProposer().startConsensus(execId, createHashPropose(dec));
+                }
+
             }
         }
         logger.info("TOMLayer stopped.");
@@ -590,5 +629,21 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         if (this.dt != null) this.dt.shutdown();
         if (this.communication != null) this.communication.shutdown();
  
+    }
+    public void OnHashPropose(ConsensusMessage msg){
+        BatchReader batchReader = new BatchReader(msg.getValue(), this.controller.getStaticConf().getUseSignatures() == 1);
+        System.out.println("success get a HashPropose");
+        TOMMessage[] requests = null;
+        requests = batchReader.deserialiseRequests(this.controller);
+//        for (int i=0;i<requests.length;i++)
+//        {
+//            System.out.println(requests[i].getSequence()+" "+requests[i].getSender()+" "+clientsManager.getClientData(requests[i].getSender()).getLastMessageReceived());
+//            if (requests[i].getSequence()>clientsManager.getClientData(requests[i].getSender()).getLastMessageReceived()){
+//                return;
+//            }
+//        }
+        System.out.println("success verify a HashPropose");
+        msg.setType(MessageFactory.PROPOSE);
+        this.acceptor.deliver(msg);
     }
 }

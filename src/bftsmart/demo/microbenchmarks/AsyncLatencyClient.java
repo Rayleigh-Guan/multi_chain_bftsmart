@@ -53,6 +53,7 @@ public class AsyncLatencyClient {
         int interval = Integer.parseInt(args[4]);
         boolean readOnly = Boolean.parseBoolean(args[5]);
         boolean verbose = Boolean.parseBoolean(args[6]);
+        boolean useunicast=Boolean.parseBoolean(args[7]);
         
         Client[] clients = new Client[numThreads];
 
@@ -64,7 +65,7 @@ public class AsyncLatencyClient {
             }
 
             System.out.println("Launching client " + (initId + i));
-            clients[i] = new AsyncLatencyClient.Client(initId + i, numberOfOps, requestSize, interval, readOnly, verbose);
+            clients[i] = new AsyncLatencyClient.Client(initId + i, numberOfOps, requestSize, interval, readOnly, verbose,useunicast);
         }
         
         ExecutorService exec = Executors.newFixedThreadPool(clients.length);
@@ -99,8 +100,9 @@ public class AsyncLatencyClient {
         byte[] request;
         TOMMessageType reqType;
         boolean verbose;
+        boolean useunicast;
 
-        public Client(int id, int numberOfOps, int requestSize, int interval, boolean readOnly, boolean verbose) {
+        public Client(int id, int numberOfOps, int requestSize, int interval, boolean readOnly, boolean verbose,boolean useunicast) {
 
             this.id = id;
             this.serviceProxy = new AsynchServiceProxy(id);
@@ -110,6 +112,7 @@ public class AsyncLatencyClient {
             this.request = new byte[requestSize];
             this.reqType = (readOnly ? TOMMessageType.UNORDERED_REQUEST : TOMMessageType.ORDERED_REQUEST);
             this.verbose = verbose;
+            this.useunicast=useunicast;
 
         }
 
@@ -125,7 +128,7 @@ public class AsyncLatencyClient {
                     long last_send_instant = System.currentTimeMillis();
                     
                     listener.storeRequest(i);
-                    this.serviceProxy.invokeAsynchRequest(this.request, listener, this.reqType);
+                    this.serviceProxy.invokeAsynchRequest(this.request, listener, this.reqType,this.useunicast);
                     listener.sotreCompletetime(i);
                     
                     long send_finish = System.currentTimeMillis();

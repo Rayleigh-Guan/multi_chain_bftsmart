@@ -59,7 +59,9 @@ public class HostsConfig {
                         int id = Integer.valueOf(str.nextToken());
                         String host = str.nextToken();
                         int port = Integer.valueOf(str.nextToken());
-                        int zoneId = Integer.valueOf(str.nextToken());
+                        int zoneId = -1;
+                        if (str.hasMoreTokens())
+                            zoneId = Integer.valueOf(str.nextToken());
                         this.servers.put(id, new Config(id, host, port, zoneId));
                         if (this.zones.containsKey(id) == false) {
                             Set<Integer> s = new HashSet<>();

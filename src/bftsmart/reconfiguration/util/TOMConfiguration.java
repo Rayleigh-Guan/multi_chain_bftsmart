@@ -389,7 +389,7 @@ public class TOMConfiguration extends Configuration {
 
             s = (String) configs.remove("system.networkmode");
             System.out.println("parsed networkmode: "+s);
-            if (s == null) {
+            if (s == null || s.equals("consensus")) {
                 networkmode = TOMUtil.NM_CONSENSUS;
                 networkingModeStr = "CONSENSUS";
             }

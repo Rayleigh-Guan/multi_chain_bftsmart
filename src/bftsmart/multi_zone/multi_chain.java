@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class multi_chain {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
-    private int replica_num = 4;
+    private int replica_num;
     private List<Mz_Batch>[] ChainPool = new ArrayList[this.replica_num];
     private int[] nTxArray;
     private int[] PackagedHeight = new int[this.replica_num];

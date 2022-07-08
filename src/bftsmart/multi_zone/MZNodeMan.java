@@ -447,9 +447,17 @@ public class MZNodeMan {
 
     public void subscribeMsgReceived(MZMessage msg) {
         // a relayer node only receives 32 connections
-        if (this.isRelayer() && this.subscriberMap.size() >= 32) {
-            msg.setType(TOMUtil.GET_RELAY_NODE);
+        if (this.isRelayer() && this.subscriberMap.size() >= this.controller.getStaticConf().getMaximumSubscriber()) {
+            msg.setType(TOMUtil.REJECT_SUBSCRIBE);
+           
             getRelayMsgReceived(msg);
+            // reject the subscribe msg and return available child nodes.
+            ArrayList<Integer> neighbors = new ArrayList<>(this.subscriberMap.keySet());
+            byte[] data = this.mzmMsgSrlzTool.seralizeRejectSubscribe(neighbors);
+            msg.setValue(data);
+            int sender =  msg.getSender();
+            msg.setSender(this.myId);
+            cs.send(new int[]{sender}, msg);
         } else {
 
             if (this.subscriberMap.get(msg.getSender()) == null)
@@ -530,6 +538,17 @@ public class MZNodeMan {
         // remove sent subscribe history
         this.subscribeMsgSentMap.remove(msg.getSender());
         logger.info("acceptSubscribeMsgReceived received msg: {}, subscribeMap: {}, stripeSender: {}", msg.toString(), this.subscribeMap, this.stripeSenderMap);
+    }
+
+    public void rejectSubscribeMsgReceived(MZMessage msg){
+        ArrayList<Integer> neighbors = this.mzmMsgSrlzTool.deseralizeRejectSubscribe(msg.getValue());
+        int sender = msg.getSender();
+        Collections.shuffle(neighbors);
+        // random choose one node and subscribe to that node.
+        HashSet<Integer> hs = new HashSet<>();
+        hs.add(sender);
+        if (neighbors.size() > 0) 
+            sendSubscribeMsgTo(neighbors.get(0), hs);
     }
 
     public void latencyDetectMsgReceived(MZMessage msg) {
@@ -861,6 +880,8 @@ public class MZNodeMan {
             relayerMsgReceived(msg);
         } else if (msg.getType() == TOMUtil.LATENCY_DETECT) {
             latencyDetectMsgReceived(msg);
+        } else if (msg.getType() == TOMUtil.REJECT_SUBSCRIBE) {
+            rejectSubscribeMsgReceived(msg);
         } else {
             logger.error("received a message: --message type: " + msg.getVerboseType()
                     + " but is regard as out of context, from " + msg.getSender());

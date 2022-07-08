@@ -68,6 +68,7 @@ public class TOMUtil {
     public static final int RELAYER = 106;
     public static final int LATENCY_DETECT = 107;
     public static final int INV = 108;
+    public static final int REJECT_SUBSCRIBE = 109;
     
     // data distribute strategy
     public static final int DS_ORIGINAL = 200;

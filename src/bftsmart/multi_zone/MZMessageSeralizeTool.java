@@ -162,6 +162,29 @@ public class MZMessageSeralizeTool{
         return content;
     }
 
+    public byte[] seralizeRejectSubscribe(ArrayList<Integer> neighbors) {
+        int size = Integer.BYTES  +  Integer.BYTES * neighbors.size();
+        int len = neighbors == null ? 0: neighbors.size();
+        ByteBuffer buff = ByteBuffer.allocate(size);
+        buff.putInt(len);
+        int i = 0;
+        while (i < len) {
+            buff.putInt(neighbors.get(i));
+        }
+        return buff.array();
+    }
+
+    public ArrayList<Integer> deseralizeRejectSubscribe(byte[] data){
+        ArrayList<Integer> neighbors = new ArrayList<>();
+        ByteBuffer buff = ByteBuffer.wrap(data);
+        int len = buff.getInt();
+        while(len > 0) {
+            neighbors.add(buff.getInt());
+            --len;
+        }
+        return neighbors;
+    }
+
     // public byte[] seralizeMZBlock(MZBlock block) {
     //     if (block.getValue() != null)
     //         return block.getValue();  

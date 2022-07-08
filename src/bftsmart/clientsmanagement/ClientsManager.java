@@ -89,7 +89,7 @@ public class ClientsManager {
     public RequestList getPendingRequests() {
         RequestList allReq = new RequestList();
         int maxBatchsize = controller.getStaticConf().getMaxBatchSize() / (controller.getStaticConf().getN());
-        maxBatchsize = Math.min(maxBatchsize, 64);
+        //maxBatchsize = Math.min(maxBatchsize, 64);
         clientsLock.lock();
         /******* BEGIN CLIENTS CRITICAL SECTION ******/
 

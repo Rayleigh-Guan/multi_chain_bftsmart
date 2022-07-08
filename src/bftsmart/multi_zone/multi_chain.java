@@ -20,29 +20,34 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class multi_chain {
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private Logger logger;
     private int replica_num;
-    private List<Mz_Batch>[] ChainPool = new ArrayList[this.replica_num];
+    private List<Mz_Batch>[] ChainPool;
     private int[] nTxArray;
-    private int[] PackagedHeight = new int[this.replica_num];
+    private int[] PackagedHeight;
     private AtomicBoolean multicastTip;
     private int MyGeneratedHeight;
     private int NodeID;
     private int NPackedTx;
-    private ReentrantLock mzlock = new ReentrantLock();
-    private List<Mz_BatchListItem> lastbatchlist = new ArrayList<>();
+    private ReentrantLock mzlock;
+    private List<Mz_BatchListItem> lastbatchlist;
 
     private Map<Integer, StripeMessageCache> stripeMsgMap;
     private int f;
     private boolean useSig;
 
     public multi_chain(int nodeid, int replicaNum, int f, boolean useSig) {
-        multicastTip = new AtomicBoolean(false);
+        this.multicastTip = new AtomicBoolean(false);
         this.replica_num = replicaNum;
         this.f = f;
         this.useSig = useSig;
-        nTxArray = new int[this.replica_num];
+        this.nTxArray = new int[this.replica_num];
         this.stripeMsgMap = new ConcurrentHashMap<>();
+        this.ChainPool = new ArrayList[this.replica_num];
+        this.PackagedHeight = new int[this.replica_num];
+        this.mzlock = new ReentrantLock();
+        this.lastbatchlist = new ArrayList<>();
+        this.logger = LoggerFactory.getLogger(this.getClass());
         for (int i = 0; i < this.replica_num; i++) {
             this.ChainPool[i] = new ArrayList<>();
             this.PackagedHeight[i] = -1;

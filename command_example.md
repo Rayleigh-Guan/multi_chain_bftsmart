@@ -30,3 +30,10 @@ sh ./runscripts/smartrun.sh bftsmart.demo.microbenchmarks.AsyncLatencyClient 3 5
 
 ## test erasure code
 sh ./runscripts/smartrun.sh bftsmart.demo.testErasureCode.TestErasureCodec 3 1 10240
+
+
+# delete tc
+tc qdisc del dev eth0 root
+
+# add latency
+tc qdisc add dev eth0 root netem delay 20ms

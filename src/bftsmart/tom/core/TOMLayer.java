@@ -676,8 +676,8 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         // only forward stripe from other node
         if (msg.getBatchChainId() == myId || msg.getSender() == myId)
            return;
-        if (false == this.controller.isInCurrentView())
-            logger.info("Node {} receive a MZStripeMsg: {}", myId, msg.toString());
+        // if (false == this.controller.isInCurrentView())
+        //     logger.info("Node {} receive a MZStripeMsg: {}", myId, msg.toString());
         boolean addRes = this.multiChain.addStripeMsg(msg);
         // If I have already received this stripe, do not forward the stripe if ds is not DS_ENHANCED_FAB
         if (addRes == false && (ds != TOMUtil.DS_RANDOM_ENHANCED_FAB)) 

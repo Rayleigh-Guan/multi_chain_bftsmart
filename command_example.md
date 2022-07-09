@@ -26,7 +26,13 @@ sh ./runscripts/smartrun.sh bftsmart.demo.microbenchmarks.ThroughputLatencyClien
 
 ## AsyncLatencyClient
 # Usage: java ...AsyncLatencyClient <initial client id> <number of clients> <number of operations> <request size> <interval (ms)> <read only?> <verbose?>
-sh ./runscripts/smartrun.sh bftsmart.demo.microbenchmarks.AsyncLatencyClient 3 5 100 512 7 false true > client3.out
+sh ./runscripts/smartrun.sh bftsmart.demo.microbenchmarks.AsyncLatencyClient 0 10 1000 512 4 false true > client0.out
+
+sh ./runscripts/smartrun.sh bftsmart.demo.microbenchmarks.AsyncLatencyClient 10 10 1000 512 4 false true > client1.out
+
+sh ./runscripts/smartrun.sh bftsmart.demo.microbenchmarks.AsyncLatencyClient 20 10 1000 512 4 false true > client2.out
+
+sh ./runscripts/smartrun.sh bftsmart.demo.microbenchmarks.AsyncLatencyClient 30 10 1000 512 4 false true > client3.out
 
 ## test erasure code
 sh ./runscripts/smartrun.sh bftsmart.demo.testErasureCode.TestErasureCodec 3 1 10240

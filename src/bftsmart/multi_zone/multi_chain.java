@@ -93,7 +93,7 @@ public class multi_chain {
         }
         StripeMessageCache cache = this.stripeMsgMap.get(msg.getBatchChainId());
         boolean res = cache.addStripe(msg);
-        logger.info("Node_{}_add_{}_res_{}_receive {} stripes, quorum is {}", NodeID, msg.toString(), res,cache.getReceivedStripeNum(msg.getHeight()), cache.getQuorum());
+        // logger.info("Node_{}_add_{}_res_{}_receive {} stripes, quorum is {}", NodeID, msg.toString(), res,cache.getReceivedStripeNum(msg.getHeight()), cache.getQuorum());
         if (cache.oldMsg(msg))  return res;
         // try to decode the stripe to a batch msg
         int chainId = msg.getBatchChainId();
@@ -104,7 +104,7 @@ public class multi_chain {
             long decodeTime = System.nanoTime() - decodeStart;
             MzBatchReader batchReader = new MzBatchReader(batch, this.useSig);
             Mz_Batch mzbatch = batchReader.deserialisemsg();
-            logger.info("Node {} decode a batch {}, length {} Bytes, uses {} ns", NodeID, mzbatch, batch.length, decodeTime);
+            // logger.info("Node {} decode a batch {}, length {} Bytes, uses {} ns", NodeID, mzbatch, batch.length, decodeTime);
             this.add(mzbatch);
             ++nextBatchHeight;
         }
@@ -124,13 +124,13 @@ public class multi_chain {
             setUpdateTipState(true);
         }
         nTxArray[nodeid] += value.Req.size();
-        logger.info(
-                "Node {} received Batch from {}, batchId: {}, request num:{}, current batch len: {}, tipArray: {}, total received Tx: {}, should I update my Tip: {}",
-                this.NodeID, nodeid, value.BatchId, value.Req.size(), this.ChainPool[nodeid].size(),
-                value.chainPooltip.toString(), nTxArray[nodeid], getUpdateTipState());
+        // logger.info(
+        //         "Node {} received Batch from {}, batchId: {}, request num:{}, current batch len: {}, tipArray: {}, total received Tx: {}, should I update my Tip: {}",
+        //         this.NodeID, nodeid, value.BatchId, value.Req.size(), this.ChainPool[nodeid].size(),
+        //         value.chainPooltip.toString(), nTxArray[nodeid], getUpdateTipState());
         this.mzlock.unlock();
-        System.out.println("-- Node" + this.NodeID + ", received Batch from " + nodeid + ", requests: " + value.Req
-                + " at time: " + System.currentTimeMillis());
+        // System.out.println("-- Node" + this.NodeID + ", received Batch from " + nodeid + ", requests: " + value.Req
+        //         + " at time: " + System.currentTimeMillis());
 
     }
 

@@ -953,17 +953,17 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                             byte[][] stripeArray = mzbb.prepareByteArray(batch, N-F, F);
 
                             // for debug
-                            for (int i = 0; i < stripeArray.length; ++i) {
-                                System.out.printf("stripeArray[%d]'s len: %d ", i ,stripeArray[i].length);
-                            }
-                            System.out.printf(" batch len: %d \n", batch.length);
+                            // for (int i = 0; i < stripeArray.length; ++i) {
+                            //     System.out.printf("stripeArray[%d]'s len: %d ", i ,stripeArray[i].length);
+                            // }
+                            // System.out.printf(" batch len: %d \n", batch.length);
 
                             ReedSolomon rs = ReedSolomon.create(N-F, F);
                             long encodeStart = System.nanoTime();
                             rs.encodeParity(stripeArray, 0, stripeArray[0].length);
                             long encodeTime = System.nanoTime() - encodeStart;
                             final int batchLen = batch.length;
-                            logger.info("Node {} encode a batch {}, length {} Bytes, uses {} ns", myId, mzbatch, batchLen, encodeTime);
+                            // logger.info("Node {} encode a batch {}, length {} Bytes, uses {} ns", myId, mzbatch, batchLen, encodeTime);
                             MZStripeMessage[] msgArray = new MZStripeMessage[N];
                             
                             // create MZStripeMessage and broadcast to other nodes
@@ -977,12 +977,12 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                                 multiChain.addStripeMsg(msgArray[stripeId]);
                                 if (stripeId == myId) 
                                     continue;
-                                logger.info("Node {} Send a stripe to node {}, stripe: {}", myId, stripeId, msgArray[stripeId].toString());
+                                // logger.info("Node {} Send a stripe to node {}, stripe: {}", myId, stripeId, msgArray[stripeId].toString());
                                 communication.send(new int[]{stripeId}, msgArray[stripeId]);
                             }  
                             // broadcast my stripe to other consensus nodes.
                             assert(myId >= 0 && myId < N);
-                            logger.info("Node {} broadcasts stripe {} to all nodes", myId, msgArray[myId].toString());
+                            // logger.info("Node {} broadcasts stripe {} to all nodes", myId, msgArray[myId].toString());
                             communication.send(controller.getCurrentViewAcceptors(), msgArray[myId]);
                             
                             // forward the data to my subscriber in NON_CONSENSUS networking mode
@@ -992,17 +992,17 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                         }
                         else {
                             ConsensusMessage batchMessage = messageFactory.createMzBatch(0, 0, batch);
-                            System.out.println("Stage: packbatch try to send --Nodeid: " + myId + " create Mzbatch height:"
-                                    + (multiChain.getMyGeneratedHeight()) + " batch size: " + reqlist.size() + " at time: "
-                                    + System.currentTimeMillis());
+                            // System.out.println("Stage: packbatch try to send --Nodeid: " + myId + " create Mzbatch height:"
+                            //         + (multiChain.getMyGeneratedHeight()) + " batch size: " + reqlist.size() + " at time: "
+                            //         + System.currentTimeMillis());
                             communication.send(controller.getCurrentViewAcceptors(), batchMessage);
-                            System.out.println("Stage: packbatch have sended --Nodeid: " + myId + " create Mzbatch height:"
-                                    + (multiChain.getMyGeneratedHeight()) + " batch size: " + reqlist.size() + " at time: "
-                                    + System.currentTimeMillis());
+                            // System.out.println("Stage: packbatch have sended --Nodeid: " + myId + " create Mzbatch height:"
+                            //         + (multiChain.getMyGeneratedHeight()) + " batch size: " + reqlist.size() + " at time: "
+                            //         + System.currentTimeMillis());
 
-                            logger.info("Stage: packbatch --Nodeid: " + myId + " create Mzbatch height:"
-                                    + (multiChain.getMyGeneratedHeight()) + " batch size: " + reqlist.size() + " at time: "
-                                    + System.currentTimeMillis());
+                            // logger.info("Stage: packbatch --Nodeid: " + myId + " create Mzbatch height:"
+                            //         + (multiChain.getMyGeneratedHeight()) + " batch size: " + reqlist.size() + " at time: "
+                            //         + System.currentTimeMillis());
                             logger.debug("Batch Request: {}", reqlist.toString());
                             lastsend = System.currentTimeMillis();
                             
@@ -1284,7 +1284,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                                     this.msgInFlightMap.put(appendix, senderTime);
                                     logger.info("request stripe [{}] from {}", appendix, senderTime);
                                 }else {
-                                    logger.info("hava stripe [{}] in local", appendix);
+                                    // logger.info("hava stripe [{}] in local", appendix);
                                 }
                             }
                             ++startHeight;

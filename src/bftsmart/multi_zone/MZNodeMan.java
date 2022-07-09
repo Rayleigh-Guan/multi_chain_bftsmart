@@ -163,7 +163,7 @@ public class MZNodeMan {
     public void ForwardDataToSubscriber() {
         if (this.dataQueue.isEmpty()) 
             return;
-        logger.info("dataQueue size: {}, consensus nodes: {}, subscriberMap: {}", dataQueue.size(), this.controller.getCurrentViewAcceptors(),this.subscriberMap);
+        // logger.info("dataQueue size: {}, consensus nodes: {}, subscriberMap: {}", dataQueue.size(), this.controller.getCurrentViewAcceptors(),this.subscriberMap);
         int networkmode = this.controller.getStaticConf().getNetworkingMode();
         int fabricTTL = this.controller.getStaticConf().getFabricTTL();
         int fabricFout = this.controller.getStaticConf().getFabricFout();
@@ -177,7 +177,7 @@ public class MZNodeMan {
                     continue;
                 ArrayList<Integer> neighbors = getNeighborNodesWithoutConsensusNodes();
                 multicastMsg(msg, neighbors);
-                logger.info("ForwardDataToSubscriber Node {} broadcast [{}] to neighbors: {}", this.myId, msg.toString(), neighbors );
+                // logger.info("ForwardDataToSubscriber Node {} broadcast [{}] to neighbors: {}", this.myId, msg.toString(), neighbors );
             }
             else if (networkmode == TOMUtil.NM_MULTI_ZONE){
                 for(Map.Entry<Integer, HashSet<Integer>> entry: this.subscriberMap.entrySet()) {
@@ -185,19 +185,19 @@ public class MZNodeMan {
                     int[] target = {nodeId};
                     if (msg instanceof  ConsensusMessage) {
                         ConsensusMessage conMsg = (ConsensusMessage)(msg);
-                        logger.info("ForwardDataToSubscriber Node {} broadcast {} to {}", this.myId, msg.toString(), target);
+                        // logger.info("ForwardDataToSubscriber Node {} broadcast {} to {}", this.myId, msg.toString(), target);
                         cs.send(target, conMsg);
                     } else if (msg instanceof MZBlock) {
                         MZBlock block = (MZBlock)(msg);
                         // seralize block content
                         Mz_Propose propose = block.getPropose();
-                        logger.info("ForwardDataToSubscriber Node {} boradcast block {} to {}, propose {}, batch: {}",this.myId, bytesToHex(block.getBlockHash(),8), target, propose.toString(), block.getBlockContent().length);
+                        // logger.info("ForwardDataToSubscriber Node {} boradcast block {} to {}, propose {}, batch: {}",this.myId, bytesToHex(block.getBlockHash(),8), target, propose.toString(), block.getBlockContent().length);
                         cs.send(target, block);
                     } else if (msg instanceof MZStripeMessage){
                         MZStripeMessage stripe = (MZStripeMessage)(msg);
                         HashSet<Integer> stripeSet = entry.getValue();
                         if (stripeSet == null || stripeSet.contains(stripe.getStripeId())) {
-                            logger.info("ForwardDataToSubscriber Node {} broadcast stripe {} to subscriber {}", this.myId, msg.toString(), target);
+                            // logger.info("ForwardDataToSubscriber Node {} broadcast stripe {} to subscriber {}", this.myId, msg.toString(), target);
                             cs.send(target, stripe);
                         } 
                     }
@@ -222,7 +222,7 @@ public class MZNodeMan {
                     if (sendCnt < fabricTTLDirect) {
                         neighbors.addAll(foutReceivers);
                         multicastMsg(msg, foutReceivers);
-                        logger.info("ForwardDataToSubscriber Node {} broadcast [{}] to neighbors {}, sendcnt: {}", this.myId, msg , foutReceivers, sendCnt);
+                        // logger.info("ForwardDataToSubscriber Node {} broadcast [{}] to neighbors {}, sendcnt: {}", this.myId, msg , foutReceivers, sendCnt);
                     } 
                     // send block digest.
                     else {
@@ -249,7 +249,7 @@ public class MZNodeMan {
                             datahashMsg = new DataHashMessage(this.myId, dataType, now, appendix, dataHash);
                         }
                         multicastMsg(datahashMsg, foutReceivers);
-                        logger.info("ForwardDataToSubscriber Node {} broadcast datahash [{}] to neighbors {}", this.myId, datahashMsg.toString(), foutReceivers);
+                        // logger.info("ForwardDataToSubscriber Node {} broadcast datahash [{}] to neighbors {}", this.myId, datahashMsg.toString(), foutReceivers);
                     }
                     ++sendCnt;
                     this.msgSendCntMap.put(msg, sendCnt);

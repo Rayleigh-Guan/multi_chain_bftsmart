@@ -279,8 +279,8 @@ public final class Acceptor {
      */
     private void writeReceived(Epoch epoch, int a, byte[] value) {
         int cid = epoch.getConsensus().getId();
-        logger.info("Node {} received a WRITE message from {}, cid: {}", me, a, cid);
-        logger.debug("WRITE from " + a + " for consensus " + cid);
+        // logger.info("Node {} received a WRITE message from {}, cid: {}", me, a, cid);
+        // logger.debug("WRITE from " + a + " for consensus " + cid);
         epoch.setWrite(a, value);
         computeWrite(cid, epoch, value);
     }
@@ -430,7 +430,7 @@ public final class Acceptor {
         logger.debug("ACCEPT from " + msg.getSender() + " for consensus " + cid);
         epoch.setAccept(msg.getSender(), msg.getValue());
         epoch.addToProof(msg);
-        logger.info("Node {} received a ACCEPT message from {}}, cid: {}", me, msg.getSender(), cid);
+        // logger.info("Node {} received a ACCEPT message from {}, cid: {}", me, msg.getSender(), cid);
         computeAccept(cid, epoch, msg.getValue());
     }
 
@@ -444,13 +444,13 @@ public final class Acceptor {
     private void computeAccept(int cid, Epoch epoch, byte[] value) {
         logger.debug("I have " + epoch.countAccept(value) +
                 " ACCEPTs for " + cid + "," + epoch.getTimestamp());
-        logger.info("Node {} computeAccept for cid: {}", me, cid);
+        // logger.info("Node {} computeAccept for cid: {}", me, cid);
         boolean nAc = epoch.countAccept(value) > controller.getQuorum();
         boolean csState = !epoch.getConsensus().isDecided();
-        logger.info("Received ACCEPT number {} more than quorum {}, : {}, arrays equal: {}", epoch.countAccept(value),
-                controller.getQuorum(), nAc, csState);
+        // logger.info("Received ACCEPT number {} more than quorum {}, : {}, arrays equal: {}", epoch.countAccept(value),
+        //         controller.getQuorum(), nAc, csState);
         if (epoch.countAccept(value) > controller.getQuorum() && !epoch.getConsensus().isDecided()) {
-            logger.info("Node {} received enough ACCEPT messages for cid: {}", me, cid);
+            // logger.info("Node {} received enough ACCEPT messages for cid: {}", me, cid);
             logger.debug("Deciding consensus " + cid);
             decide(epoch);
         }

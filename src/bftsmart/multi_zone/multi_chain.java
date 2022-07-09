@@ -205,10 +205,10 @@ public class multi_chain {
         // check the block before returned
         checkBlock(list); // 这是由于空batch所带来的弊端
         logger.debug("Stage packListWithTip: --end time: " + System.currentTimeMillis());
-        if (list.isEmpty() == false) {
-            for (int i = 0; i < this.replica_num; i++)
-                logger.info("Node {}'s tip Array: {}", i, i, chainTipArray.get(i).toString());
-        }
+        // if (list.isEmpty() == false) {
+        //     for (int i = 0; i < this.replica_num; i++)
+        //         logger.info("Node {}'s tip Array: {}", i, i, chainTipArray.get(i).toString());
+        // }
         return list;
     }
 

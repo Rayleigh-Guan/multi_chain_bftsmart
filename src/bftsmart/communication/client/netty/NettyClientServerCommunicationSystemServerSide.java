@@ -364,8 +364,8 @@ public class NettyClientServerCommunicationSystemServerSide extends SimpleChanne
                     t.start();
                     ///////////////////////////////////////////
                 } else {
-                    logger.warn("!!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: " + sm.getSequence()
-                            + ", ID; " + targets[i]);
+                    // logger.warn("!!!!!!!!NettyClientServerSession is NULL !!!!!! sequence: " + sm.getSequence()
+                    //         + ", ID; " + targets[i]);
                 }
             } finally {
                 // sendLock.unlock();

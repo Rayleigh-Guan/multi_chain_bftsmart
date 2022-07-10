@@ -231,7 +231,7 @@ public class MZNodeMan {
                         multicastMsg(msg, foutReceivers);
                         // logger.info("ForwardDataToSubscriber Node {} broadcast [{}] to neighbors {}, sendcnt: {}", this.myId, msg , foutReceivers, sendCnt);
                     } 
-                    // send block digest.
+                    // send digest.
                     else {
                         long now = System.currentTimeMillis();
                         int dataType = -1;
@@ -243,7 +243,13 @@ public class MZNodeMan {
                             dataType = TOMUtil.DH_BLODKHASH;
                             dataHash = consMsg.getHash();
                             appendix = new int[]{consMsg.getNumber()};
-                            datahashMsg = new DataHashMessage(this.myId, dataType, now, appendix, dataHash);
+                        }
+                        else if (msg instanceof MZBlock) {
+                            MZBlock block = (MZBlock)(msg);
+                            block.getPropose();
+                            dataType = TOMUtil.DH_BLODKHASH;
+                            dataHash = block.getBlockHash();
+                            appendix = new int[]{block.getPropose().blockHeight};
                         }
                         else if (msg instanceof MZStripeMessage) {
                             MZStripeMessage stripeMsg = (MZStripeMessage)(msg);
@@ -253,8 +259,8 @@ public class MZNodeMan {
                             appendix[0] = stripeMsg.getBatchChainId();
                             appendix[1] = stripeMsg.getHeight();
                             appendix[2] = stripeMsg.getStripeId();
-                            datahashMsg = new DataHashMessage(this.myId, dataType, now, appendix, dataHash);
                         }
+                        datahashMsg = new DataHashMessage(this.myId, dataType, now, appendix, dataHash);
                         multicastMsg(datahashMsg, foutReceivers);
                         // logger.info("ForwardDataToSubscriber Node {} broadcast datahash [{}] to neighbors {}", this.myId, datahashMsg.toString(), foutReceivers);
                     }

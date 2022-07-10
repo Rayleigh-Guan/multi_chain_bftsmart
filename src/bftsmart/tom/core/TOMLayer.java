@@ -747,7 +747,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             dh.setType(TOMUtil.DH_GETBLOCK);
             dh.setSender(myId);
             this.communication.send(new int[]{sender}, dh);
-            logger.info("Node {} receives data hash and send [{}] to {}",myId, dh,sender);
+            logger.info("Node {} receives DH_BLODKHASH and send [{}] to {}",myId, dh,sender);
         } else if (type == TOMUtil.DH_GETBLOCK) {
             if (blockchain.containsKey(blockheight) == false) {
                 SystemMessage msg = blockchain.get(blockheight);

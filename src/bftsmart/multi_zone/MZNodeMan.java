@@ -171,6 +171,13 @@ public class MZNodeMan {
         while (this.dataQueue.isEmpty() == false) {
             SystemMessage msg = this.dataQueue.poll();
             msg.setSender(this.myId);
+            if (msg instanceof MZBlock) {
+                // change block sending time
+                MZBlock block = (MZBlock)(msg);
+                Mz_Propose propose = block.getPropose();
+                propose.timestamp = System.currentTimeMillis();
+                msg = block;
+            }
             if (networkmode == TOMUtil.NM_STAR) {
                 // only consensus nodes forward data to other nodes in a star topology.
                 if (this.controller.isInCurrentView() == false)

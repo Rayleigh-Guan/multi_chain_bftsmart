@@ -2,7 +2,7 @@ package bftsmart.multi_zone;
 
 import bftsmart.erasureCode.ReedSolomon;
 
-import static org.junit.Assert.fail;
+import java.util.concurrent.ConcurrentHashMap;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -17,7 +17,7 @@ public class StripeMessageCache {
     private int totalNum;
 
     public StripeMessageCache(int quorum, int totalNum){
-        this.receivedStripeMap = new HashMap<>();
+        this.receivedStripeMap = new ConcurrentHashMap<>();
         this.alreadyDecoded = new HashMap<>();
         assert(quorum > 0);
         assert(totalNum > quorum);

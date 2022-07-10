@@ -171,7 +171,7 @@ public class MZNodeMan {
         while (this.dataQueue.isEmpty() == false) {
             SystemMessage msg = this.dataQueue.poll();
             msg.setSender(this.myId);
-            if (msg instanceof MZBlock) {
+            if (this.controller.isInCurrentView() && msg instanceof MZBlock ) {
                 // change block sending time
                 MZBlock block = (MZBlock)(msg);
                 Mz_Propose propose = block.getPropose();

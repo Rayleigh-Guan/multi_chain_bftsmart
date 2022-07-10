@@ -114,8 +114,9 @@ public class ServersCommunicationLayer extends Thread {
                     for(int i = 0; i < myId; ++i)  
                         neighbors.add(i);
                     Collections.shuffle(neighbors);
-                    logger.info("Random connects to nodes: {}", neighbors.subList(0, n));
-                    for(int i = 0; i < Math.min(neighbors.size(), nNeighbor); ++i) {
+                    int nChoosen = Math.min(neighbors.size(), nNeighbor);
+                    logger.info("Random connects to nodes: {}", neighbors.subList(0, nChoosen));
+                    for(int i = 0; i < nChoosen; ++i) {
                         getConnection(neighbors.get(i));
                     }
                 }

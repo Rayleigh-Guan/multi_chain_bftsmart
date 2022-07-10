@@ -110,11 +110,12 @@ public class ServersCommunicationLayer extends Thread {
                 else if (networkmode == TOMUtil.NM_RANDOM) {
                     // Randomly choose node to connect.
                     ArrayList<Integer> neighbors = new ArrayList<>();
+                    int nNeighbor = this.controller.getStaticConf().getNRandomNeighbor();
                     for(int i = 0; i < myId; ++i)  
                         neighbors.add(i);
                     Collections.shuffle(neighbors);
-                    logger.info("Random chose nodes: {}", neighbors.subList(0, n));
-                    for(int i = 0; i < n; ++i) {
+                    logger.info("Random connects to nodes: {}", neighbors.subList(0, n));
+                    for(int i = 0; i < Math.min(neighbors.size(), nNeighbor); ++i) {
                         getConnection(neighbors.get(i));
                     }
                 }

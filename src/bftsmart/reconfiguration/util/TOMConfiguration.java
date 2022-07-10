@@ -68,6 +68,7 @@ public class TOMConfiguration extends Configuration {
     private int dataDisStrategy;                // data distribution strategy
     private int networkmode;                    // networkmode mode
     private int nMaximumSubscriber;             // maximum neighbors in multi_zone or random networking mode
+    private int nRandomNeighbor;                // average node to connect in random network topology
     private int minConWithConseususNode;
     private int minConWithRelayerNode;
 
@@ -426,11 +427,16 @@ public class TOMConfiguration extends Configuration {
             }
 
             s = (String) configs.remove("system.maximumSubscriber");
-            
             if (s == null)
                 nMaximumSubscriber = 24;
             else
                 nMaximumSubscriber = Integer.parseInt(s);
+            
+            s = (String) configs.remove("system.randoNneighbor");
+            if (s == null)
+                nRandomNeighbor = 12;
+            else
+                nRandomNeighbor  = Integer.parseInt(s);
             
             s = (String) configs.remove("system.fabricTTLDirect");
             if (s == null)
@@ -438,14 +444,12 @@ public class TOMConfiguration extends Configuration {
             else
                 fabricTTLDirect = Integer.parseInt(s);
 
-            
             s = (String) configs.remove("system.fabricTTL");
             if (s == null)
                 fabricTTL = 9;
             else
                 fabricTTL = Integer.parseInt(s);
 
-            
             s = (String) configs.remove("system.fabricFout");
             if (s == null)
                 fabricFout = 4;
@@ -458,6 +462,7 @@ public class TOMConfiguration extends Configuration {
             logger.info("Data distribution strategy is "+ dataDisStrategyStr);
             logger.info("Networking mode is " + networkingModeStr);
             logger.info("Maximum subscriber is "+ nMaximumSubscriber);
+            logger.info("Random connect neighbor is " + nRandomNeighbor);
             logger.info("Initialview: {}", initialView);
             
         } catch (Exception e) {
@@ -652,6 +657,10 @@ public class TOMConfiguration extends Configuration {
 
     public int getMaximumSubscriber(){
         return nMaximumSubscriber;
+    }
+
+    public int getNRandomNeighbor(){
+        return nRandomNeighbor;
     }
 
     public int getNetworkingMode(){

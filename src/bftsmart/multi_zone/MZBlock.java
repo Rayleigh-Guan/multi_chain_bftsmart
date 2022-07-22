@@ -34,6 +34,14 @@ public class MZBlock extends SystemMessage{
         return this.blockHash;
     }
 
+    public int getBlockHeight(){
+        int height = -2;
+        if (this.propose != null) {
+            height = this.propose.blockHeight;
+        }
+        return height;
+    }
+
 
     public byte[] getBlockContent(){
         return this.blockContent;

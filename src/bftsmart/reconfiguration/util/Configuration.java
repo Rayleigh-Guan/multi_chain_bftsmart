@@ -297,7 +297,11 @@ public class Configuration {
         return hosts.getZoneId(id);
     }
 
-    public final Set<Integer> getZoneSet(int zoneId){
+    public final int getMaxZoneId(){
+        return hosts.getMaxZoneId();
+    }
+
+    public final Set<Integer> getZoneNodeSet(int zoneId){
         return hosts.getZoneNodeSet(zoneId);
     }
 

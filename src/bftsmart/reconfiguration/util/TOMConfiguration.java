@@ -68,6 +68,7 @@ public class TOMConfiguration extends Configuration {
     private int dataDisStrategy;                // data distribution strategy
     private int networkmode;                    // networkmode mode
     private int nMaximumSubscriber;             // maximum neighbors in multi_zone or random networking mode
+    private int heartbeatInterval;              // heartbeat interval(milliseconds) to notify my existence.
     private int nRandomNeighbor;                // average node to connect in random network topology
     private int minConWithConseususNode;
     private int minConWithRelayerNode;
@@ -432,6 +433,12 @@ public class TOMConfiguration extends Configuration {
             else
                 nMaximumSubscriber = Integer.parseInt(s);
             
+            s = (String) configs.remove("System.heartbeatInterval");
+            if (s == null)
+                heartbeatInterval = 30000;
+            else
+                heartbeatInterval = Integer.parseInt(s);
+
             s = (String) configs.remove("system.randoNneighbor");
             if (s == null)
                 nRandomNeighbor = 12;
@@ -657,6 +664,10 @@ public class TOMConfiguration extends Configuration {
 
     public int getMaximumSubscriber(){
         return nMaximumSubscriber;
+    }
+
+    public int getHeartbeatInterval(){
+        return heartbeatInterval;
     }
 
     public int getNRandomNeighbor(){

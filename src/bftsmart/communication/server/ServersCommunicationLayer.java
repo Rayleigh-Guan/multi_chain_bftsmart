@@ -26,6 +26,7 @@ import java.net.SocketTimeoutException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.HashSet;
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
@@ -102,9 +103,19 @@ public class ServersCommunicationLayer extends Thread {
                 logger.info("Node Id = {}, ZoneId = {}, networkmode:{} current consensus nodes are {}", myId, myZoneId, networkmode, this.controller.getCurrentView());
                 if (networkmode == TOMUtil.NM_STAR || networkmode == TOMUtil.NM_MULTI_ZONE) {
                     int[] initialV = controller.getCurrentViewAcceptors();
-                    logger.info("Node {} connects to {}", myId, initialV.toString());
+                    // logger.info("Node {} connects to {}", myId, initialV);
                     for (int i = 0; i < initialV.length; i++) {
                         getConnection(initialV[i]);
+                    }
+                    if (networkmode == TOMUtil.NM_MULTI_ZONE) {
+                        ArrayList<Integer> neighbors = getNeighborZoneNodes();
+                        if (neighbors.isEmpty() == false) {
+                            int extraNeighbor = this.controller.getStaticConf().getNRandomNeighbor();
+                            int nNode = Math.min(neighbors.size(), extraNeighbor);
+                            logger.info("Node {} choose extra {} nodes", myId, neighbors.subList(0, nNode));
+                            for(int i = 0; i < nNode; ++i)
+                                getConnection(neighbors.get(i));
+                        }
                     }
                 }
                 else if (networkmode == TOMUtil.NM_RANDOM) {
@@ -183,10 +194,25 @@ public class ServersCommunicationLayer extends Thread {
      * @return
      */
     public ArrayList<Integer> getNeighborNodes(){
+        connectionsLock.lock();
         ArrayList<Integer> neighbors = new ArrayList<>();
         for (Integer key : this.connections.keySet()) {
             neighbors.add(key);
         }
+        connectionsLock.unlock();
+        return neighbors;
+    }
+
+    public ArrayList<Integer> getNeighborZoneNodes(){
+        int myId = this.controller.getStaticConf().getProcessId();
+        int myZoneId = this.controller.getStaticConf().getZoneId(myId);
+        int curZoneId = myZoneId;
+        Set<Integer> neighborZoneNodes = new HashSet<Integer>();
+        while (curZoneId > 0) {
+            --curZoneId;
+            neighborZoneNodes.addAll(this.controller.getStaticConf().getZoneNodeSet(myZoneId));
+        }
+        ArrayList<Integer> neighbors = new ArrayList<Integer>(neighborZoneNodes);
         return neighbors;
     }
 
@@ -234,6 +260,16 @@ public class ServersCommunicationLayer extends Thread {
         }
         connectionsLock.unlock();
         return ret;
+    }
+
+    public void closeConnection(int remoteId) {
+        connectionsLock.lock();
+        ServerConnection ret = this.connections.get(remoteId);
+        if (ret != null) {
+            ret.shutdown();
+        }
+        this.connections.remove(remoteId);
+        connectionsLock.unlock();
     }
     // ******* EDUARDO END **************//
 

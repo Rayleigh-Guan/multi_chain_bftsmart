@@ -184,18 +184,4 @@ public class MZMessageSeralizeTool{
         }
         return neighbors;
     }
-
-    // public byte[] seralizeMZBlock(MZBlock block) {
-    //     if (block.getValue() != null)
-    //         return block.getValue();  
-    // }
-
-    // public byte[] seralizeStripe(MZStripeMessage msg) {
-    //     assert(msg != null):"MZStripeMessage is null";
-    //     int size = Integer.BYTES * 3 + msg.getStripe().length;
-    //     ByteBuffer buff = ByteBuffer.allocate(size);
-    //     buff.putInt(msg.batchChainId);
-    //     buff.putInt(msg.)
-    // }
-
 }

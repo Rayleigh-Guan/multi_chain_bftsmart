@@ -65,7 +65,7 @@ public class TOMUtil {
     public static final int UNSUBSCRIBE = 103;
     public static final int ACCEPT_SUBSCRIBE = 104;
     public static final int STRIPE = 105;
-    public static final int RELAYER = 106;
+    public static final int RELAYERALIVE = 106;
     public static final int LATENCY_DETECT = 107;
     public static final int INV = 108;
     public static final int REJECT_SUBSCRIBE = 109;
@@ -88,8 +88,11 @@ public class TOMUtil {
     // message for data hash
     public static final int DH_BLODKHASH = 400;
     public static final int DH_STRIPEHASH = 401;    
-    public static final int DH_GETBLOCK = 402;
+    public static final int DH_GETPREDISBLOCK = 402;
     public static final int DH_GETSTRIPE = 403;
+
+    // message for common use
+    public static final int CM_HEARTBEAT = 500;
 
     private static int signatureSize = -1;
     private static boolean init = false;

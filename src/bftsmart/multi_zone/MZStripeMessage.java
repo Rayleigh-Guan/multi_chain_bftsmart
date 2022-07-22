@@ -125,7 +125,7 @@ public class MZStripeMessage extends SystemMessage{
 
     @Override
     public String toString(){
-        return String.format("BatchChain_%d_height_%d_stripeId_%d_totalLen_%d_stripeLen_%d_validDataLen_%d_Sender_%d",
+        return String.format("type=STRIPE_BatchChain_%d_height_%d_stripeId_%d_totalLen_%d_stripeLen_%d_validDataLen_%d_Sender_%d",
             this.batchChainId, this.batchHeight, this.stripeId, this.totalLen, this.stripe.length, this.dataLen,this.getSender());
     }
     

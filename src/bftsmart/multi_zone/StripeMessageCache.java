@@ -7,18 +7,21 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class StripeMessageCache {
 
     // the MSZstripeMessages a node received at a height.
     private Map<Integer, ArrayList<MZStripeMessage>> receivedStripeMap;
+    private ReentrantLock stripeLock;
     private Map<Integer, Boolean> alreadyDecoded;
     private int quorum;
     private int totalNum;
 
     public StripeMessageCache(int quorum, int totalNum){
-        this.receivedStripeMap = new ConcurrentHashMap<>();
+        this.receivedStripeMap = new HashMap<>();
         this.alreadyDecoded = new HashMap<>();
+        this.stripeLock = new ReentrantLock();
         assert(quorum > 0);
         assert(totalNum > quorum);
         assert(totalNum <= 256);
@@ -31,12 +34,16 @@ public class StripeMessageCache {
     }
 
     public int getReceivedStripeNum(int height) {
-        if (receivedStripeMap.containsKey(height) == false)
-            return -1;
-        return receivedStripeMap.get(height).size();
+        int num = -1;
+        this.stripeLock.lock();
+        if (receivedStripeMap.containsKey(height))
+            num = receivedStripeMap.get(height).size();
+        this.stripeLock.unlock();
+        return num;
     }
 
     public boolean addStripe(MZStripeMessage msg) {
+        this.stripeLock.lock();
         if (this.receivedStripeMap.containsKey(msg.getHeight()) == false)
             this.receivedStripeMap.put(msg.getHeight(), new ArrayList<MZStripeMessage>());
         ArrayList<MZStripeMessage> stripeList = this.receivedStripeMap.get(msg.getHeight());
@@ -52,17 +59,22 @@ public class StripeMessageCache {
         }
         if (addRes) 
             stripeList.add(msg);
+        this.stripeLock.unlock();
         return addRes;     
     }
 
     public MZStripeMessage getStripe(int height, int stripeId) {
-        if (this.receivedStripeMap.containsKey(height) == false)
-            return null;
-        for(MZStripeMessage msg: this.receivedStripeMap.get(height)) {
-            if (msg.getStripeId() == stripeId)
-                return msg;
+        MZStripeMessage res = null;
+        this.stripeLock.lock();
+        if (this.receivedStripeMap.containsKey(height)){
+            for(MZStripeMessage msg: this.receivedStripeMap.get(height)) {
+                if (msg.getStripeId() == stripeId) {
+                    res = msg;
+                }    
+            }
         }
-        return null;
+        this.stripeLock.unlock();
+        return res;
     }
 
     public boolean oldMsg(MZStripeMessage msg) {
@@ -73,13 +85,18 @@ public class StripeMessageCache {
     }
 
     public boolean receiveQuorum(int height) {
-        if (this.receivedStripeMap.get(height) == null || this.receivedStripeMap.get(height).size() < quorum)
-            return false;
-        return true;
+        boolean res = true;
+        this.stripeLock.lock();
+        if (this.receivedStripeMap.get(height) == null || 
+            this.receivedStripeMap.get(height).size() < quorum)
+            res = false;
+        this.stripeLock.unlock();
+        return res;
     }
 
     public byte[] decodeMsg(int height) {
         assert (receiveQuorum(height) == true);
+        this.stripeLock.lock();
         ReedSolomon codec = ReedSolomon.create(this.quorum, this.totalNum - this.quorum);
         ArrayList<MZStripeMessage> stripeList = this.receivedStripeMap.get(height);
         assert(stripeList != null && stripeList.size() > 0);
@@ -107,6 +124,7 @@ public class StripeMessageCache {
         alreadyDecoded.put(height, true);
         // if (height >= 1000 + (receivedStripeMap.keySet().stream().findFirst().get()))
         //     this.receivedStripeMap.remove(height);
+        this.stripeLock.unlock();
         return batch;
     }
 

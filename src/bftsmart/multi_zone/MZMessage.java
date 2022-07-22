@@ -181,8 +181,8 @@ public class MZMessage extends SystemMessage{
             return "UNSUBSCRIBE";
         else if (getType() == TOMUtil.STRIPE)
             return "STRIPE";
-        else if (getType() == TOMUtil.RELAYER)
-            return "RELAYER";
+        else if (getType() == TOMUtil.RELAYERALIVE)
+            return "RELAYERALIVE";
         else if (getType() == TOMUtil.LATENCY_DETECT)
             return "LATENCY_DETECT";
         else if (getType() == TOMUtil.INV)

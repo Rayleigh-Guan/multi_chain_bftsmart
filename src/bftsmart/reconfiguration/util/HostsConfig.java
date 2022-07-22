@@ -29,9 +29,12 @@ public class HostsConfig {
 
     private HashMap<Integer, Config> servers = new HashMap<>();
     protected HashMap<Integer, Set<Integer>> zones = new HashMap<>();
+    private int maxZoneId;
+    private int heartbeatInterval;
     /** Creates a new instance of ServersConfig */
     public HostsConfig(String configHome, String fileName) {
         loadConfig(configHome, fileName);
+        maxZoneId = -1;
     }
 
     private void loadConfig(String configHome, String fileName) {
@@ -60,8 +63,10 @@ public class HostsConfig {
                         String host = str.nextToken();
                         int port = Integer.valueOf(str.nextToken());
                         int zoneId = -1;
-                        if (str.hasMoreTokens())
+                        if (str.hasMoreTokens()) {
                             zoneId = Integer.valueOf(str.nextToken());
+                            this.maxZoneId = Math.max(zoneId, this.maxZoneId);
+                        }
                         this.servers.put(id, new Config(id, host, port, zoneId));
                         if (this.zones.containsKey(id) == false) {
                             Set<Integer> s = new HashSet<>();
@@ -134,6 +139,10 @@ public class HostsConfig {
             return c.zoneId;
         }
         return -1;
+    }
+
+    public int getMaxZoneId() {
+        return this.maxZoneId;
     }
 
 

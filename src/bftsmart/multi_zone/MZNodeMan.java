@@ -6,17 +6,20 @@ import bftsmart.consensus.messages.ConsensusMessage;
 import bftsmart.consensus.messages.MessageFactory;
 import bftsmart.communication.SystemMessage;
 import bftsmart.tom.util.TOMUtil;
+
 import bftsmart.multi_zone.DataHashMessage;
+import bftsmart.multi_zone.MZRelayerMan;
+import bftsmart.multi_zone.MZSubscribeMan;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Queue;
-import java.util.List;
+import java.util.Random;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -26,16 +29,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MZNodeMan {
+
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private ServerViewController controller;
     private ServerCommunicationSystem cs;                       // comunication system
     private Map<Integer, HashSet<Integer>> subscriberMap;       // nodeId --> stripeId other nodes subscribed
-    private Map<Integer, HashSet<Integer>> subscribeMap;        // nodeId --> stripeId I subscribed
-    private Map<Integer, Integer> stripeSenderMap;              // stripeId --> nodeId send to me
-    private Map<Integer, HashSet<Integer>> zoneRelayerMap;
-    private Map<Integer, HashSet<Integer>> relayerStripeMap;    // relayerId-> stripe it relayed.
-    private Map<Integer, HashSet<Integer>> subscribeMsgSentMap; // subscribe msg I send to other nodes but not received replies.
+    private MZSubscribeMan mzSubscribeMan;
+    private MZRelayerMan mzRelayerMan;
+    private Map<Integer, Long> heartbeatRecvTime;           // heartbeat msg received time.
+    private Map<Integer, Long> nextTimeBroadcastHeartbeat;      // nextTimeBroadcastHeartbeat
     private boolean isRelayer = false;
     private boolean isConsensusNode = false;
     private MZMessageSeralizeTool mzmMsgSrlzTool;
@@ -48,6 +51,7 @@ public class MZNodeMan {
 
     // stripe, block, mzbatch that need to forward.
     private Queue<SystemMessage> dataQueue ;
+    private Queue<Long> enQueueTime;
     private Map<String, SystemMessage> candidateBlockMap;
 
     // ordinary block I send and received 
@@ -59,7 +63,6 @@ public class MZNodeMan {
 
     private int myId;
     private int zoneId;
-    private boolean adjust;
 
     // for asking relay_node info
     private AtomicLong lastTimeAskRelayNode = new AtomicLong();
@@ -68,17 +71,20 @@ public class MZNodeMan {
     // last time broadcast relayer
     private AtomicLong nextTimeBroadcastRelayer = new AtomicLong();
     private AtomicLong nextTimeBroadcastLatencyDetect = new AtomicLong();
+    private AtomicLong nextTimeDetect = new AtomicLong();
 
     public MZNodeMan(ServerViewController controller, ServerCommunicationSystem cs) {
         this.controller = controller;
+        this.myId = this.controller.getStaticConf().getProcessId();
+        this.zoneId = this.controller.getStaticConf().getZoneId(myId);
 
         this.subscriberMap = new ConcurrentHashMap<>();
-        this.zoneRelayerMap = new ConcurrentHashMap<>();
-        this.subscribeMap = new ConcurrentHashMap<>();
-        this.relayerStripeMap = new ConcurrentHashMap<>();
-        this.subscribeMsgSentMap = new ConcurrentHashMap<>();
-        this.stripeSenderMap = new ConcurrentHashMap<>();
+        this.mzRelayerMan = new MZRelayerMan(this.myId, this.zoneId);
+        this.mzSubscribeMan = new MZSubscribeMan(this.myId);
+
+        this.heartbeatRecvTime = new HashMap();
         this.routingTable = new ConcurrentHashMap<>();
+        this.nextTimeBroadcastHeartbeat = new ConcurrentHashMap<>();
 
         this.gossipedMsg = new LinkedList<>();
         this.gossipedMsgSender = new ConcurrentHashMap<>();
@@ -86,6 +92,7 @@ public class MZNodeMan {
 
         // for send data to subscriber node.
         this.dataQueue = new ConcurrentLinkedQueue<SystemMessage>();
+        this.enQueueTime = new ConcurrentLinkedQueue<>();
         this.candidateBlockMap = new ConcurrentHashMap<>();
 
         this.blockchain = new HashMap<>();
@@ -100,14 +107,11 @@ public class MZNodeMan {
         this.nextTimeBroadcastRelayer.set(0);
         this.nextTimeBroadcastLatencyDetect.set(0);
 
-        this.myId = this.controller.getStaticConf().getProcessId();
-        this.zoneId = this.controller.getStaticConf().getZoneId(myId);
-
         this.blockRecvMap = new ConcurrentHashMap<>();
         this.blockSendMap = new ConcurrentHashMap<>();
         this.msgSendCntMap = new ConcurrentHashMap<>();
 
-        adjust = true;
+        this.nextTimeDetect.set(System.currentTimeMillis()+60000);
     }
 
     final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
@@ -130,6 +134,7 @@ public class MZNodeMan {
 
     public void addForwardData(SystemMessage msg) {
         assert(msg != null);
+        this.enQueueTime.add(System.currentTimeMillis());
         this.dataQueue.add(msg);
     }
 
@@ -151,13 +156,45 @@ public class MZNodeMan {
         MZBlock candidateBlock = new MZBlock(myId, blockHash, propose, seralizedPropose);
         String hash = MZNodeMan.bytesToHex(blockHash, 16);
         this.candidateBlockMap.put(hash, candidateBlock);
-        logger.info("addMZCandidateBlock:Node {} add msg [{}] to candidateblock [{}]", myId, hash, candidateBlock.toString());
+        // logger.info("addMZCandidateBlock: Node {} add msg [{}] to candidateblock [{}]", myId, hash, candidateBlock.toString());
     }
 
     public void storeCandidateBlock(byte[] blockHash, ConsensusMessage msg) {
         String hash = MZNodeMan.bytesToHex(blockHash, 16);
         this.candidateBlockMap.put(hash, msg);
         logger.info("storeCandidateBlock: Node {} add msg: [{}] to candidateblock, blockheight: [{}]", myId, hash, msg.getNumber());
+    }
+
+    public DataHashMessage generateDataHashMsg(SystemMessage msg) {
+        DataHashMessage datahashMsg = null;
+        long now = System.currentTimeMillis();
+        int dataType = -1;
+        byte[] dataHash = null;
+        int[] appendix = null;
+        if (msg instanceof ConsensusMessage ){
+            ConsensusMessage consMsg = (ConsensusMessage)(msg);
+            dataType = TOMUtil.DH_BLODKHASH;
+            dataHash = consMsg.getHash();
+            appendix = new int[]{consMsg.getNumber()};
+        }
+        else if (msg instanceof MZBlock) {
+            MZBlock block = (MZBlock)(msg);
+            block.getPropose();
+            dataType = TOMUtil.DH_BLODKHASH;
+            dataHash = block.getBlockHash();
+            appendix = new int[]{block.getPropose().blockHeight};
+        }
+        else if (msg instanceof MZStripeMessage) {
+            MZStripeMessage stripeMsg = (MZStripeMessage)(msg);
+            dataType = TOMUtil.DH_STRIPEHASH;
+            dataHash = null;
+            appendix = new int[3];
+            appendix[0] = stripeMsg.getBatchChainId();
+            appendix[1] = stripeMsg.getHeight();
+            appendix[2] = stripeMsg.getStripeId();
+        }
+        datahashMsg = new DataHashMessage(this.myId, dataType, now, appendix, dataHash);
+        return datahashMsg;
     }
 
     public void ForwardDataToSubscriber() {
@@ -170,12 +207,25 @@ public class MZNodeMan {
         int fabricTTLDirect = this.controller.getStaticConf().getFabricTTLDirect();
         while (this.dataQueue.isEmpty() == false) {
             SystemMessage msg = this.dataQueue.poll();
+            long enterTime = this.enQueueTime.poll();
+            long now = System.currentTimeMillis() ;
+            long diff = now - enterTime;
+            if (diff > 5000) {
+                if (msg instanceof MZBlock) {
+                    MZBlock block = (MZBlock)(msg);
+                    logger.info("forward {} exceed {} ms", block.toString(), diff);
+                }
+                else if (msg instanceof MZStripeMessage) {
+                    MZStripeMessage stripe = (MZStripeMessage)(msg);
+                    logger.info("forward {} exceed {} ms", stripe.toString(), diff);
+                }
+            }
             msg.setSender(this.myId);
             if (this.controller.isInCurrentView() && msg instanceof MZBlock ) {
                 // change block sending time
                 MZBlock block = (MZBlock)(msg);
-                Mz_Propose propose = block.getPropose();
-                propose.timestamp = System.currentTimeMillis();
+                logger.info("forward blockheight: {}, wait {} ms", block.getBlockHeight(), diff);
+                block.getPropose().timestamp = now;
                 msg = block;
             }
             if (networkmode == TOMUtil.NM_STAR) {
@@ -184,7 +234,7 @@ public class MZNodeMan {
                     continue;
                 ArrayList<Integer> neighbors = getNeighborNodesWithoutConsensusNodes();
                 multicastMsg(msg, neighbors);
-                // logger.info("ForwardDataToSubscriber Node {} broadcast [{}] to neighbors: {}", this.myId, msg.toString(), neighbors );
+                // logger.info("ForwardDataToSubscriber Node {} broadcast [{}] to neighbors: {}", this.myId, msg.toString(), neighbors);
             }
             else if (networkmode == TOMUtil.NM_MULTI_ZONE){
                 for(Map.Entry<Integer, HashSet<Integer>> entry: this.subscriberMap.entrySet()) {
@@ -193,21 +243,37 @@ public class MZNodeMan {
                     if (msg instanceof  ConsensusMessage) {
                         ConsensusMessage conMsg = (ConsensusMessage)(msg);
                         // logger.info("ForwardDataToSubscriber Node {} broadcast {} to {}", this.myId, msg.toString(), target);
-                        cs.send(target, conMsg);
+                        sendMsg(target, conMsg);
                     } else if (msg instanceof MZBlock) {
                         MZBlock block = (MZBlock)(msg);
                         // seralize block content
                         Mz_Propose propose = block.getPropose();
                         // logger.info("ForwardDataToSubscriber Node {} boradcast block {} to {}, propose {}, batch: {}",this.myId, bytesToHex(block.getBlockHash(),8), target, propose.toString(), block.getBlockContent().length);
-                        cs.send(target, block);
+                        sendMsg(target, block);
                     } else if (msg instanceof MZStripeMessage){
                         MZStripeMessage stripe = (MZStripeMessage)(msg);
                         HashSet<Integer> stripeSet = entry.getValue();
                         if (stripeSet == null || stripeSet.contains(stripe.getStripeId())) {
                             // logger.info("ForwardDataToSubscriber Node {} broadcast stripe {} to subscriber {}", this.myId, msg.toString(), target);
-                            cs.send(target, stripe);
+                            sendMsg(target, stripe);
                         } 
                     }
+                }
+                if (msg instanceof DataHashMessage) {
+                    // multicast data hash to extra neighbors for robustness
+                    ArrayList<Integer> neighbors = this.getNeighborNodesWithoutConsensusNodes();
+                    if (this.isConsensusNode()) {
+                        Set<Integer> relayerSet = this.mzRelayerMan.getAllRelayers();
+                        neighbors = new ArrayList<Integer>(relayerSet);
+                    } else {
+                        neighbors = this.getNeighborNodesWithoutConsensusNodes();
+                    }
+                    neighbors.removeAll(this.subscriberMap.keySet());
+                    multicastMsg(msg, neighbors);
+                } else {
+                    // add those datahashMsg to queue and broadcast later
+                    DataHashMessage datahashMsg = generateDataHashMsg(msg);
+                    this.dataQueue.add(datahashMsg);
                 }
             }
             else if (networkmode == TOMUtil.NM_RANDOM) {
@@ -233,34 +299,7 @@ public class MZNodeMan {
                     } 
                     // send digest.
                     else {
-                        long now = System.currentTimeMillis();
-                        int dataType = -1;
-                        byte[] dataHash = null;
-                        int[] appendix = null;
-                        DataHashMessage datahashMsg = null;
-                        if (msg instanceof ConsensusMessage ){
-                            ConsensusMessage consMsg = (ConsensusMessage)(msg);
-                            dataType = TOMUtil.DH_BLODKHASH;
-                            dataHash = consMsg.getHash();
-                            appendix = new int[]{consMsg.getNumber()};
-                        }
-                        else if (msg instanceof MZBlock) {
-                            MZBlock block = (MZBlock)(msg);
-                            block.getPropose();
-                            dataType = TOMUtil.DH_BLODKHASH;
-                            dataHash = block.getBlockHash();
-                            appendix = new int[]{block.getPropose().blockHeight};
-                        }
-                        else if (msg instanceof MZStripeMessage) {
-                            MZStripeMessage stripeMsg = (MZStripeMessage)(msg);
-                            dataType = TOMUtil.DH_STRIPEHASH;
-                            dataHash = null;
-                            appendix = new int[3];
-                            appendix[0] = stripeMsg.getBatchChainId();
-                            appendix[1] = stripeMsg.getHeight();
-                            appendix[2] = stripeMsg.getStripeId();
-                        }
-                        datahashMsg = new DataHashMessage(this.myId, dataType, now, appendix, dataHash);
+                        DataHashMessage datahashMsg = generateDataHashMsg(msg);
                         multicastMsg(datahashMsg, foutReceivers);
                         // logger.info("ForwardDataToSubscriber Node {} broadcast datahash [{}] to neighbors {}", this.myId, datahashMsg.toString(), foutReceivers);
                     }
@@ -292,6 +331,10 @@ public class MZNodeMan {
         return isRelayer;
     }
 
+    public boolean isOrdinary(){
+        return this.isRelayer() == false && this.controller.isInCurrentView() == false;
+    }
+
     public void setRelayer(boolean state) {
         isRelayer = state;
     }
@@ -302,15 +345,6 @@ public class MZNodeMan {
 
     public void setConsensusNode(boolean state) {
         isConsensusNode = state;
-    }
-
-    public HashSet<Integer> getStripeCanSubscribe() {
-        HashSet<Integer> hs = new HashSet<>();
-        for (int i = 0; i < this.controller.getCurrentViewN(); ++i)
-            hs.add(i);
-        if (this.stripeSenderMap.keySet() != null)
-            hs.removeAll(this.stripeSenderMap.keySet());
-        return hs;
     }
 
     public void addSubscriber(int subscriberId, int stripeId) {
@@ -347,43 +381,30 @@ public class MZNodeMan {
         return true;
     }
 
-    // public void unscribe(int subscriberId, int stripeId) {
-    //     if (subscriberMap.containsKey(subscriberId) == false)
-    //         return;
-    //     HashSet<Integer> hs = subscriberMap.get(subscriberId);
-    //     hs.remove(stripeId);
-    // }
-
     public void sendSubscribeMsgTo(int target, Set<Integer> subStripes) {
-        if (subStripes == null || subStripes.isEmpty())
+        if (subStripes == null || subStripes.isEmpty() || target == this.myId)
             return;
         byte[] content = this.mzmMsgSrlzTool.seralizeSubscribe(subStripes);
         MZMessage subscribeMsg = createMZMessage(TOMUtil.SUBSCRIBE, content);
         int[] targets = { target };
-        cs.send(targets, subscribeMsg);
-        this.subscribeMsgSentMap.put(target, new HashSet<Integer>(subStripes));
-        logger.info("sendSubscribeMsgTo Send [{}] to {}, subscripes: {}", subscribeMsg, target, this.subscribeMsgSentMap.get(target));
-        this.nextTimeBroadcastRelayer.set(System.currentTimeMillis() + 5000);
+        sendMsg(targets, subscribeMsg);
+        this.mzSubscribeMan.addSubscribeMsg(target, new HashSet<Integer>(subStripes));
+        logger.info("sendSubscribeMsgTo Send [{}] to {}, subscripes: {}", subscribeMsg, target, this.mzSubscribeMan.getSubscribeMsgSentTo(target));
+
     }
 
-    public void sendUnSubscribedMsgTo(int target, Set<Integer> stripes) {
+    public void sendUnSubscribedMsgTo(int target, HashSet<Integer> stripes) {
         byte[] content = this.mzmMsgSrlzTool.seralizeSubscribe(stripes);
         MZMessage unsubscribeMsg = createMZMessage(TOMUtil.UNSUBSCRIBE, content);
         int[] targets = { target };
-        cs.send(targets, unsubscribeMsg);
+        sendMsg(targets, unsubscribeMsg);
         // if I am a relayer node, update relayerStripeMap.
-        if (isRelayer() && this.controller.isCurrentViewMember(target) && this.relayerStripeMap.containsKey(myId)) {
-            this.relayerStripeMap.get(myId).removeAll(stripes);
-            updateRelayer(myId, zoneId, new ArrayList<>(this.relayerStripeMap.get(myId)));
+        if (isRelayer() && this.controller.isCurrentViewMember(target) ) {
+            this.mzRelayerMan.deleteRelayerStripe(this.myId, this.zoneId, new ArrayList<Integer>(stripes));
         }
-        // update subscribeMap
-        if(this.subscribeMap.containsKey(target)) {
-            this.subscribeMap.get(target).removeAll(stripes);
-            if (this.subscribeMap.get(target).isEmpty())
-                this.subscribeMap.remove(target);
-        }
-            
-        logger.info("sendUnSubscribedMsgTo Send [{}] to {}, relayStripeMap: {}", unsubscribeMsg, target, this.relayerStripeMap.get(myId));
+
+        this.mzSubscribeMan.removeSubscribe(target, stripes);
+        logger.info("sendUnSubscribedMsgTo Send [{}] to {}, relayStripeMap: {}", unsubscribeMsg, target, this.mzRelayerMan.getRelayerStripe(myId));
     }
 
     /**
@@ -393,47 +414,12 @@ public class MZNodeMan {
      */
     public void getRelayMsgReceived(MZMessage msg) {
         assert (msg != null);
-        HashSet<Integer> relayerSet = zoneRelayerMap.get(msg.getZoneId());
-        byte[] content = this.mzmMsgSrlzTool.seralizeRelayNodes(relayerSet, this.relayerStripeMap);
+        byte[] content = this.mzRelayerMan.seralizeRelayer(mzmMsgSrlzTool, msg.getZoneId());
         MZMessage replyMsg = createMZMessage(TOMUtil.RELAY_NODES, content);
         int target[] = { msg.getSender() };
-        this.cs.send(target, replyMsg);
-        logger.info("getRelayMsgReceived: received msg: [{}], relayerStripeMap: {}", msg.toString(),
-                this.relayerStripeMap);
-    }
-
-    public void updateRelayer(int relayerId, int relayerZone, ArrayList<Integer> relayerStripes) {
-        // assert (null != relayerStripes) : "updateRelayer: relayerStripes is empty!!";
-        if (this.zoneRelayerMap.containsKey(relayerZone) == false)
-            this.zoneRelayerMap.put(relayerZone, new HashSet<>());
-        // add to relayerStripeMap
-        if (this.relayerStripeMap.containsKey(relayerId) == false)
-            this.relayerStripeMap.put(relayerId, new HashSet<>());
-        // clear
-        if (this.relayerStripeMap.containsKey(relayerId))
-            this.relayerStripeMap.get(relayerId).clear();
-        if (relayerStripes.isEmpty() == false)
-            addRelayer(relayerId, relayerZone, relayerStripes);
-        else {
-            // an empty relayerStripes means that node do not be a relayer anymore.
-            if (zoneRelayerMap.containsKey(relayerZone))
-                this.zoneRelayerMap.get(relayerZone).remove(relayerId);
-            this.relayerStripeMap.remove(relayerId);
-            logger.info("updateRelayer Node {} receive an empty relayerMsg for zone {}, this.zoneRelayerMap: {}", this.myId, relayerZone, this.zoneRelayerMap.get(relayerId));
-        }
-    }
-
-    public void addRelayer(int relayerId, int relayerZone, ArrayList<Integer> relayerStripes) {
-        // assert (null != relayerStripes) : "addRelayer: relayerStripes is empty!!";
-        // add to zoneRelayerMap
-        if (this.zoneRelayerMap.containsKey(relayerZone) == false)
-            this.zoneRelayerMap.put(relayerZone, new HashSet<>());
-        this.zoneRelayerMap.get(relayerZone).add(relayerId);
-
-        // add to relayerStripeMap
-        if (this.relayerStripeMap.containsKey(relayerId) == false)
-            this.relayerStripeMap.put(relayerId, new HashSet<>());
-        this.relayerStripeMap.get(relayerId).addAll(relayerStripes);
+        this.sendMsg(target, replyMsg);
+        // logger.info("getRelayMsgReceived: received msg: [{}], relayerStripeMap: {}", msg.toString(),
+        //         this.relayerStripeMap);
     }
 
     /**
@@ -442,18 +428,16 @@ public class MZNodeMan {
      * @param msg
      */
     public void relayNodesMsgReceived(MZMessage msg) {
+        nRelayNodesMsgReceived.incrementAndGet();
         // skip a old relayer msg
         if (this.lastReceivedRelayerMsg != null &&
                 this.lastReceivedRelayerMsg.getTimeStamp() > msg.getTimeStamp())
             return;
-        nRelayNodesMsgReceived.incrementAndGet();
         HashMap<Integer, HashSet<Integer>> tmpRelayStripeMap = this.mzmMsgSrlzTool.deseralizeRelayNodes(msg.getValue());
-        logger.info("relayNodesMsgReceived received msg: [{}], zoneRelayerMap: {}, relayerStripeMap:{}", msg.toString(),
-                this.zoneRelayerMap, this.relayerStripeMap);
         for (HashMap.Entry<Integer, HashSet<Integer>> entry : tmpRelayStripeMap.entrySet()) {
             int relayerId = entry.getKey();
             int relayerZone = this.controller.getStaticConf().getZoneId(relayerId);
-            updateRelayer(relayerId, relayerZone, new ArrayList<>(entry.getValue()));
+            mzRelayerMan.addNewRelayer(relayerId, relayerZone, new ArrayList<>(entry.getValue()));
         }
         this.lastReceivedRelayerMsg = msg;
     }
@@ -462,7 +446,6 @@ public class MZNodeMan {
         // a relayer node only receives 32 connections
         if (this.isRelayer() && this.subscriberMap.size() >= this.controller.getStaticConf().getMaximumSubscriber()) {
             msg.setType(TOMUtil.REJECT_SUBSCRIBE);
-           
             getRelayMsgReceived(msg);
             // reject the subscribe msg and return available child nodes.
             ArrayList<Integer> neighbors = new ArrayList<>(this.subscriberMap.keySet());
@@ -470,9 +453,8 @@ public class MZNodeMan {
             msg.setValue(data);
             int sender =  msg.getSender();
             msg.setSender(this.myId);
-            cs.send(new int[]{sender}, msg);
+            sendMsg(new int[]{sender}, msg);
         } else {
-
             if (this.subscriberMap.get(msg.getSender()) == null)
                 this.subscriberMap.put(msg.getSender(), new HashSet<>());
             ArrayList<Integer> subStripes = this.mzmMsgSrlzTool.deseralizeSubscribe(msg.getValue());
@@ -480,17 +462,14 @@ public class MZNodeMan {
 
             // if I am a leader, mark that node as a relayer.
             if (this.controller.isInCurrentView()) {
-                addRelayer(msg.getSender(), msg.getZoneId(), subStripes);
+                mzRelayerMan.addRelayerStripes(msg.getSender(), msg.getZoneId(), subStripes);
+                logger.info("{} is a new relayer and relayer {}", msg.getSender(), subStripes);
             }
 
-            MZMessage replyMsg = createMZMessage(TOMUtil.ACCEPT_SUBSCRIBE, null);
+            MZMessage replyMsg = createMZMessage(TOMUtil.ACCEPT_SUBSCRIBE, msg.getValue());
             int target[] = { msg.getSender() };
-            cs.send(target, replyMsg);
-
+            sendMsg(target, replyMsg);
         }
-        logger.info("subscribeMsgReceived received msg: [{}], zoneRelayerMap: {}, relayerStripeMap:{}, subscriberMap: {}", msg.toString(),
-                this.zoneRelayerMap, this.relayerStripeMap, this.subscriberMap);
-
     }
 
     public void unsubscribeMsgReceived(MZMessage msg) {
@@ -502,67 +481,73 @@ public class MZNodeMan {
         if (this.subscriberMap.get(msg.getSender()).isEmpty())
             this.subscriberMap.remove(msg.getSender());
 
-        // adjust node's relayer info
-        if (this.controller.isInCurrentView() && this.relayerStripeMap.containsKey(msg.getSender())) {
-            this.relayerStripeMap.get(msg.getSender()).removeAll(unsubStripes);
-            // this node will be a non-relayer if its relayed stripes are empty
-            if (this.relayerStripeMap.get(msg.getSender()).isEmpty()) {
-                this.relayerStripeMap.remove(msg.getSender());
-                if (this.zoneRelayerMap.containsKey(msg.getZoneId()))
-                    this.zoneRelayerMap.get(msg.getZoneId()).remove(msg.getSender());
-            }
+        // change node's relayer info
+        if (this.controller.isInCurrentView()) {
+            mzRelayerMan.deleteRelayerStripe(msg.getSender(), msg.getZoneId(), unsubStripes);
         }
         logger.info("unsubscribeMsgReceived receive [{}] , relayerStripeMap: {}, sender's subscriberMap: {}", msg,
-            this.relayerStripeMap.get(myId), this.subscriberMap.get(msg.getSender()));
+            this.mzRelayerMan.getRelayerStripe(myId), this.subscriberMap.get(msg.getSender()));
     }
 
     public void acceptSubscribeMsgReceived(MZMessage msg) {
-        HashSet<Integer> hs = this.subscribeMsgSentMap.get(msg.getSender());
-        assert(hs != null):"hs is empty!!";
-        
+        ArrayList<Integer> subStripes = this.mzmMsgSrlzTool.deseralizeSubscribe(msg.getValue());
+        HashSet<Integer> hs = new HashSet<>(subStripes);
+        if(hs.isEmpty()){
+            logger.warn("the subdstripe I send to {} is null", msg.getSender());
+            return;
+        }
         // if sender is a consensus node, then, mark myself is a new relayer
         if (this.controller.isCurrentViewMember(msg.getSender())) {
+            mzRelayerMan.addRelayerStripes(this.myId, this.zoneId, new ArrayList<>(hs));
             this.setRelayer(true);
-            addRelayer(this.myId, this.zoneId, new ArrayList<>(hs));
+            logger.info("{} becomes a relayer and forward {}", this.myId, this.mzRelayerMan.getRelayerStripe(this.myId));
         }
 
         // send unsubscribe msg to previous sender
-        HashMap<Integer, Set<Integer>> unsubscribeMap = new HashMap<>();
-        // update my subscribeMap
-        if (this.subscribeMap.get(msg.getSender()) == null)
-            this.subscribeMap.put(msg.getSender(), new HashSet<Integer>());
+        HashMap<Integer, HashSet<Integer>> unsubscribeMap = new HashMap<>();
         if (hs != null) {
-            for (int stripeId : hs) {
-                Integer previousSender = this.stripeSenderMap.get(stripeId);
-                if (previousSender != null && previousSender.intValue() != msg.getSender()) {
-                    if (unsubscribeMap.containsKey(previousSender.intValue()) == false)
-                        unsubscribeMap.put(previousSender.intValue(), new HashSet<Integer>());
-                    unsubscribeMap.get(previousSender.intValue()).add(stripeId);
-
+            HashMap<Integer, Integer> previousStripeSenderMap = this.mzSubscribeMan.getStripeSender(hs);
+            this.mzSubscribeMan.addSubscribe(msg.getSender(), hs);
+            for(int stripeId: previousStripeSenderMap.keySet()) {
+                int previousSender = previousStripeSenderMap.get(stripeId);
+                if (previousSender != this.mzSubscribeMan.noSender) {
+                    if (unsubscribeMap.containsKey(previousSender) == false)
+                        unsubscribeMap.put(previousSender, new HashSet<Integer>());
+                        unsubscribeMap.get(previousSender).add(stripeId);
                 }
-                // change stripe sender
-                this.stripeSenderMap.put(stripeId, msg.getSender());
-                this.subscribeMap.get(msg.getSender()).add(stripeId);
             }
+            for (HashMap.Entry<Integer, HashSet<Integer>> entry : unsubscribeMap.entrySet()) 
+                sendUnSubscribedMsgTo(entry.getKey(), entry.getValue());
+            // remove sent subscribe history
+            this.mzSubscribeMan.removeSubscribeMsg(msg.getSender(), subStripes);
         }
-        for (HashMap.Entry<Integer, Set<Integer>> entry : unsubscribeMap.entrySet()) 
-            sendUnSubscribedMsgTo(entry.getKey(), entry.getValue());
-
-        // remove sent subscribe history
-        this.subscribeMsgSentMap.remove(msg.getSender());
-        logger.info("acceptSubscribeMsgReceived received msg: {}, subscribeMap: {}, stripeSender: {}", msg.toString(), this.subscribeMap, this.stripeSenderMap);
+        
+        logger.info("acceptSubscribeMsgReceived received msg: {}, subscribeMap: {}, stripeSender: {}", 
+            msg.toString(), this.mzSubscribeMan.subscribeMapToString(), this.mzSubscribeMan.stripeSenderMapToString());
+        this.nextTimeBroadcastRelayer.set(System.currentTimeMillis());
     }
 
+    /*
+     * when received a reject message, 
+     */
     public void rejectSubscribeMsgReceived(MZMessage msg){
         ArrayList<Integer> neighbors = this.mzmMsgSrlzTool.deseralizeRejectSubscribe(msg.getValue());
+        HashSet<Integer> subedStripeSet = this.mzSubscribeMan.getSubscribeMsgSentTo(msg.getSender());
         int sender = msg.getSender();
-        Collections.shuffle(neighbors);
-        // random choose one node and subscribe to that node.
-        HashSet<Integer> hs = new HashSet<>();
-        hs.add(sender);
-        if (neighbors.size() > 0) 
-            sendSubscribeMsgTo(neighbors.get(0), hs);
+        for(int stripeId: subedStripeSet) {
+            this.mzSubscribeMan.addStripeSubscribeSource(stripeId, neighbors);
+        }
+        HashSet<Integer> hs = this.mzSubscribeMan.getSubscribeMsgSentTo(sender);
+        this.mzSubscribeMan.removeStripeSubscribeSource(sender, hs);
+        this.mzSubscribeMan.removeSubscribeMsg(sender, new ArrayList<Integer>(hs));
     }
+
+    public void heartbeatMsgReceived(MZMessage msg) {
+        long now = System.currentTimeMillis();
+        // logger.info("heartbeatMsgReceived {} received a heartbeat from {} at {}", this.myId, msg.getSender(), now);
+        this.heartbeatRecvTime.put(msg.getSender(), now);
+    }
+
 
     public void latencyDetectMsgReceived(MZMessage msg) {
         if (addGossipedMsg(msg) == false)
@@ -618,7 +603,6 @@ public class MZNodeMan {
             // logger.info("latencyDetectMsgReceived: multicast {} to neighbors {}, routing table{} ", msg.toString(),
             //         neighbors, this.routingTable);
         }
-
     }
 
     /**
@@ -626,64 +610,62 @@ public class MZNodeMan {
      * 
      * @param msg
      */
-    public void relayerMsgReceived(MZMessage msg) {
+    public void relayerAliveMsgReceived(MZMessage msg) {
         if (addGossipedMsg(msg) == false)
             return;
         HashSet<Integer> relayedStripes = this.mzmMsgSrlzTool.deseralizeRelayer(msg.getValue());
-        logger.info("relayerMsgReceived received msg: {}, stripes: {}", msg.toString(), relayedStripes);
         int relayerId = msg.getMsgCreator();
         int relayerZone = this.controller.getStaticConf().getZoneId(relayerId);
+        this.mzRelayerMan.addNewRelayer(relayerId, relayerZone, new ArrayList<Integer>(relayedStripes));
+        logger.info("relayerAliveMsgReceived received msg: {}, stripes: {}", msg.toString(), relayedStripes);
         // a relayer should subscribe stripes from a relayer to recude consensus nodes'
         // bandwidth burden.
         // only process msg from a same zone
         if (this.isRelayer() && relayerZone == this.zoneId) {
-            HashSet<Integer> hs = new HashSet<>();
-            hs.addAll(this.relayerStripeMap.get(myId));
+            HashSet<Integer> hs = this.mzRelayerMan.getRelayerStripe(this.myId);
             hs.retainAll(relayedStripes);
             if (this.myId < relayerId) {
                 // a relayer can not subscribe all stripes from another relayer.
-                if (hs.size() == this.relayerStripeMap.get(myId).size()) {
+                if (hs.size() == this.mzRelayerMan.getRelayerStripe(this.myId).size()) {
                     for (int stripe : hs) {
                         hs.remove(stripe);
                         break;
                     }
                 }
-                if (hs.isEmpty() == false) {
-                    sendSubscribeMsgTo(relayerId, hs);
-                }
+                sendSubscribeMsgTo(relayerId, hs);
             }
             else {
                 // if that relayer relayed only one stripe and I also relay that stripe
-                // and the number of current relayers is more than N
+                // and (the number of current relayers is more than N or I relayed more than one stripes)
                 // I should subscribe msg from that node
-                if (this.zoneRelayerMap.containsKey(this.zoneId)){
-                    int nRelayers = this.zoneRelayerMap.get(this.zoneId).size();
-                    if (relayedStripes.size() == 1 && hs.isEmpty() == false && nRelayers > this.controller.getCurrentViewN()) {  
-                        sendSubscribeMsgTo(relayerId, hs);
-                    }
+                // this design can reduce the number of relayers to N.
+                int nRelayers = this.mzRelayerMan.getRelayerNums(this.zoneId);
+                if (relayedStripes.size() == 1 && hs.isEmpty() == false ) {  
+                    sendSubscribeMsgTo(relayerId, hs);
                 }
+                // if (relayedStripes.size() == 1 && hs.isEmpty() == false && 
+                //     (nRelayers > this.controller.getCurrentViewN() || this.mzRelayerMan.getNumOfRelayedStripes(this.myId) > 1 )) {  
+                //     sendSubscribeMsgTo(relayerId, hs);
+                // }
             }
 
-            // 
-            // I should change stripe sender if my a stripe sender do not relay my subscribed stripe
-            // for example, 0, 1, 2, 3 are consensus nodes, I am node 5, subscribe stripe 1 from node 4, but node 4 do not relay stripe 1 and now node 6 relays stripe 1.
-            // I should subscribe stripe 1 from node 6.
-            hs.clear();
+            // I should change stripe sender if a stripe sender do not relay my subscribed stripe
+            // for example, 0, 1, 2, 3 are consensus nodes. I am node 5 and subscribe stripe 1 from node 4, 
+            // but node 4 do not relay stripe 1 and now node 6 relays stripe 1.
+            // In such a case, I should subscribe stripe 1 from node 6.
+            // logger.info("Node {} check if I should change stripeSender", this.myId);
+            HashSet<Integer> stripeCanSub = new HashSet<>();
             for (Integer stripeId: relayedStripes) {
-                if (this.stripeSenderMap.containsKey(stripeId) == false)
-                    continue;  
-                int currentSender = this.stripeSenderMap.get(stripeId);
-                if (this.controller.isCurrentViewMember(currentSender)) 
+                int currentSender = this.mzSubscribeMan.getStripeSender(stripeId);
+                if (this.controller.isCurrentViewMember(currentSender) || this.mzSubscribeMan.isSendSubscribeMsgBefore(stripeId)) 
                     continue;
-                if (this.relayerStripeMap.containsKey(currentSender) == false || 
-                    this.relayerStripeMap.get(currentSender).contains(stripeId) == false)
-                    hs.add(stripeId);
-            }
-            if (hs.isEmpty() == false)
-                sendSubscribeMsgTo(relayerId, hs);
+                if (currentSender == this.mzSubscribeMan.noSender || 
+                    this.mzRelayerMan.isRelayer(currentSender) == false || 
+                    this.mzRelayerMan.getRelayerStripe(currentSender).contains(stripeId) == false)
+                    stripeCanSub.add(stripeId);
+            } 
+            sendSubscribeMsgTo(relayerId, stripeCanSub);
         }
-        
-        updateRelayer(relayerId, relayerZone, new ArrayList<Integer>(relayedStripes));
 
         // record the sender and creator have send this msg to me.
         if (this.gossipedMsgSender.containsKey(msg) == false)
@@ -704,25 +686,31 @@ public class MZNodeMan {
             // msg.setTimeStamp(System.currentTimeMillis());
             
             multicastMsg(msg, neighbors);
-            logger.info("relayerMsgReceived: forward [{}] to neighbors {}, zoneRelayerMap:{}, relayerStripeMap:{}, subscribeMap: {}, subscriberMap:{}",
-                    msg.toString(), neighbors, this.zoneRelayerMap, this.relayerStripeMap, this.subscribeMap, this.subscriberMap);
         }
     }
 
     public void adjustFromReceivedRelayNodeMsgs() {
         long now = System.currentTimeMillis();
         int N = this.controller.getCurrentViewN();
-        int F = this.controller.getCurrentViewF();
-        if (adjust == false)
-            return;
-        if (this.nRelayNodesMsgReceived.get() == N
-                || (now - this.lastTimeAskRelayNode.get()) > 10000 && this.nRelayNodesMsgReceived.get() > 0) {
+        while (this.nRelayNodesMsgReceived.get() < N && (now - this.lastTimeAskRelayNode.get()) < 10000) {
+            try {
+                logger.info("waiting for TOMutil_RELAYER_NODE, current received {} replies", this.nRelayNodesMsgReceived.get());
+                Thread.sleep(1000);
+                now = System.currentTimeMillis();
+            } catch (InterruptedException ie) {
+                logger.error("Error in waitting for TOMutil_RELAYER_NODE: {}", ie);
+                System.exit(1);
+            } 
+        }
+        // if (this.nRelayNodesMsgReceived.get() == N
+        //         || (now - this.lastTimeAskRelayNode.get()) > 10000 && this.nRelayNodesMsgReceived.get() > 0) {
+        if (this.nRelayNodesMsgReceived.get() > 0) {
             // Todo to be a relayer or a ordinary node?
             logger.info("Node {} receives {} RELAY_NODES messages, N = {}", myId, this.nRelayNodesMsgReceived.get(), N);
-            HashSet<Integer> hs = this.zoneRelayerMap.get(zoneId);
+            HashSet<Integer> hs = this.mzRelayerMan.getZoneRelayers(this.zoneId);
             // if there is no relayer, I should subscribe stripes from all consensus nodes.
             if (hs == null || hs.isEmpty()) {
-                logger.info("Zoneid = {}, no relayers", zoneId);
+                logger.info("Zoneid = {}, no relayers", this.zoneId);
                 int[] consensusnodes = this.controller.getCurrentViewAcceptors();
                 for (int nodeId : consensusnodes) {
                     Set<Integer> subStripes = new HashSet<>();
@@ -732,7 +720,7 @@ public class MZNodeMan {
             }
             // There may be not enough relay node in my zone, I should be a relayer
             else {
-                HashSet<Integer> stripeCansubscribe = getStripeCanSubscribe();
+                HashSet<Integer> stripeCansubscribe = this.mzSubscribeMan.getStripeCanSubscribe(0, N);
                 logger.info("Zoneid = {}, {} relayers, currentviewN = {} ", zoneId, hs.size(),
                         this.controller.getCurrentViewN());
                 // if the number of relayers is less than N
@@ -742,7 +730,8 @@ public class MZNodeMan {
                     int maxStripes = 0;
                     HashMap<Integer, HashSet<Integer>> requestNodeStripes = new HashMap<>();
                     for (int relayerId : hs) {
-                        HashSet<Integer> stripes = this.relayerStripeMap.get(relayerId);
+                        HashSet<Integer> stripes = this.mzRelayerMan.getRelayerStripe(relayerId);
+                        // find node that relayed most stripes
                         if (stripes.size() > maxStripes) {
                             maxStripes = stripes.size();
                             maxStripesnodeId = relayerId;
@@ -758,13 +747,16 @@ public class MZNodeMan {
                             }
                         }
                     }
-
+                    HashSet<Integer> maxRelayedStripeSet = this.mzRelayerMan.getRelayerStripe(maxStripesnodeId);
+                    logger.info("{} relayed most stripes {}", maxStripesnodeId, maxRelayedStripeSet);
+                    for(Integer nodeId: requestNodeStripes.keySet()) 
+                        maxRelayedStripeSet.removeAll(requestNodeStripes.get(nodeId));
+                    logger.info("{} now relayed stripes {}", maxStripesnodeId, maxRelayedStripeSet);
                     // choose half stripes from nodes that relay most stripes
-                    for (int stripe : this.relayerStripeMap.get(maxStripesnodeId)) {
+                    for (int stripe : maxRelayedStripeSet) {
                         if (stripeCansubscribe.contains(stripe) == false)
                             continue;
-                        else if (requestNodeStripes.get(maxStripesnodeId).size() * 2 >= relayerStripeMap
-                                .get(maxStripesnodeId).size())
+                        else if (requestNodeStripes.get(maxStripesnodeId).size() * 2 >= maxStripes)
                             break;
                         requestNodeStripes.get(maxStripesnodeId).add(stripe);
                         stripeCansubscribe.remove(stripe);
@@ -787,7 +779,7 @@ public class MZNodeMan {
                 // relayer
                 else {
                     for (int nodeId : hs) {
-                        HashSet<Integer> stripes = this.relayerStripeMap.get(nodeId);
+                        HashSet<Integer> stripes = this.mzRelayerMan.getRelayerStripe(nodeId);
                         if (stripes == null) continue;
                         // just subscribe one stripe and break;
                         for (int stripeId : stripes) {
@@ -802,25 +794,31 @@ public class MZNodeMan {
                     }
                 }
             }
-            adjust = false;
+            
         }
+        // adjust after 60 seconds
+        this.nextTimeDetect.set(System.currentTimeMillis()+60000);
+        
     }
 
     public void multicastMsg(SystemMessage msg, ArrayList<Integer> neighbors) {
         int[] targets = new int[neighbors.size()];
         for (int i = 0; i < neighbors.size(); ++i)
             targets[i] = neighbors.get(i);
-        this.cs.send(targets, msg);
+        this.sendMsg(targets, msg);
     }
-
     /**
      * periodically broadcast RELAYER msg to neighbors.
      */
-    public void broadcastRelayerMsg() {
+    public void boradcastRelayerAliveMsg() {
         long now = System.currentTimeMillis();
+        // if (this.isRelayer() && now > this.nextTimeBroadcastRelayer.get()) {
+        //     logger.info("Its time to multicast boradcastRelayerAliveMsg");
+        // }
+        HashSet<Integer> hs = this.mzRelayerMan.getRelayerStripe(this.myId);
         if (this.isRelayer() && now > this.nextTimeBroadcastRelayer.get()) {
-            byte[] content = this.mzmMsgSrlzTool.seralizeRelayer(this.relayerStripeMap.get(myId));
-            MZMessage msg = this.createMZMessage(TOMUtil.RELAYER, content);
+            byte[] content = this.mzmMsgSrlzTool.seralizeRelayer(hs);
+            MZMessage msg = this.createMZMessage(TOMUtil.RELAYERALIVE, content);
             // only broadcast to nodes in myzone and consensus nodes.
             ArrayList<Integer> neighbors = getNeighborNodes();
             ArrayList<Integer> tmpNeighbors = new ArrayList<>();
@@ -832,11 +830,9 @@ public class MZNodeMan {
             this.multicastMsg(msg, tmpNeighbors);
             // broadcast every one minute.
             this.nextTimeBroadcastRelayer.set(now + 60000);
-            logger.info("broadcastRelayerMsg: Multicast [{}] to neighbors {}, stripes I relayed: {}", msg.toString(),
-                    neighbors, this.relayerStripeMap.get(myId));
-        
-            // If I do not relay stripes from consensus node, I should be an ordinary node.
-            if (this.relayerStripeMap.get(myId).isEmpty() || relayerStripeMap.size() == 0) {
+            logger.info("boradcastRelayerAliveMsg: Multicast [{}] to neighbors {}, stripes I relayed: {}", msg.toString(),
+                     neighbors, this.mzRelayerMan.getRelayerStripe(myId));
+            if (hs.isEmpty()){
                 this.setRelayer(false);
             }
         }
@@ -866,11 +862,195 @@ public class MZNodeMan {
     }
 
     /**
+     * Node periodically broadcast heartbeat message to neighbors.
+     */
+    public void broadcastHeartbeatMsg(){
+        if (this.controller.isInCurrentView())
+            return;
+        long now = System.currentTimeMillis();
+        ArrayList<Integer> neighbors = this.getNeighborNodes();
+        ArrayList<Integer> candidates = new ArrayList<>();
+        for(int node: neighbors) {
+            if (this.nextTimeBroadcastHeartbeat.containsKey(node) == false || 
+                now >= this.nextTimeBroadcastHeartbeat.get(node)) {
+                candidates.add(node);
+            }
+        }
+        MZMessage msg = createMZMessage(TOMUtil.CM_HEARTBEAT, null);
+        multicastMsg(msg, candidates);
+    }
+
+    public void processStripeWithNoSender(){
+        int nc = this.controller.getCurrentViewN();
+        HashSet<Integer> noSenderStripeSet = this.mzSubscribeMan.getStripeCanSubscribe(0, nc);
+        for(Integer stripe: noSenderStripeSet) {
+            ArrayList<Integer> downloadSourceList = this.mzSubscribeMan.getStripeSubscribeSource(stripe);
+            Collections.shuffle(downloadSourceList);
+            HashSet<Integer> subedStripeSet = new HashSet<>();
+            subedStripeSet.add(stripe);
+            logger.info("{} find stripe {} have no sender, stripeSender:{}, subscribeMap: {}", this.myId, 
+            stripe,this.mzSubscribeMan.stripeSenderMapToString(), this.mzSubscribeMan.subscribeMapToString());
+            this.sendSubscribeMsgTo(downloadSourceList.get(0), subedStripeSet);
+        }
+    }
+
+    /**
+     * A node peirodically connect to other node and connect to them
+     */
+    public void connectNodeForRobust(){
+        // connect with enough nodes to keep robust.
+        ArrayList<Integer> neighbors = this.getNeighborNodesWithoutConsensusNodes();
+        int quorumCon = this.controller.getStaticConf().getNRandomNeighbor();
+        if (neighbors.size() < quorumCon) {
+            ArrayList<Integer> candidateNeighbors = this.cs.getServersConn().getNeighborZoneNodes();
+            candidateNeighbors.removeAll(neighbors);
+            candidateNeighbors.removeAll(this.subscriberMap.keySet());
+            Collections.shuffle(candidateNeighbors);
+            int i = 0;
+            while (neighbors.size() < quorumCon && i < candidateNeighbors.size()) {
+                int nodeId = candidateNeighbors.get(i++);
+                this.cs.getServersConn().getConnection(nodeId);
+                logger.info("{} connect with {} as backup connection",this.myId, nodeId);
+            }
+        }
+    }
+
+    /**
+     * A node will disconnect with overdue node
+     */
+    public HashSet<Integer> disconnectOverdueNode() {
+        // if a nodes does not send heartbeat message for a long time, we think it may be off-line
+        long now = System.currentTimeMillis();
+        int interval = this.controller.getStaticConf().getHeartbeatInterval();
+        ArrayList<Integer> neighbors = this.getNeighborNodesWithoutConsensusNodes();
+        HashSet<Integer> eraseSet = new HashSet<>();
+        Random r = new Random();
+        double multi = 1.5 + r.nextDouble();
+        for(int node: neighbors) {
+            long diff = this.heartbeatRecvTime.containsKey(node) ? (now - this.heartbeatRecvTime.get(node)): 0;
+            if ( diff > multi * interval) {
+                int tmpZoneId = this.controller.getStaticConf().getZoneId(node);
+                if (tmpZoneId == this.zoneId) {
+                    logger.info("{} is a relayer in zone {}, it is offline", node, tmpZoneId);
+                }
+                // remove this node as a subscribe or subscriber
+                this.mzSubscribeMan.nodeOffline(node);
+                this.subscriberMap.remove(node);
+                // put node into eraseSet
+                eraseSet.add(node);
+                // close connection
+                cs.getServersConn().closeConnection(node);
+                this.heartbeatRecvTime.remove(node);
+
+                // consensus node remove that relayer as it only 
+                // if (this.isConsensusNode()) {
+                int relayerZone = this.controller.getStaticConf().getZoneId(node);
+                this.mzRelayerMan.removeRelayer(node, relayerZone);
+                // }
+                    
+                logger.info("{} disconnect with {} afer {} ms, stripeSender:{}, subscribeMap{}, its relayerinfo {}", 
+                    this.myId, node, diff, this.mzSubscribeMan.stripeSenderMapToString(), this.mzSubscribeMan.subscribeMapToString(), this.mzRelayerMan.getRelayerStripe(node));
+
+                }
+        }
+
+        // /**
+        //  * if some stripes have no relayers, I should be a relayer
+        //  */
+        // if (false == this.isConsensusNode()) {
+        //     for(Integer relayerNode: eraseSet) {
+        //         if (this.mzRelayerMan.isRelayer(relayerNode) == false)
+        //             continue;
+        //         HashSet<Integer> relayerStripeSet = this.mzRelayerMan.getRelayerStripe(relayerNode);
+        //         int relayerZone = this.controller.getStaticConf().getZoneId(relayerNode);
+        //         this.mzRelayerMan.removeRelayer(relayerNode, relayerZone);
+        //         if (relayerZone == this.zoneId) {
+        //             for(int stripe: relayerStripeSet) {
+        //                 // if I just subscribe this stripe before ,skip this
+        //                 if (this.mzSubscribeMan.shouldISubscribe(stripe) == false) {
+        //                     logger.info("{} will not forward {}, its sender is {}", this.myId, stripe,  this.mzSubscribeMan.getStripeSender(stripe));
+        //                     continue;
+        //                 }
+                            
+        //                 HashSet<Integer> hs = new HashSet<>();
+        //                 hs.add(stripe);
+        //                 sendSubscribeMsgTo(stripe, hs);
+        //                 logger.info("{} find {} is a relayer and it is off-line, prepare to be a relayer and forward {}", this.myId, relayerNode, hs);
+        //             }
+        //         }
+        //     }
+        // }
+        return eraseSet;
+    }
+
+    /**
+     * An ordinay node will always check if there are enough relayers
+     * if there is more than N relayers, it will become a new relayers
+     */
+    public void checkAndBecomeRelayer(){
+        // If some stripes have no relayers, I should subscribe them.
+        int nc = this.controller.getCurrentViewN();
+        HashSet<Integer> noRelayerStripeSet = this.mzRelayerMan.findStripeWithNoRelayer(nc);
+        HashSet<Integer> subedStripeSet = new HashSet<>();
+        for(Integer stripe: noRelayerStripeSet) {
+            if (this.mzSubscribeMan.shouldISubscribe(stripe)){
+                subedStripeSet.add(stripe);
+                sendSubscribeMsgTo(stripe, new HashSet<Integer>(stripe));
+                logger.info("{} find stripe {} have no relayers and prepare to become a relayer", this.myId, stripe);
+            }
+            else {
+                logger.info("stripe {} have a relayer or a sender, I will not become a relayer, my sender: {}", stripe, this.mzSubscribeMan.getStripeSender(stripe));
+            }
+        } 
+
+        if (this.isOrdinary() == false)
+            return;
+        
+        HashSet<Integer> myZoneRelayers = this.mzRelayerMan.getZoneRelayers(this.zoneId);
+        logger.info("{} is an ordinary node and find there are {} relayers", this.myId, myZoneRelayers.size());
+        if (myZoneRelayers.size() < nc) {
+            
+            int stripeIshouldRelay = nc / myZoneRelayers.size();
+            for(int relayer: myZoneRelayers) {
+                HashSet<Integer> stripeSet = this.mzRelayerMan.getRelayerStripe(relayer);
+                if(stripeSet.size() > 1) {
+                    int tmpStripe = stripeSet.iterator().next();
+                    if (subedStripeSet.add(tmpStripe)){
+                        this.sendSubscribeMsgTo(tmpStripe, new HashSet<Integer>(tmpStripe));
+                        logger.info("{} find there are {} relayers, prepare to be a relayer and forward {}", this.myId, myZoneRelayers.size(), tmpStripe);
+                    }
+                }
+                if (subedStripeSet.size() >= stripeIshouldRelay)
+                    break;
+            }    
+        }
+    }
+
+    /**
      * periodically detect other nodes in my zone, neighbor zone and other zones.
      * Todo
      */
-    public void detectOtherNodes() {
+    public void detectNodes() {
+        long now = System.currentTimeMillis();
+        if (now < nextTimeDetect.get()) 
+            return;
+            
+        disconnectOverdueNode();
 
+        if (this.isConsensusNode() == false) {
+            
+            checkAndBecomeRelayer();
+
+            processStripeWithNoSender();
+            
+            connectNodeForRobust();
+
+        }
+        long finish = System.currentTimeMillis();
+        Random r = new Random();
+        this.nextTimeDetect.set(System.currentTimeMillis() + r.nextInt(15000)+ 15000); 
+        if (finish-now > 500)
+            logger.info("{} detect nodes use {} ms", this.myId, finish-now);
     }
 
     public final void deliver(MZMessage msg) {
@@ -878,7 +1058,6 @@ public class MZNodeMan {
         long now = System.currentTimeMillis();
         if (now - msg.getTimeStamp() > 120000 || msg.getTimeStamp() - now > 30000)
             return;
-
         if (msg.getType() == TOMUtil.GET_RELAY_NODE) {
             getRelayMsgReceived(msg);
         } else if (msg.getType() == TOMUtil.RELAY_NODES) {
@@ -889,16 +1068,18 @@ public class MZNodeMan {
             unsubscribeMsgReceived(msg);
         } else if (msg.getType() == TOMUtil.ACCEPT_SUBSCRIBE) {
             acceptSubscribeMsgReceived(msg);
-        } else if (msg.getType() == TOMUtil.RELAYER) {
-            relayerMsgReceived(msg);
+        } else if (msg.getType() == TOMUtil.RELAYERALIVE) {
+            relayerAliveMsgReceived(msg);
         } else if (msg.getType() == TOMUtil.LATENCY_DETECT) {
             latencyDetectMsgReceived(msg);
         } else if (msg.getType() == TOMUtil.REJECT_SUBSCRIBE) {
             rejectSubscribeMsgReceived(msg);
-        } else {
-            logger.error("received a message: --message type: " + msg.getVerboseType()
-                    + " but is regard as out of context, from " + msg.getSender());
         }
+        // else if (msg.getType() != TOMUtil.CM_HEARTBEAT) {
+        //     logger.error("received a message: --message type: " + msg.getVerboseType()
+        //             + " but is regard as out of context, from " + msg.getSender());
+        // }
+        heartbeatMsgReceived(msg);
     }
 
     /**
@@ -906,14 +1087,37 @@ public class MZNodeMan {
      * and collect current relay_node info.
      */
     public void askRelayNodes() {
-        long now = System.currentTimeMillis();
-        if (now - this.lastTimeAskRelayNode.get() < 60000)
-            return;
-        MZMessage msg = this.createMZMessage(TOMUtil.GET_RELAY_NODE, null);
         int[] initialV = this.controller.getCurrentViewAcceptors();
-        logger.info("Node {} multicast [{}] to consensus node {}", myId, msg.toString(), initialV);
-        cs.send(initialV, msg);
-        this.lastTimeAskRelayNode.set(now);
-        this.nRelayNodesMsgReceived.set(0);
+        ArrayList<Integer> consensusNodes = new ArrayList<>();
+        for(int i = 0; i < initialV.length; ++i)    consensusNodes.add(i);
+        boolean asked = false;
+        while (!asked) {
+            ArrayList<Integer> neighbors = this.getNeighborNodes();
+            if (neighbors.containsAll(consensusNodes) == false) {
+                try {
+                    Thread.sleep(1000);
+                    continue;
+                } catch (InterruptedException ie) {
+                    LoggerFactory.getLogger(this.getClass()).error("Interruption during sleep", ie);
+                    System.exit(1);
+                }
+            }
+            long now = System.currentTimeMillis();
+            MZMessage msg = this.createMZMessage(TOMUtil.GET_RELAY_NODE, null);
+            logger.info("Node {} multicast [{}] to consensus node {}", myId, msg.toString(), initialV);
+            this.nRelayNodesMsgReceived.set(0);
+            this.lastTimeAskRelayNode.set(now);
+            multicastMsg(msg, consensusNodes);
+            asked = true;
+        }
+    }
+
+    public void sendMsg(int[] targets, SystemMessage sm) {
+        this.cs.send(targets, sm);
+        long now = System.currentTimeMillis();
+        int interval = this.controller.getStaticConf().getHeartbeatInterval();
+        for(int node: targets) {
+            this.nextTimeBroadcastHeartbeat.put(node, now+interval);
+        }
     }
 }

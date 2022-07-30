@@ -17,7 +17,7 @@ import java.util.Objects;
  * 
  */
 
-public class MZStripeMessage extends SystemMessage{
+public class MZStripeMessage extends SystemMessage implements Cloneable{
 
     private int batchChainId;       // batchChainId is the producer's ID. 
     private int batchHeight;
@@ -61,6 +61,11 @@ public class MZStripeMessage extends SystemMessage{
         return this.totalLen;
     }
 
+    @Override
+    public MZStripeMessage clone(){
+        MZStripeMessage cloneMsg = new MZStripeMessage(this.getSender(), this.batchChainId, this.batchHeight, this.totalLen, this.stripeId, this.dataLen, this.stripe.clone());
+        return cloneMsg;
+    }
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {

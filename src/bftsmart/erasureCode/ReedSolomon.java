@@ -59,14 +59,14 @@ public class ReedSolomon {
      * Returns the number of data shards.
      */
     public int getDataShardCount() {
-        return dataShardCount;
+        return this.dataShardCount;
     }
 
     /**
      * Returns the number of parity shards.
      */
     public int getParityShardCount() {
-        return parityShardCount;
+        return this.parityShardCount;
     }
 
     /**

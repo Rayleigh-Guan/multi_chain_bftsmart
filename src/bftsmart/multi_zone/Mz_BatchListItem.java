@@ -1,6 +1,6 @@
 package bftsmart.multi_zone;
 
-public class Mz_BatchListItem {
+public class Mz_BatchListItem implements Cloneable{
 
     public int NodeId;
     public int StartHeight;
@@ -17,5 +17,11 @@ public class Mz_BatchListItem {
     @Override
     public String toString(){
         return String.format("NodeId:%d_StartHeight:%d_EndHeight:%d_usedful:%d", NodeId, StartHeight,EndHeight,usedful);
+    }
+
+    @Override
+    public Mz_BatchListItem clone(){
+        Mz_BatchListItem cloneItem = new Mz_BatchListItem(this.NodeId, this.StartHeight,this.EndHeight,this.usedful);
+        return cloneItem;
     }
 }

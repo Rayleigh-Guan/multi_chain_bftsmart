@@ -58,7 +58,10 @@ public class MZBlockchainMan {
         MZBlock block = null;
         this.blockLock.lock();
         if (this.containsBlock(heihgt)) {
-            block = (MZBlock)this.mzBlockMap.get(heihgt);
+            MZBlock preBlock = (MZBlock)this.mzBlockMap.get(heihgt);
+            if (preBlock == null)
+                preBlock = (MZBlock)this.blockchain.get(heihgt);
+            block = preBlock.clone();
         }
         this.blockLock.unlock();
         return block;

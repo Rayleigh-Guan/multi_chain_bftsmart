@@ -26,7 +26,7 @@ import bftsmart.tom.core.messages.TOMMessage;
  *
  * @author alysson
  */
-public class RequestList extends LinkedList<TOMMessage> {
+public class RequestList extends LinkedList<TOMMessage> implements Cloneable{
 
     private static final long serialVersionUID = -3639222602426147629L;
 
@@ -38,6 +38,18 @@ public class RequestList extends LinkedList<TOMMessage> {
     public RequestList(int maxSize) {
         super();
         this.maxSize = maxSize;
+    }
+
+    public void setMaxSize(int ms){
+        this.maxSize = ms;
+    }
+
+    @Override
+    public RequestList clone() {
+        RequestList reqListClone = (RequestList) super.clone();
+        int ms = this.maxSize;
+        reqListClone.setMaxSize(ms);
+        return reqListClone;
     }
 
     @Override

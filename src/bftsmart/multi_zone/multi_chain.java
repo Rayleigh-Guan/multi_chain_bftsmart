@@ -33,6 +33,7 @@ public class multi_chain {
     private List<Mz_BatchListItem> lastbatchlist;
 
     private Map<Integer, StripeMessageCache> stripeMsgMap;
+    private Map<Integer, MZBundleCache> bundleMap;
     private int f;
     private boolean useSig;
 
@@ -43,6 +44,7 @@ public class multi_chain {
         this.useSig = useSig;
         this.nTxArray = new int[this.replica_num];
         this.stripeMsgMap = new ConcurrentHashMap<>();
+        this.bundleMap = new ConcurrentHashMap<>();
         this.ChainPool = new ArrayList[this.replica_num];
         this.PackagedHeight = new int[this.replica_num];
         this.mzlock = new ReentrantLock();
@@ -83,6 +85,20 @@ public class multi_chain {
         return this.stripeMsgMap.get(batchchainId).getStripe(height, stripeId);
     }
 
+    public Mz_Batch getBundle(int bundleChainId, int bundleHeight) {
+        int lastHeight = getLastBatchHeight(bundleChainId);
+        Mz_Batch bundle = null;
+        if (lastHeight >= bundleHeight) {
+            bundle = this.ChainPool[bundleChainId].get(bundleHeight).clone();
+        }
+        else if (this.bundleMap.containsKey(bundleChainId)){
+            MZBundleCache cache = this.bundleMap.get(bundleChainId);
+            if (cache.contains(bundleHeight))
+                bundle = cache.getBundle(bundleHeight);
+        }
+        return bundle;
+    }
+
     /**
      * add a stripe to 
      * @param msg`
@@ -109,6 +125,24 @@ public class multi_chain {
             ++nextBatchHeight;
         }
         return res;
+    }
+
+    public void addBundle(Mz_Batch bundle) {
+        int bundleChainId = bundle.NodeId;
+        int bundleHeight = bundle.BatchId;
+        // logger.info("Node {} receive bundle {}-{}",NodeID, bundleChainId, bundleHeight );
+        if (this.bundleMap.containsKey(bundleChainId) == false) {
+            this.bundleMap.put(bundleChainId, new MZBundleCache());
+        }
+        MZBundleCache bdCache = this.bundleMap.get(bundleChainId);
+        bdCache.addBundle(bundle);
+        int nextBundleHeight = this.getLastBatchHeight(bundleChainId) + 1;
+        while(bdCache.contains(nextBundleHeight)) {
+            Mz_Batch tmpBundle = bdCache.getAndRemove(nextBundleHeight);
+            this.add(tmpBundle);
+            // logger.info("Node {} add bundle {}-{} to multi_chain", NodeID, tmpBundle.NodeId, tmpBundle.BatchId);
+            ++nextBundleHeight;
+        }
     }
 
     public void add(Mz_Batch value) {

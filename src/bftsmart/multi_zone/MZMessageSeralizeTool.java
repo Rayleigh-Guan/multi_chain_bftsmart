@@ -162,26 +162,37 @@ public class MZMessageSeralizeTool{
         return content;
     }
 
-    public byte[] seralizeRejectSubscribe(ArrayList<Integer> neighbors) {
-        int size = Integer.BYTES  +  Integer.BYTES * neighbors.size();
-        int len = neighbors == null ? 0: neighbors.size();
+    public byte[] seralizeRejectSubscribe(ArrayList<Integer> neighbors, ArrayList<Integer> stripeList) {
+        int neighborLen = neighbors == null ? 0: neighbors.size();
+        int stripeLen = stripeList == null ? 0: stripeList.size();
+        int size = Integer.BYTES * (neighborLen + stripeLen + 2);
         ByteBuffer buff = ByteBuffer.allocate(size);
-        buff.putInt(len);
-        int i = 0;
-        while (i < len) {
-            buff.putInt(neighbors.get(i));
+        buff.putInt(neighborLen);
+        int i = 0, j = 0;
+        while (i < neighborLen) {
+            buff.putInt(neighbors.get(i++));
+        }
+        buff.putInt(stripeLen);
+        while (j < stripeLen){
+            buff.putInt(stripeList.get(j++));
         }
         return buff.array();
     }
 
-    public ArrayList<Integer> deseralizeRejectSubscribe(byte[] data){
-        ArrayList<Integer> neighbors = new ArrayList<>();
+    public ArrayList<Integer> deseralizeRejectSubscribe(byte[] data, ArrayList<Integer> neighbors, ArrayList<Integer> stripeList){
+        
         ByteBuffer buff = ByteBuffer.wrap(data);
-        int len = buff.getInt();
-        while(len > 0) {
+        int neighborLen = buff.getInt();
+        while(neighborLen > 0) {
             neighbors.add(buff.getInt());
-            --len;
+            --neighborLen;
         }
+        int stripeLen = buff.getInt();
+        while(stripeLen > 0){
+            stripeList.add(buff.getInt());
+            --stripeLen;
+        }
+
         return neighbors;
     }
 }

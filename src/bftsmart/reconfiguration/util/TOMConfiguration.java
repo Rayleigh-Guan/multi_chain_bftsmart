@@ -82,6 +82,9 @@ public class TOMConfiguration extends Configuration {
     private String dataDisStrategyStr;
     private String networkingModeStr;
     private String dsInRandommodeStr;
+
+    private int dsBundleToFullNodesMode;
+    private String dsBundleToFullNodesModeStr;
     
     /** Creates a new instance of TOMConfiguration */
     public TOMConfiguration(int processId, KeyLoader loader) {
@@ -375,7 +378,7 @@ public class TOMConfiguration extends Configuration {
             }
             
             s = (String) configs.remove("system.ds");
-            System.out.println("parsed ds: "+s);
+            // System.out.println("parsed ds: "+s);
             if (s == null) {
                 dataDisStrategy = TOMUtil.DS_ORIGINAL;
                 dataDisStrategyStr = "ORGINAL";
@@ -390,7 +393,7 @@ public class TOMConfiguration extends Configuration {
             }
 
             s = (String) configs.remove("system.networkmode");
-            System.out.println("parsed networkmode: "+s);
+            // System.out.println("parsed networkmode: "+s);
             if (s == null || s.equals("consensus")) {
                 networkmode = TOMUtil.NM_CONSENSUS;
                 networkingModeStr = "CONSENSUS";
@@ -406,10 +409,20 @@ public class TOMConfiguration extends Configuration {
             else if (s.equals("star")) {
                 networkmode = TOMUtil.NM_STAR;
                 networkingModeStr = "STAR";
-            }  
+            }
+            
+            s = (String) configs.remove("system.ds_bundle");
+            if (s == null || s.equals("erasure_coding")) {
+                dsBundleToFullNodesMode = TOMUtil.DS_BUNDLE_EC;
+                dsBundleToFullNodesModeStr = "erasure_coding";
+            }
+            else {
+                dsBundleToFullNodesMode = TOMUtil.DS_BUNDLE_FULL;
+                dsBundleToFullNodesModeStr = "full";
+            }
             
             s = (String) configs.remove("system.ds_in_random");
-            System.out.println("parsed ds_in_random: "+s);
+            // System.out.println("parsed ds_in_random: "+s);
             if (s == null) {
                 dsInRandommode = TOMUtil.DS_RANDOM_ENHANCED_FAB;
                 dsInRandommodeStr = "DS_RANDOM_ENHANCED_FAB";
@@ -418,11 +431,11 @@ public class TOMConfiguration extends Configuration {
                 dsInRandommode = TOMUtil.DS_RANDOM_ENHANCED_FAB;
                 dsInRandommodeStr = "DS_RANDOM_ENHANCED_FAB";
             } 
-            else if (s.equals("btc")) {
+            else if (s.equals("BTC")) {
                 dsInRandommode = TOMUtil.DS_RANDOM_BTC;
                 dsInRandommodeStr = "DS_RANDOM_BTC";
             } 
-            else if (s.equals("eth")) {
+            else if (s.equals("ETH")) {
                 dsInRandommode = TOMUtil.DS_RANDOM_ETH;
                 dsInRandommodeStr = "DS_RANDOM_ETH";
             }
@@ -466,8 +479,10 @@ public class TOMConfiguration extends Configuration {
             logger = LoggerFactory.getLogger(this.getClass());
             logger.info("Qc(Quorum connections to consensus node) = " + minConWithConseususNode);
             logger.info("Qr(Quorum connections to relay node) = " + minConWithRelayerNode );
-            logger.info("Data distribution strategy is "+ dataDisStrategyStr);
+            logger.info("Consensus data distribution strategy is "+ dataDisStrategyStr);
             logger.info("Networking mode is " + networkingModeStr);
+            logger.info("Data dissemination strategy is " + dsInRandommodeStr);
+            logger.info("Data distribute to full nodes is " + dsBundleToFullNodesModeStr);
             logger.info("Maximum subscriber is "+ nMaximumSubscriber);
             logger.info("Random connect neighbor is " + nRandomNeighbor);
             logger.info("Initialview: {}", initialView);
@@ -688,6 +703,14 @@ public class TOMConfiguration extends Configuration {
 
     public String getNetworkmodeStr(){
         return networkingModeStr;
+    }
+
+    public int getDisBundleToFullNodes(){
+        return dsBundleToFullNodesMode;
+    }
+
+    public String getDisBundleToFullNodesStr(){
+        return dsBundleToFullNodesModeStr;
     }
 
     public int getFabricTTLDirect(){

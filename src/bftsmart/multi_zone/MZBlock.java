@@ -9,7 +9,7 @@ import bftsmart.communication.SystemMessage;
 
 
 
-public class MZBlock extends SystemMessage{
+public class MZBlock extends SystemMessage implements Cloneable{
     // ecah proof is HashMap<Integer, byte[]> macVector = new HashMap<>();
     // private Set<ConsensusMessage> proof;
     
@@ -29,6 +29,16 @@ public class MZBlock extends SystemMessage{
         this.propose = propose;
         this.blockContent = seralizedPropose;
     }
+
+    @Override
+    public MZBlock clone(){
+        Mz_Propose tmpPropose = null;
+        if (this.propose != null)
+            tmpPropose = this.propose.clone();
+        MZBlock blk = new MZBlock(this.getSender(), this.blockHash.clone(), tmpPropose, this.blockContent.clone());
+        return blk;
+    }
+
 
     public byte[] getBlockHash(){
         return this.blockHash;

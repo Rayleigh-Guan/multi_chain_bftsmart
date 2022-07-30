@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.io.DataInputStream;
 import java.io.ByteArrayInputStream;
 
-public class Mz_Propose {
+public class Mz_Propose implements Cloneable{
     public int blockHeight;
     public long timestamp;
     public long seed;
@@ -29,6 +29,15 @@ public class Mz_Propose {
         this.numNounces = numNonces;
         this.reqList = reqList;
         this.bundleSliceList = bundleSliceList;
+    }
+
+    @Override
+    public Mz_Propose clone(){
+        List<Mz_BatchListItem> tmpList = new ArrayList<>();
+        for(Mz_BatchListItem item: this.bundleSliceList)
+            tmpList.add(item.clone());
+        Mz_Propose clonePropose = new Mz_Propose(this.blockHeight, this.timestamp, this.seed, this.numNounces, this.reqList.clone(), tmpList);
+        return clonePropose;
     }
 
     @Override

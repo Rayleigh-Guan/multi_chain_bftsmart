@@ -28,9 +28,8 @@ import org.slf4j.LoggerFactory;
 public class HostsConfig {
 
     private HashMap<Integer, Config> servers = new HashMap<>();
-    protected HashMap<Integer, Set<Integer>> zones = new HashMap<>();
+    protected HashMap<Integer, Set<Integer>> zoneNodeMap = new HashMap<>();
     private int maxZoneId;
-    private int heartbeatInterval;
     /** Creates a new instance of ServersConfig */
     public HostsConfig(String configHome, String fileName) {
         loadConfig(configHome, fileName);
@@ -68,11 +67,10 @@ public class HostsConfig {
                             this.maxZoneId = Math.max(zoneId, this.maxZoneId);
                         }
                         this.servers.put(id, new Config(id, host, port, zoneId));
-                        if (this.zones.containsKey(id) == false) {
-                            Set<Integer> s = new HashSet<>();
-                            this.zones.put(id, s);
+                        if (this.zoneNodeMap.containsKey(zoneId) == false) {
+                            this.zoneNodeMap.put(zoneId, new HashSet<>());
                         }
-                        this.zones.get(id).add(zoneId);
+                        this.zoneNodeMap.get(zoneId).add(id);
                     }
                 }
             }
@@ -126,7 +124,7 @@ public class HostsConfig {
     }
 
     public Set<Integer> getZoneNodeSet(int zoneId){
-        Set<Integer> s = this.zones.get(zoneId);
+        Set<Integer> s = this.zoneNodeMap.get(zoneId);
         if (s != null) {
             return s;
         }

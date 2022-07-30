@@ -2,8 +2,6 @@ package bftsmart.multi_zone;
 
 import bftsmart.erasureCode.ReedSolomon;
 
-import java.util.concurrent.ConcurrentHashMap;
-
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
@@ -69,7 +67,7 @@ public class StripeMessageCache {
         if (this.receivedStripeMap.containsKey(height)){
             for(MZStripeMessage msg: this.receivedStripeMap.get(height)) {
                 if (msg.getStripeId() == stripeId) {
-                    res = msg;
+                    res = msg.clone();
                 }    
             }
         }

@@ -1,11 +1,9 @@
 package bftsmart.multi_zone;
 
 import java.util.Map;
-
 import java.util.HashMap;
+import java.util.Set;
 import java.util.HashSet;
-
-
 import java.util.ArrayList;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -23,10 +21,11 @@ public class MZSubscribeMan {
     private Map<Integer, Integer> stripeSenderMap;                      // stripeId --> nodeId send to me
 
     private Map<Integer, HashSet<Integer>> subscribeMsgSentMap;         // nodeId --> subscribed stripe I send to
-    private Map<Integer, ArrayList<Long>> stripeSubedNodeAndTimeMap; // stripeId --> node I subscribed to and time
+    private Map<Integer, ArrayList<Long>> stripeSubedNodeAndTimeMap;    // stripeId --> node I subscribed to and time
     private ReentrantLock msgLock;
 
     private Map<Integer, HashSet<Integer>> stripeAvailableNode;         // stripeId --> node that can forwad the stripe
+    private HashSet<Integer> nodeRejectMeSet;                           // node who reject me.
     private ReentrantLock downloaderLock;
 
 
@@ -44,6 +43,8 @@ public class MZSubscribeMan {
         this.downloaderLock = new ReentrantLock();
 
         this.logger = LoggerFactory.getLogger(this.getClass());
+
+        this.nodeRejectMeSet = new HashSet<Integer>();
 
         this.noSender = -1;
     }
@@ -103,6 +104,14 @@ public class MZSubscribeMan {
         for(int stripeId: stripeSet)
             this.addStripeSender(sender, stripeId);
         this.subscribeLock.unlock();
+    }
+
+    public HashSet<Integer> getSenderSet(){
+        this.subscribeLock.lock();
+        HashSet<Integer> senderSet = new HashSet<>();
+        senderSet.addAll(this.subscribeMap.keySet());
+        this.subscribeLock.unlock();
+        return senderSet;
     }
 
     public int getStripeSender(int stripe) {
@@ -211,6 +220,7 @@ public class MZSubscribeMan {
         if (this.stripeAvailableNode.containsKey(stripeId) == false)
             this.stripeAvailableNode.put(stripeId, new HashSet<Integer>());
         this.stripeAvailableNode.get(stripeId).addAll(nodeList);
+        this.stripeAvailableNode.get(stripeId).removeAll(this.nodeRejectMeSet);
         this.downloaderLock.unlock();
     }
 
@@ -223,15 +233,32 @@ public class MZSubscribeMan {
         this.downloaderLock.unlock();
     }
 
+    public void removeStripeSubscribeSource(int nodeId) {
+        this.downloaderLock.lock();
+        for(int stripeId: this.stripeAvailableNode.keySet()) {
+            this.stripeAvailableNode.get(stripeId).remove(nodeId);
+        }
+        this.nodeRejectMeSet.add(nodeId);
+        this.downloaderLock.unlock();
+    }
+
     public ArrayList<Integer> getStripeSubscribeSource(int stripeId) {
         this.downloaderLock.lock();
         HashSet<Integer> hs = new HashSet<>();
         if (this.stripeAvailableNode.containsKey(stripeId))
             hs.addAll(this.stripeAvailableNode.get(stripeId));
-        else
+        if (hs.isEmpty())
             hs.add(stripeId);
         this.downloaderLock.unlock();
         return new ArrayList<Integer>(hs);
+    }
+
+    public Set<Integer> getRejectNodeSet(){
+        this.downloaderLock.lock();
+        Set<Integer> res = new HashSet<Integer>();
+        res.addAll(this.nodeRejectMeSet);
+        this.downloaderLock.unlock();
+        return res;
     }
 
 

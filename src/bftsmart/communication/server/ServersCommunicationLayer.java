@@ -112,9 +112,11 @@ public class ServersCommunicationLayer extends Thread {
                         if (neighbors.isEmpty() == false) {
                             int extraNeighbor = this.controller.getStaticConf().getNRandomNeighbor();
                             int nNode = Math.min(neighbors.size(), extraNeighbor);
-                            logger.info("Node {} choose extra {} nodes", myId, neighbors.subList(0, nNode));
-                            for(int i = 0; i < nNode; ++i)
+                            logger.info("Node {} choose extra {} nodes, nNode = {}", myId, neighbors.subList(0, nNode), nNode);
+                            for(int i = 0; i < nNode; ++i) {
+                                logger.info("Node {} prepare to connect to {}", myId, neighbors.get(i));
                                 getConnection(neighbors.get(i));
+                            }  
                         }
                     }
                 }
@@ -208,9 +210,9 @@ public class ServersCommunicationLayer extends Thread {
         int myZoneId = this.controller.getStaticConf().getZoneId(myId);
         int curZoneId = myZoneId;
         Set<Integer> neighborZoneNodes = new HashSet<Integer>();
-        while (curZoneId > 0) {
+        while (curZoneId > 1) {
             --curZoneId;
-            neighborZoneNodes.addAll(this.controller.getStaticConf().getZoneNodeSet(myZoneId));
+            neighborZoneNodes.addAll(this.controller.getStaticConf().getZoneNodeSet(curZoneId));
         }
         ArrayList<Integer> neighbors = new ArrayList<Integer>(neighborZoneNodes);
         return neighbors;
@@ -387,7 +389,7 @@ public class ServersCommunicationLayer extends Thread {
             // System.out.println("Vai se conectar com: "+remoteId);
             if (this.connections.get(remoteId) == null) { // This must never happen!!!
                 // first time that this connection is being established
-                System.out.println("THIS DOES NOT HAPPEN....."+remoteId);
+                //System.out.println("THIS DOES NOT HAPPEN....."+remoteId);
                 this.connections.put(remoteId, new ServerConnection(controller, newSocket, remoteId, inQueue, replica));
             } else {
                 // reconnection

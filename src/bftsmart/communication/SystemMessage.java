@@ -25,7 +25,7 @@ import java.io.ObjectOutput;
  * 
  */
 
-public abstract class SystemMessage implements Externalizable {
+public abstract class SystemMessage implements Externalizable, Cloneable{
 
     protected int sender; // ID of the process which sent the message
     public transient boolean authenticated; // set to TRUE if the message was received

@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.TreeSet;
 import java.util.ArrayList;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -90,6 +91,18 @@ public class MZRelayerMan {
         this.zoneRelayerMap.get(zoneId).add(nodeId);
         this.relayerStripeMap.put(nodeId, new HashSet<>(stripes));
         this.relayerLock.unlock();
+    }
+
+    public Set<Integer> getRelayerWhoRelay(int stripe, int zoneId) {
+        this.relayerLock.lock();
+        HashSet<Integer> relayerSet = this.getZoneRelayers(zoneId);
+        Set<Integer> res = new TreeSet<Integer>();
+        for(int relayer: relayerSet) {
+            if (this.relayerStripeMap.get(relayer).contains(stripe))
+                res.add(relayer);
+        }
+        this.relayerLock.unlock();
+        return res;
     }
 
     public void addRelayerStripes(int nodeId, int zoneId, ArrayList<Integer> stripes){

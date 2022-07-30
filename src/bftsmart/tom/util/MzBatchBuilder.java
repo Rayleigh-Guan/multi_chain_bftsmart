@@ -1,5 +1,6 @@
 package bftsmart.tom.util;
 
+import bftsmart.multi_zone.Mz_Batch;
 import bftsmart.tom.core.messages.TOMMessage;
 
 import java.nio.ByteBuffer;
@@ -21,6 +22,10 @@ public class MzBatchBuilder {
             }
         }
         MzBatchBuffer.putLong(recp);
+    }
+
+    public byte[] makeMzBatch(Mz_Batch bundle, boolean useSignatures) {
+        return makeMzBatch(bundle.getNodeId(), bundle.getBatchId(), bundle.getReq(), useSignatures, bundle.getChainPooltip());
     }
 
     public byte[] makeMzBatch(int id, int height, List<TOMMessage> msgs, boolean useSignatures,

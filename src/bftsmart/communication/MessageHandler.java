@@ -136,7 +136,12 @@ public class MessageHandler {
                 }
             }
             else {
-                this.tomLayer.OnBlock(consMsg);
+                if (consMsg.getType() == MessageFactory.MZPROPOSE){
+                    this.tomLayer.OnBlock(consMsg);
+                }
+                else if (consMsg.getType() == MessageFactory.MZBATCH){
+                    this.tomLayer.OnMzBatch(consMsg);
+                }
             }
 
         } else if (sm instanceof MZMessage) {

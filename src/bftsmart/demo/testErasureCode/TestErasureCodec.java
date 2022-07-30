@@ -157,7 +157,7 @@ public class TestErasureCodec {
                                       byte [] [] allShards, byte [] [] testShards,
                                       boolean [] shardPresent, int numberMissing) {
         final int shardLength = allShards[0].length;
-        final int maxVal = codec.getDataShardCount() + codec.getDataShardCount()-1;
+        final int maxVal = codec.getDataShardCount() + codec.getParityShardCount()-1;
         List<int []> subsets = allSubsets(numberMissing, 0, maxVal);
         int testCnt = 0;
         double testTime = 0;

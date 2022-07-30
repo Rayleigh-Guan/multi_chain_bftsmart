@@ -129,6 +129,10 @@ public class DataHashMessage extends SystemMessage{
             return "DH_STRIPEHASH";
         else if (this.type == TOMUtil.DH_GETSTRIPE)
             return "DH_GETSTRIPE";
+        else if (this.type == TOMUtil.DH_BUNDLEHASH)
+            return "DH_BUNDLEHASH";
+        else if (this.type == TOMUtil.DH_GETBUNDLE)
+            return "DH_GETBUNDLE";
         else
             return "NULL";
     }

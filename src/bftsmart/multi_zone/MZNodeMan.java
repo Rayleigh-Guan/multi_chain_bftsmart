@@ -48,6 +48,7 @@ public class MZNodeMan {
     // stripe, block, mzbatch that need to forward.
     private Queue<ArrayList<Object>> dataQueue;
     private Map<String, SystemMessage> candidateBlockMap;
+    private Map<String, SystemMessage> originalBlockMap;
 
     // ordinary block I send and received 
     private Map<SystemMessage, Set<Integer>>    blockSendMap;
@@ -88,6 +89,7 @@ public class MZNodeMan {
         // for send data to subscriber node.
         this.dataQueue = new ConcurrentLinkedQueue<>();
         this.candidateBlockMap = new ConcurrentHashMap<>();
+        this.originalBlockMap = new ConcurrentHashMap<>();
 
         this.blockchain = new HashMap<>();
 
@@ -134,6 +136,22 @@ public class MZNodeMan {
         this.dataQueue.add(arr);
     }
 
+
+    public void addOriginalBlock(byte[] blockHash, ConsensusMessage propose) {
+        String hash = MZNodeMan.bytesToHex(blockHash, 16);
+        this.originalBlockMap.put(hash, propose);
+    }
+
+    public SystemMessage getOriginalBlock(byte[] blockHash) {
+        String hash = MZNodeMan.bytesToHex(blockHash, 16);
+        SystemMessage msg = this.originalBlockMap.get(hash);
+        if (msg == null) {
+            logger.info("getOriginalBlock can not find the originalBlock [{}]", hash);
+            return null;
+        }
+        return msg;
+    }
+
     // forward a new block to subscribers.
     public SystemMessage getCandidateBlock(byte[] blockHash) {
         String hash = MZNodeMan.bytesToHex(blockHash, 16);
@@ -170,7 +188,7 @@ public class MZNodeMan {
         if (msg instanceof ConsensusMessage ){
             ConsensusMessage consMsg = (ConsensusMessage)(msg);
             if (consMsg.getType() == MessageFactory.MZPROPOSE) {
-                dataType = TOMUtil.DH_BLODKHASH;
+                dataType = TOMUtil.DH_BLOCKHASH;
                 dataHash = consMsg.getHash();
                 appendix = new int[]{consMsg.getNumber()};
             }
@@ -178,7 +196,7 @@ public class MZNodeMan {
         else if (msg instanceof MZBlock) {
             MZBlock block = (MZBlock)(msg);
             block.getPropose();
-            dataType = TOMUtil.DH_BLODKHASH;
+            dataType = TOMUtil.DH_BLOCKHASH;
             dataHash = block.getBlockHash();
             appendix = new int[]{block.getPropose().blockHeight};
         }

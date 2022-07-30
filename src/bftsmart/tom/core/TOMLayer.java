@@ -447,7 +447,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         if (this.controller.getStaticConf().getNetworkingMode() != TOMUtil.NM_CONSENSUS)
             this.mznodeThread.start();
         if (this.controller.isInCurrentView() ){
-            int ds = this.controller.getStaticConf().getDataDisStrategy();
+            int ds = this.controller.getStaticConf().getBundleDisStrategyToConsensusNodes();
             if (ds == TOMUtil.DS_PREDIS_EC || ds == TOMUtil.DS_PREDIS_FULL) {
                 // pack batch
                 this.packbundlethread.start();
@@ -479,16 +479,35 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         int networkmode = this.controller.getStaticConf().getNetworkingMode();
         if (networkmode == TOMUtil.NM_CONSENSUS)
             return;
-        SystemMessage block = this.mzNodeMan.getCandidateBlock(epoch.propValueHash);
-        if (block == null) return;
-        if (block instanceof MZBlock) {
-            MZBlock mzblock = (MZBlock)(block);
-            this.OnMZBlock(mzblock);
-        }   
-        else if (block instanceof ConsensusMessage) {
-            ConsensusMessage ordinaryBlock = (ConsensusMessage)(block);
-            this.OnBlock(ordinaryBlock);
+        int blockDisStrategyToFullNodes = this.controller.getStaticConf().getDisBlockToFullNodes();
+       
+        if (blockDisStrategyToFullNodes ==  TOMUtil.DS_BLOCK_PREDIS){
+            SystemMessage block = this.mzNodeMan.getCandidateBlock(epoch.propValueHash);
+            if (block == null) return;
+            if (block instanceof MZBlock) {
+                MZBlock mzblock = (MZBlock)(block);
+                this.OnMZBlock(mzblock);
+            }   
         }
+        else if (blockDisStrategyToFullNodes == TOMUtil.DS_BLOCK_ORIGINAL) {
+            SystemMessage block = this.mzNodeMan.getOriginalBlock(epoch.propValueHash);
+            if (block == null) return;
+            if (block instanceof ConsensusMessage){
+                ConsensusMessage ordinaryBlock = (ConsensusMessage)(block);
+                this.OnBlock(ordinaryBlock);
+            }
+            
+        }
+        // SystemMessage block = this.mzNodeMan.getCandidateBlock(epoch.propValueHash);
+        // if (block == null) return;
+        // if (block instanceof MZBlock) {
+        //     MZBlock mzblock = (MZBlock)(block);
+        //     this.OnMZBlock(mzblock);
+        // }   
+        // else if (block instanceof ConsensusMessage) {
+        //     ConsensusMessage ordinaryBlock = (ConsensusMessage)(block);
+        //     this.OnBlock(ordinaryBlock);
+        // }
     }
 
     /**
@@ -670,8 +689,8 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                 byte[] dataHash = msg.getHash();
                 int[] appendix = new int[]{mzBatch.getNodeId(), mzBatch.getBatchId()};
                 DataHashMessage datahashMsg = new DataHashMessage(myId, dataType, now, appendix, dataHash);
-                // logger.info("Node {} add {} to forwardQueue", myId, datahashMsg);
                 this.mzNodeMan.addForwardData(datahashMsg);
+                // logger.info("Node {} add {} to forwardQueue", myId, datahashMsg);
             }
         }
         if (myId != msg.getSender()) {
@@ -686,13 +705,13 @@ public final class TOMLayer extends Thread implements RequestReceiver {
 
     public void OnMZStripe(MZStripeMessage msg) {
         int myId = this.controller.getStaticConf().getProcessId();
-        //int ds = this.controller.getStaticConf().getDataDisStrategy();
+        //int ds = this.controller.getStaticConf().getBundleDisStrategyToConsensusNodes();
         int networkmode = this.controller.getStaticConf().getNetworkingMode();
         // only forward stripe from other node
         if (msg.getBatchChainId() == myId || msg.getSender() == myId)
            return;
-        // if (false == this.controller.isInCurrentView())
-        //     logger.info("Node {} receive a MZStripeMsg: {}", myId, msg.toString());
+        if (false == this.controller.isInCurrentView())
+            logger.info("Node {} receive a MZStripeMsg: {}", myId, msg.toString());
         // boolean addRes = this.multiChain.addStripeMsg(msg);
         // If I have already received this stripe, do not forward the stripe if ds is not DS_ENHANCED_FAB
         // if (addRes == false && (ds != TOMUtil.DS_RANDOM_ENHANCED_FAB)) 
@@ -758,27 +777,41 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         ArrayList<Integer> arr = new ArrayList<>();
         for(int ele : dh.getAppendix())
             arr.add(ele);
-        if (type == TOMUtil.DH_BLODKHASH) {
+        if (type == TOMUtil.DH_BLOCKHASH) {
             if (this.mzblockchainMan.containsBlock(arr.get(0)) == false &&  this.mzInflightMan.contains(arr) == false) {
                 this.mzInflightMan.addMsgInflight(arr, record);
-                dh.setType(TOMUtil.DH_GETPREDISBLOCK);
+                int blockDisStrategyToFullNodes = this.controller.getStaticConf().getDisBlockToFullNodes();
+                if (blockDisStrategyToFullNodes == TOMUtil.DS_BLOCK_PREDIS)
+                    dh.setType(TOMUtil.DH_GETPREDISBLOCK);
+                else
+                    dh.setType(TOMUtil.DH_GETORIGINALBLOCK);
                 dh.setSender(myId);
                 this.communication.send(new int[]{sender}, dh);
-                // logger.info("Node {} receives DH_BLODKHASH and send [{}] to {}",myId, dh,sender);
+                // logger.info("Node {} receives DH_BLOCKHASH and send [{}] to {}", myId, dh, sender);
             }
-            this.mzInflightMan.addDownloadSource(arr, sender);
-            
+            this.mzInflightMan.addDownloadSource(arr, sender); 
         } else if (type == TOMUtil.DH_GETPREDISBLOCK) {
             if (this.mzblockchainMan.containsBlock(blockheight)) {
                 SystemMessage msg = this.mzblockchainMan.getPredisBlock(blockheight);
                 msg.setSender(myId);
                 this.communication.send(new int[]{sender}, msg);
-                logger.info("Node {} receives DH_GETPREDISBLOCK and send [{}] to {}",myId, msg, sender);
+                // logger.info("Node {} receives DH_GETPREDISBLOCK and send [{}] to {}",myId, msg, sender);
             }
             else {
                 logger.warn("Node {} receives DH_GETPREDISBLOCK but can not find that blockheight: {}",myId, blockheight);
             }
-        } else if (type == TOMUtil.DH_STRIPEHASH) {
+        } else if (type ==  TOMUtil.DH_GETORIGINALBLOCK){
+            if (this.mzblockchainMan.containsBlock(blockheight)) {
+                SystemMessage msg = this.mzblockchainMan.getOriginalBLock(blockheight);
+                msg.setSender(myId);
+                this.communication.send(new int[]{sender}, msg);
+                // logger.info("Node {} receives DH_GETORIGINALBLOCK and send [{}] to {}", myId, blockheight, sender);
+            }
+            else {
+                logger.warn("Node {} receives DH_GETORIGINALBLOCK but can not find that blockheight: {}", myId, blockheight);
+            }
+        }
+        else if (type == TOMUtil.DH_STRIPEHASH) {
             MZStripeMessage stripe = this.multiChain.getStripe(dh.getAppendix()[0], dh.getAppendix()[1],dh.getAppendix()[2]);
             // if this stipe is not in flight or not received, request it.
             if (this.mzInflightMan.contains(arr) == false && stripe == null ) {
@@ -797,7 +830,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             }
             stripe.setSender(myId);
             this.communication.send(new int[]{sender}, stripe);
-            logger.info("Node {} receives DH_GETSTRIPE and send [{}] to {}", myId, stripe.toString(), sender);
+            //logger.info("Node {} receives DH_GETSTRIPE and send [{}] to {}", myId, stripe.toString(), sender);
         }
         else if (type == TOMUtil.DH_BUNDLEHASH){
             int bundleChainId = dh.getAppendix()[0];
@@ -850,7 +883,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         // if the first time receives
         // store the block and let recoveryBlock function to recovery the block
         // else just forward the block if it is DS_RANDOM_ENHANCED_FAB mode
-        int ds = this.controller.getStaticConf().getDataDisStrategy();
+        int ds = this.controller.getStaticConf().getBundleDisStrategyToConsensusNodes();
         boolean addRes = this.mzblockchainMan.addPredisBlock(block);
         if (addRes == false && ds == TOMUtil.DS_RANDOM_ENHANCED_FAB) {
             block.setSender(myId);
@@ -861,25 +894,37 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     // a node receives a block only in random 
     public void OnBlock(ConsensusMessage block) {
         int blockHeight = block.getNumber();
-        int myId = this.controller.getStaticConf().getProcessId();
         boolean addRes = this.mzblockchainMan.addValidBlock(block, blockHeight);
+        int myId = this.controller.getStaticConf().getProcessId();
+        int ds = this.controller.getStaticConf().getBundleDisStrategyToConsensusNodes();
         // if I am a consensus node, do not need to recovery block 
         // I just store and forward the block
-        if (this.controller.isInCurrentView()) {
-            if (addRes) {
-                block.setSender(myId);
-                this.mzNodeMan.addForwardData(block);
+        if (addRes == true){
+            long now = System.currentTimeMillis();
+            byte[] computedBlockHash = computeHash(block.getValue());
+            if (this.controller.isInCurrentView() == false) {
+                final String blockHashStr = MZNodeMan.bytesToHex(computedBlockHash, 16);
+                logger.info("Node {} successfully recovery a new block {}, blockheight: {}, sender: {}, orignal block size: {}, Mzblock size {}, use {} ms, waitting {} ms",
+                    myId, blockHashStr, blockHeight, block.getSender(), block.getValue().length, 0, now - block.getTimestamp(), 0);
             }
-            return;
-        }
-        // if the first time receives
-        // store the block and let recoveryBlock function to recovery the block
-        // else just forward the block if it is DS_RANDOM_ENHANCED_FAB mode
-        int ds = this.controller.getStaticConf().getDataDisStrategy();
-        if (addRes == false && ds == TOMUtil.DS_RANDOM_ENHANCED_FAB) {
+            else {
+                block.setTimestamp(now);
+            }
             block.setSender(myId);
-            this.mzNodeMan.addForwardData(block);
+            int dataType = TOMUtil.DH_BLOCKHASH;
+            byte[] dataHash = computedBlockHash;
+            int[] appendix = new int[]{blockHeight};
+            DataHashMessage datahashMsg = new DataHashMessage(myId, dataType, now, appendix, dataHash);
+            this.mzNodeMan.addForwardData(datahashMsg);
+            logger.info("Node {} add {} to forwardQueue", myId, datahashMsg);
         }
+        // else if (addRes == false && ds == TOMUtil.DS_RANDOM_ENHANCED_FAB) {
+        //     // if the first time receives
+        //     // store the block and let recoveryBlock function to recovery the block
+        //     // else just forward the block if it is DS_RANDOM_ENHANCED_FAB mode
+        //     block.setSender(myId);
+        //     this.mzNodeMan.addForwardData(block);
+        // }
     }
 
     public void storeCandidateBlock(byte[] blockHash, ConsensusMessage msg) {
@@ -946,6 +991,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         // convert the msg to a propose message 
         MessageFactory messageFactory = new MessageFactory(msg.getSender());
         this.acceptor.deliver(messageFactory.createPropose(msg.getNumber(), msg.getEpoch(), reply.batch));
+        this.mzNodeMan.addOriginalBlock(blockHash, messageFactory.createPropose(msg.getNumber(), msg.getEpoch(), reply.batch.clone()));
     }
 
     public void updatepackedheight() {
@@ -1012,7 +1058,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                         Mz_Batch mzbatch = new Mz_Batch(myId, multiChain.getMyGeneratedHeight(), reqlist, chainPoolTip);
                         multiChain.add(mzbatch);
                         byte[] batch = mzbb.makeMzBatch(myId, multiChain.getMyGeneratedHeight(), reqlist, useSignature == 1, chainPoolTip);
-                        if (controller.getStaticConf().getDataDisStrategy() == TOMUtil.DS_PREDIS_EC) {
+                        if (controller.getStaticConf().getBundleDisStrategyToConsensusNodes() == TOMUtil.DS_PREDIS_EC) {
                             // use erasure code to encode stripe array
                             int N = controller.getCurrentViewN();
                             int F = controller.getCurrentViewF();
@@ -1389,9 +1435,8 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             if (Arrays.equals(computedBlockHash, block.getBlockHash())) {
                 long now = System.currentTimeMillis();
                 long waittingTime = now - this.mzblockchainMan.getBlockRecvTime(blockheight);
-                logger.info("Node {} successfully recovery a new block {}, blockheight: {}, sender: {}, orignal tx size: {}, Mzblock size {}, use {} ms, waitting {} ms",
+                logger.info("Node {} successfully recovery a new block {}, blockheight: {}, sender: {}, orignal block size: {}, Mzblock size {}, use {} ms, waitting {} ms",
                     myId, blockHashStr, mzpropose.blockHeight, block.getSender(), reply.batch.length, block.getBlockContent().length, now - mzpropose.timestamp, waittingTime);
-                
                 
                 // store the block
                 this.mzblockchainMan.removePredisBlock(blockheight);
@@ -1421,7 +1466,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                     mzNodeMan.askRelayNodes();
                     mzNodeMan.adjustFromReceivedRelayNodeMsgs();   
                 }
-                int ds = controller.getStaticConf().getDataDisStrategy();
+                int ds = controller.getStaticConf().getBundleDisStrategyToConsensusNodes();
                 while(doWork) {
                     if (networkMode == TOMUtil.NM_MULTI_ZONE) {
                         // subscribe stripe 

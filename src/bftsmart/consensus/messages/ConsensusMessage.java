@@ -183,6 +183,10 @@ public class ConsensusMessage extends SystemMessage {
         return this.timestamp;
     }
 
+    public void setTimestamp(long ts){
+        this.timestamp = ts;
+    }
+
     public void setProof(Object proof) {
 
         this.proof = proof;

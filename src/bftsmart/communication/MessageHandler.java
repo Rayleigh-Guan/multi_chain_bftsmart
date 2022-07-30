@@ -82,8 +82,8 @@ public class MessageHandler {
             ConsensusMessage consMsg = (ConsensusMessage) sm;
             // if I am a consensus node, enter the consensus phase.
             if (this.tomLayer.controller.isInCurrentView()) {
-                // System.out.println("received a message: --message type: "+consMsg.getType()+"
-                // from "+consMsg.getSender());
+                if (consMsg.getType() == MessageFactory.MZPROPOSE)
+                    System.out.println("received a message: --message type: "+consMsg.getType()+" from "+consMsg.getSender());
                 if (tomLayer.controller.getStaticConf().getUseMACs() == 0 || consMsg.authenticated
                         || consMsg.getSender() == myId)
                     acceptor.deliver(consMsg);
@@ -137,6 +137,9 @@ public class MessageHandler {
             }
             else {
                 if (consMsg.getType() == MessageFactory.MZPROPOSE){
+                    this.tomLayer.OnBlock(consMsg);
+                }
+                else if (consMsg.getType() == MessageFactory.PROPOSE){
                     this.tomLayer.OnBlock(consMsg);
                 }
                 else if (consMsg.getType() == MessageFactory.MZBATCH){

@@ -112,7 +112,8 @@ public final class Acceptor {
      * @param msg Paxos messages delivered by the communication layer
      */
     public final void deliver(ConsensusMessage msg) {
-        logger.debug("received a message: --message type: " + msg.getPaxosVerboseType() + " from " + msg.getSender());
+        if (msg.getType() == MessageFactory.MZPROPOSE)
+            logger.info("received a message: --message type: " + msg.getPaxosVerboseType() + " from " + msg.getSender());
         if (msg.getType() == MessageFactory.MZBATCH) {
             MzBatchReceived(msg);
         } else if (msg.getType() == MessageFactory.MZPROPOSE) {
@@ -176,17 +177,17 @@ public final class Acceptor {
         int ts = epoch.getConsensus().getEts();
         int ets = executionManager.getConsensus(msg.getNumber()).getEts();
         logger.debug("PROPOSE for consensus " + cid);
-        logger.debug("Stage: proposeReceived --from: " + msg.getSender());
+        logger.info("Stage: proposeReceived --from: " + msg.getSender());
         if (msg.getSender() == executionManager.getCurrentLeader() // Is the replica the leader?
                 && epoch.getTimestamp() == 0 && ts == ets && ets == 0) { // Is all this in epoch 0?
             executePropose(epoch, msg.getValue());
             
             // ask tomlayer to store the candidateblcok
-            int ds = this.controller.getStaticConf().getDataDisStrategy();
+            int ds = this.controller.getStaticConf().getBundleDisStrategyToConsensusNodes();
             if (ds == TOMUtil.DS_ORIGINAL)
                 this.tomLayer.storeCandidateBlock(epoch.propValue, msg);
         } else {
-            logger.debug("Propose received is not from the expected leader");
+            logger.error("Propose received is not from the expected leader");
         }
     }
 
@@ -198,7 +199,7 @@ public final class Acceptor {
      */
     private void executePropose(Epoch epoch, byte[] value) {
         int cid = epoch.getConsensus().getId();
-        logger.debug("Executing propose for " + cid + "," + epoch.getTimestamp());
+        logger.info("Executing propose for " + cid + "," + epoch.getTimestamp());
 
         long consensusStartTime = System.currentTimeMillis();// System.nanoTime();
 
@@ -208,7 +209,7 @@ public final class Acceptor {
 
             /*** LEADER CHANGE CODE ********/
             epoch.getConsensus().addWritten(value);
-            logger.debug("I have written value " + Arrays.toString(epoch.propValueHash) + " in consensus instance "
+            logger.info("I have written value " + Arrays.toString(epoch.propValueHash) + " in consensus instance "
                     + cid + " with timestamp " + epoch.getConsensus().getEts());
             /*****************************************/
 
@@ -240,7 +241,7 @@ public final class Acceptor {
                     communication.send(this.controller.getCurrentViewOtherAcceptors(),
                             factory.createWrite(cid, epoch.getTimestamp(), epoch.propValueHash));
                     logger.debug("Stage: executePropose --has write vote to consensus id: " + cid);
-                    logger.debug("WRITE sent for " + cid);
+                    logger.info("WRITE sent for " + cid);
                     computeWrite(cid, epoch, epoch.propValueHash);
                     logger.debug("WRITE computed for " + cid);
 
@@ -267,6 +268,9 @@ public final class Acceptor {
                 System.out.println("Stage: executePropose --has not wirte vote");
                 tomLayer.getSynchronizer().triggerTimeout(new LinkedList<>());
             }
+        }
+        else{
+            logger.info("epoch.propValue is null");
         }
     }
 

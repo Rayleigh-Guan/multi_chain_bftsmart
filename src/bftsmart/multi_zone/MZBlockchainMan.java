@@ -54,6 +54,13 @@ public class MZBlockchainMan {
         return res;
     }
 
+    public SystemMessage getOriginalBLock(int height) {
+        this.blockLock.lock();
+        SystemMessage msg = this.blockchain.get(height);
+        this.blockLock.unlock();
+        return msg;
+    }
+
     public MZBlock getPredisBlock(int heihgt) {
         MZBlock block = null;
         this.blockLock.lock();

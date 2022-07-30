@@ -80,6 +80,9 @@ public class TOMUtil {
     public static final int DS_RANDOM_ENHANCED_FAB = 206;
     public static final int DS_BUNDLE_EC = 207;
     public static final int DS_BUNDLE_FULL = 208;
+    public static final int DS_BUNDLE_NONE = 209;
+    public static final int DS_BLOCK_PREDIS = 210;
+    public static final int DS_BLOCK_ORIGINAL = 211;
 
     // networking mode
     public static final int NM_STAR = 300;
@@ -88,12 +91,13 @@ public class TOMUtil {
     public static final int NM_CONSENSUS = 303;
 
     // message for data hash
-    public static final int DH_BLODKHASH = 400;
+    public static final int DH_BLOCKHASH = 400;
     public static final int DH_STRIPEHASH = 401;    
     public static final int DH_GETPREDISBLOCK = 402;
     public static final int DH_GETSTRIPE = 403;
     public static final int DH_BUNDLEHASH = 404;
     public static final int DH_GETBUNDLE = 405;
+    public static final int DH_GETORIGINALBLOCK = 406;
 
     // message for common use
     public static final int CM_HEARTBEAT = 500;

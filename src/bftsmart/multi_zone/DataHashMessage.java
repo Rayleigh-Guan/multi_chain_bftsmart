@@ -121,10 +121,12 @@ public class DataHashMessage extends SystemMessage{
     }
 
     public String getVerboseType(){
-        if (this.type == TOMUtil.DH_BLODKHASH)
-            return "DH_BLODKHASH";
+        if (this.type == TOMUtil.DH_BLOCKHASH)
+            return "DH_BLOCKHASH";
         else if (this.type == TOMUtil.DH_GETPREDISBLOCK)
             return "DH_GETPREDISBLOCK";
+        else if (this.type == TOMUtil.DH_GETORIGINALBLOCK)
+            return "DH_GETORIGINALBLOCK";
         else if (this.type == TOMUtil.DH_STRIPEHASH)
             return "DH_STRIPEHASH";
         else if (this.type == TOMUtil.DH_GETSTRIPE)
